@@ -1,0 +1,20 @@
+{
+  "lane": "x-feed",
+  "date": "2026-04-12",
+  "status": "success",
+  "warnings": [],
+  "errors": [],
+  "summary": {
+    "signals_written": 2,
+    "signal_types": {
+      "feed-exposure": 2
+    }
+  },
+  "artifacts": {
+    "index_file": "index.md",
+    "signal_files": [
+      "signals/alpha.md",
+      "signals/beta.md"
+    ]
+  }
+}

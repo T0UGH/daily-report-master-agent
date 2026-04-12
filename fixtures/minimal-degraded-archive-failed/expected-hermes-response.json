@@ -1,0 +1,55 @@
+{
+  "host": "hermes",
+  "run_key": "2026-04-15:daily-report",
+  "report_date": "2026-04-15",
+  "verdict": {
+    "status": "degraded",
+    "reason_summary": "归档失败，但日报已成功发布",
+    "has_report": true,
+    "should_publish": true,
+    "should_archive": true,
+    "should_notify_ops": true
+  },
+  "run_state": {
+    "run_key": "2026-04-15:daily-report",
+    "report_date": "2026-04-15",
+    "trigger_kind": "cron",
+    "status": "finished",
+    "last_verdict": "degraded",
+    "has_report_artifact": true,
+    "publish_state": {
+      "status": "succeeded",
+      "summary": "published to Feishu",
+      "reference": "feishu://daily-report/2026-04-15"
+    },
+    "archive_state": {
+      "status": "failed",
+      "summary": "archive to Obsidian failed",
+      "reference": null
+    }
+  },
+  "report_artifact": {
+    "artifact_type": "final_report",
+    "report_date": "2026-04-15",
+    "title": "AI Agent 日报（2026-04-15）",
+    "summary": "今日共整理 2 条有用内容。",
+    "body_markdown": "# AI Agent 日报（2026-04-15）\n\n## X 推荐流\n- **@gamma/status/3**：agent 协作模式开始从命令集合变成流程约定。 [原帖](https://x.com/gamma/status/3)\n\n## Product Hunt 新品\n- **Nicelydone MCP**：设计上下文打包器开始作为独立产品被售卖。 [Product Hunt](https://www.producthunt.com/products/nicely-done)\n\n## 来源\n\n### X 推荐流\n- 来源 1：https://x.com/gamma/status/3\n\n### Product Hunt 新品\n- 来源 1：https://www.producthunt.com/products/nicely-done\n",
+    "useful_item_count": 2,
+    "source_lanes": [
+      "x-feed",
+      "product-hunt-watch"
+    ]
+  },
+  "publish_result": {
+    "status": "succeeded",
+    "target": "feishu",
+    "reference": "feishu://daily-report/2026-04-15",
+    "error_summary": null
+  },
+  "archive_result": {
+    "status": "failed",
+    "target": "obsidian",
+    "reference": null,
+    "error_summary": "obsidian vault unavailable"
+  }
+}

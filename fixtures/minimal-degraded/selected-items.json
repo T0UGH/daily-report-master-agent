@@ -1,0 +1,23 @@
+{
+  "report_date": "2026-04-13",
+  "source": "signals-engine",
+  "selected_items": [
+    {
+      "lane": "x-feed",
+      "title": "@beta/status/2",
+      "source_url": "https://x.com/beta/status/2",
+      "signal_path": "x-feed/2026-04-13/signals/beta.md",
+      "fetched_at": "2026-04-13T09:00:00+0000",
+      "excerpt": "讨论焦点转向 agent matrix 测试思路。"
+    }
+  ],
+  "summary": {
+    "selected_item_count": 1,
+    "lane_counts": [
+      {
+        "lane": "x-feed",
+        "selected_item_count": 1
+      }
+    ]
+  }
+}

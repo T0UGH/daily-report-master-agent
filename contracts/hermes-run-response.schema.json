@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hermes Run Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host",
+    "run_key",
+    "report_date",
+    "verdict",
+    "run_state",
+    "report_artifact",
+    "publish_result",
+    "archive_result"
+  ],
+  "properties": {
+    "host": {
+      "type": "string",
+      "const": "hermes"
+    },
+    "run_key": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}:[a-z0-9-]+$"
+    },
+    "report_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "verdict": {
+      "$ref": "#/$defs/verdict"
+    },
+    "run_state": {
+      "$ref": "#/$defs/run_state"
+    },
+    "report_artifact": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/report_artifact"
+        }
+      ]
+    },
+    "publish_result": {
+      "$ref": "#/$defs/publish_result"
+    },
+    "archive_result": {
+      "$ref": "#/$defs/archive_result"
+    }
+  },
+  "$defs": {
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason_summary",
+        "has_report",
+        "should_publish",
+        "should_archive",
+        "should_notify_ops"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "degraded",
+            "blocked"
+          ]
+        },
+        "reason_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "has_report": {
+          "type": "boolean"
+        },
+        "should_publish": {
+          "type": "boolean"
+        },
+        "should_archive": {
+          "type": "boolean"
+        },
+        "should_notify_ops": {
+          "type": "boolean"
+        }
+      }
+    },
+    "report_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_type",
+        "report_date",
+        "title",
+        "body_markdown",
+        "useful_item_count",
+        "source_lanes"
+      ],
+      "properties": {
+        "artifact_type": {
+          "type": "string",
+          "const": "final_report"
+        },
+        "report_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string"
+        },
+        "body_markdown": {
+          "type": "string",
+          "minLength": 1
+        },
+        "useful_item_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_lanes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "side_effect_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_started",
+            "succeeded",
+            "failed",
+            "skipped"
+          ]
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "run_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_key",
+        "report_date",
+        "trigger_kind",
+        "status",
+        "last_verdict",
+        "has_report_artifact",
+        "publish_state",
+        "archive_state"
+      ],
+      "properties": {
+        "run_key": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}:[a-z0-9-]+$"
+        },
+        "report_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "trigger_kind": {
+          "type": "string",
+          "enum": [
+            "cron",
+            "manual"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "running",
+            "finished"
+          ]
+        },
+        "last_verdict": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "normal",
+            "degraded",
+            "blocked",
+            null
+          ]
+        },
+        "has_report_artifact": {
+          "type": "boolean"
+        },
+        "publish_state": {
+          "$ref": "#/$defs/side_effect_state"
+        },
+        "archive_state": {
+          "$ref": "#/$defs/side_effect_state"
+        }
+      }
+    },
+    "result_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "target"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "succeeded",
+            "failed",
+            "skipped"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "feishu",
+            "obsidian"
+          ]
+        },
+        "reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error_summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "publish_result": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/result_summary"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "const": "feishu"
+            }
+          }
+        }
+      ]
+    },
+    "archive_result": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/result_summary"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "const": "obsidian"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

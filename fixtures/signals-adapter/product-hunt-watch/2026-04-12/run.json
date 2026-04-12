@@ -1,0 +1,22 @@
+{
+  "lane": "product-hunt-watch",
+  "date": "2026-04-12",
+  "status": "success",
+  "warnings": [
+    "one referenced signal file is missing"
+  ],
+  "errors": [],
+  "summary": {
+    "signals_written": 2,
+    "signal_types": {
+      "producthunt_topic_hit": 2
+    }
+  },
+  "artifacts": {
+    "index_file": "index.md",
+    "signal_files": [
+      "signals/nicelydone-mcp.md",
+      "signals/missing.md"
+    ]
+  }
+}

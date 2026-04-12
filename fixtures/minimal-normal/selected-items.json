@@ -1,0 +1,35 @@
+{
+  "report_date": "2026-04-12",
+  "source": "signals-engine",
+  "selected_items": [
+    {
+      "lane": "x-feed",
+      "title": "@alpha/status/1",
+      "source_url": "https://x.com/alpha/status/1",
+      "signal_path": "x-feed/2026-04-12/signals/alpha.md",
+      "fetched_at": "2026-04-12T11:00:00+0000",
+      "excerpt": "社区开始把远程审计划工作流说得更具体。"
+    },
+    {
+      "lane": "claude-code-watch",
+      "title": "v2.1.101",
+      "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.101",
+      "signal_path": "claude-code-watch/2026-04-12/signals/release.md",
+      "fetched_at": "2026-04-12T10:00:00+0000",
+      "excerpt": "团队上手和远程协作能力继续补齐。"
+    }
+  ],
+  "summary": {
+    "selected_item_count": 2,
+    "lane_counts": [
+      {
+        "lane": "x-feed",
+        "selected_item_count": 1
+      },
+      {
+        "lane": "claude-code-watch",
+        "selected_item_count": 1
+      }
+    ]
+  }
+}

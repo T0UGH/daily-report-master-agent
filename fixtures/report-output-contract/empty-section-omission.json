@@ -1,0 +1,16 @@
+{
+  "report_date": "2026-04-12",
+  "report_markdown": "# AI Agent 日报（2026-04-12）\n\n## X 推荐流\n- **Claude Code 的远程会话功能继续外溢到社区叙事。** 一条高传播 X 帖把 `/ultraplan` 这类“先在 Web 审计划、再决定在哪执行”的工作方式讲清楚了，说明 Claude Code 的远程协作心智已经开始进入更泛化的 agent workflow 讨论。[原帖](https://x.com/example/status/1)\n\n## Claude Code\n- **v2.1.101 把团队上手和远程协作继续往前推。** 这次 release 同时补了 `/team-onboarding`、默认云环境和更清晰的工具错误说明，重点不是单点修复，而是把多人协作和受限环境里的可用性一起抬高。[Release](https://github.com/anthropics/claude-code/releases/tag/v2.1.101)\n\n## 来源\n\n### X 推荐流\n- @example #1 — https://x.com/example/status/1\n\n### Claude Code\n- v2.1.101 — https://github.com/anthropics/claude-code/releases/tag/v2.1.101\n",
+  "expected_section_titles": [
+    "X 推荐流",
+    "Claude Code"
+  ],
+  "expected_sources": {
+    "X 推荐流": [
+      "https://x.com/example/status/1"
+    ],
+    "Claude Code": [
+      "https://github.com/anthropics/claude-code/releases/tag/v2.1.101"
+    ]
+  }
+}

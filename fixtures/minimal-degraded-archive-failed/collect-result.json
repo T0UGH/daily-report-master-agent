@@ -1,0 +1,26 @@
+{
+  "report_date": "2026-04-15",
+  "source": "signals-engine",
+  "lanes": [
+    {
+      "name": "x-feed",
+      "status": "ok",
+      "useful_item_count": 1
+    },
+    {
+      "name": "product-hunt-watch",
+      "status": "ok",
+      "useful_item_count": 1
+    }
+  ],
+  "summary": {
+    "useful_item_count": 2,
+    "partial_lane_count": 0
+  },
+  "side_effects": {
+    "archive": {
+      "status": "failed",
+      "error_summary": "obsidian vault unavailable"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "report_date": "2026-04-12",
+  "source": "signals-engine",
+  "lanes": [
+    {
+      "name": "x-feed",
+      "status": "ok",
+      "useful_item_count": 100
+    },
+    {
+      "name": "x-following",
+      "status": "ok",
+      "useful_item_count": 100
+    },
+    {
+      "name": "reddit-watch",
+      "status": "ok",
+      "useful_item_count": 12
+    },
+    {
+      "name": "claude-code-watch",
+      "status": "partial",
+      "useful_item_count": 3
+    },
+    {
+      "name": "codex-watch",
+      "status": "ok",
+      "useful_item_count": 23
+    },
+    {
+      "name": "openclaw-watch",
+      "status": "partial",
+      "useful_item_count": 3
+    },
+    {
+      "name": "github-trending-weekly",
+      "status": "error",
+      "useful_item_count": 0
+    },
+    {
+      "name": "product-hunt-watch",
+      "status": "ok",
+      "useful_item_count": 7
+    },
+    {
+      "name": "polymarket-watch",
+      "status": "ok",
+      "useful_item_count": 12
+    }
+  ],
+  "summary": {
+    "useful_item_count": 260,
+    "partial_lane_count": 3
+  },
+  "errors": [
+    "claude-code-watch: warnings=anthropics/claude-code README: gh api repos/anthropics/claude-code/contents/README.md --jq {content: .content, sha: .sha, path: .path} failed (exit 1): Get \"https://api.github.com/repos/anthropics/claude-code/contents/README.md\": EOF",
+    "openclaw-watch: warnings=openclaw/openclaw changelog CHANGELOG.md: gh api repos/openclaw/openclaw/contents/CHANGELOG.md --jq {content: .content, sha: .sha, path: .path} failed (exit 1): Get \"https://api.github.com/repos/openclaw/openclaw/contents/CHANGELOG.md\": read tcp 192.168.2.118:51517->198.18.0.28:443: read: connection reset by peer; openclaw/openclaw README: gh api repos/openclaw/openclaw/contents/README.md --jq {content: .content, sha: .sha, path: .path} failed (exit 1): Get \"https://api.github.com/repos/openclaw/openclaw/contents/README.md\": read tcp 192.168.2.118:51524->198.18.0.28:443: read: connection reset by peer",
+    "github-trending-weekly: 缺少目录 /Users/haha/.daily-lane-data/signals/github-trending-weekly/2026-04-12"
+  ]
+}

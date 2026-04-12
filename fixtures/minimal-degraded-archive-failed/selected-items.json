@@ -1,0 +1,35 @@
+{
+  "report_date": "2026-04-15",
+  "source": "signals-engine",
+  "selected_items": [
+    {
+      "lane": "x-feed",
+      "title": "@gamma/status/3",
+      "source_url": "https://x.com/gamma/status/3",
+      "signal_path": "x-feed/2026-04-15/signals/gamma.md",
+      "fetched_at": "2026-04-15T09:30:00+0000",
+      "excerpt": "agent 协作模式开始从命令集合变成流程约定。"
+    },
+    {
+      "lane": "product-hunt-watch",
+      "title": "Nicelydone MCP",
+      "source_url": "https://www.producthunt.com/products/nicely-done",
+      "signal_path": "product-hunt-watch/2026-04-15/signals/nicelydone-mcp.md",
+      "fetched_at": "2026-04-15T08:30:00+0000",
+      "excerpt": "设计上下文打包器开始作为独立产品被售卖。"
+    }
+  ],
+  "summary": {
+    "selected_item_count": 2,
+    "lane_counts": [
+      {
+        "lane": "x-feed",
+        "selected_item_count": 1
+      },
+      {
+        "lane": "product-hunt-watch",
+        "selected_item_count": 1
+      }
+    ]
+  }
+}

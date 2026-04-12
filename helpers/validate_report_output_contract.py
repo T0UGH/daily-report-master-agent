@@ -1,0 +1,259 @@
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+
+FIXED_SECTION_ORDER = [
+    "x-feed",
+    "x-following",
+    "reddit-watch",
+    "claude-code-watch",
+    "codex-watch",
+    "openclaw-watch",
+    "github-trending-weekly",
+    "product-hunt-watch",
+    "polymarket-watch",
+]
+
+FIXED_SECTION_TITLES = {
+    "x-feed": "X 推荐流",
+    "x-following": "X 关注流",
+    "reddit-watch": "Reddit 社区",
+    "claude-code-watch": "Claude Code",
+    "codex-watch": "Codex",
+    "openclaw-watch": "OpenClaw",
+    "github-trending-weekly": "GitHub 趋势项目",
+    "product-hunt-watch": "Product Hunt 新品",
+    "polymarket-watch": "Polymarket 市场",
+}
+
+READER_SECTION_ORDER = [FIXED_SECTION_TITLES[lane] for lane in FIXED_SECTION_ORDER]
+READER_SECTION_SET = set(READER_SECTION_ORDER)
+LEGACY_MARKERS = ("今日要点", "## 正文", "编辑结论", "### Sources")
+MARKDOWN_LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
+PLAIN_URL_RE = re.compile(r"https?://[^\s)>]+")
+
+
+def load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise ValueError(message)
+
+
+def validate_report_markdown(
+    markdown: str,
+    *,
+    report_date: str,
+    expected_section_titles: list[str] | None = None,
+    expected_sources: dict[str, list[str]] | None = None,
+) -> None:
+    lines = markdown.splitlines()
+    first_content_line = next((line.strip() for line in lines if line.strip()), "")
+    require(first_content_line == f"# AI Agent 日报（{report_date}）", "标题必须固定为 AI Agent 日报（YYYY-MM-DD）")
+
+    for marker in LEGACY_MARKERS:
+        require(marker not in markdown, f"最终 Markdown 不得包含旧结构: {marker}")
+
+    appendix_index = find_line_index(lines, "## 来源")
+    require(appendix_index is not None, "最终 Markdown 必须包含统一的 ## 来源")
+
+    body_lines = lines[1:appendix_index]
+    appendix_lines = lines[appendix_index + 1 :]
+    require(not any(line.startswith("### ") for line in body_lines), "正文栏目内不得再嵌套 ### 小节")
+
+    body_sections = parse_h2_sections(body_lines)
+    actual_section_titles = [title for title, _ in body_sections]
+    expected_titles = expected_section_titles or actual_section_titles
+    validate_section_titles(actual_section_titles, expected_titles)
+
+    body_sources = extract_body_sources(body_sections)
+    appendix_sources = parse_appendix_sources(appendix_lines)
+
+    expected_sources = expected_sources or body_sources
+    require(list(appendix_sources) == list(expected_sources), "文末来源分组顺序必须与预期栏目顺序一致")
+
+    for section_title, urls in expected_sources.items():
+        require(section_title in actual_section_titles, f"文末来源引用了正文不存在的栏目: {section_title}")
+        require(body_sources.get(section_title, []) == urls, f"{section_title} 的正文段落尾引用与预期不一致")
+        require(appendix_sources.get(section_title, []) == urls, f"{section_title} 的文末来源列表与预期不一致")
+
+
+def validate_fixture_case(case_path: Path, case_data: dict[str, Any]) -> None:
+    require(isinstance(case_data, dict), f"{case_path.name} 必须是 object")
+
+    report_date = case_data.get("report_date")
+    report_markdown = case_data.get("report_markdown")
+    expected_section_titles = case_data.get("expected_section_titles")
+    expected_sources = case_data.get("expected_sources")
+
+    require(isinstance(report_date, str) and report_date, f"{case_path.name} 缺少 report_date")
+    require(isinstance(report_markdown, str) and report_markdown, f"{case_path.name} 缺少 report_markdown")
+    require(isinstance(expected_section_titles, list) and expected_section_titles, f"{case_path.name} 缺少 expected_section_titles")
+    require(isinstance(expected_sources, dict) and expected_sources, f"{case_path.name} 缺少 expected_sources")
+
+    expected_titles = [validate_reader_section_title(title, field_name="expected_section_titles") for title in expected_section_titles]
+    validate_section_titles(expected_titles, expected_titles)
+
+    normalized_sources: dict[str, list[str]] = {}
+    for section_title, urls in expected_sources.items():
+        normalized_title = validate_reader_section_title(section_title, field_name="expected_sources")
+        require(isinstance(urls, list) and urls, f"{case_path.name}: {section_title} 必须给出非空 URL 列表")
+        normalized_urls = validate_url_list(urls, label=f"{case_path.name}: {section_title}")
+        normalized_sources[normalized_title] = normalized_urls
+
+    validate_report_markdown(
+        report_markdown,
+        report_date=report_date,
+        expected_section_titles=expected_titles,
+        expected_sources=normalized_sources,
+    )
+
+
+def validate_section_titles(actual_titles: list[str], expected_titles: list[str]) -> None:
+    require(actual_titles == expected_titles, "正文栏目必须是固定顺序下的非空栏目子序列")
+
+    previous_index = -1
+    for title in actual_titles:
+        validate_reader_section_title(title, field_name="section_title")
+        current_index = READER_SECTION_ORDER.index(title)
+        require(current_index > previous_index, "正文栏目顺序必须符合固定顺序")
+        previous_index = current_index
+
+
+def validate_reader_section_title(title: Any, *, field_name: str) -> str:
+    require(isinstance(title, str) and title in READER_SECTION_SET, f"{field_name} 只能使用 reader-facing 中文栏目名")
+    return title
+
+
+def validate_url_list(urls: list[Any], *, label: str) -> list[str]:
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for url in urls:
+        require(isinstance(url, str) and url.startswith(("http://", "https://")), f"{label} 包含非法来源 URL")
+        require(url not in seen, f"{label} 不允许重复 URL")
+        seen.add(url)
+        normalized.append(url)
+    return normalized
+
+
+def find_line_index(lines: list[str], needle: str) -> int | None:
+    for index, line in enumerate(lines):
+        if line.strip() == needle:
+            return index
+    return None
+
+
+def parse_h2_sections(lines: list[str]) -> list[tuple[str, list[str]]]:
+    sections: list[tuple[str, list[str]]] = []
+    current_title: str | None = None
+    current_lines: list[str] = []
+
+    for raw_line in lines:
+        line = raw_line.rstrip()
+        if line.startswith("## "):
+            if current_title is not None:
+                finalize_section(sections, current_title, current_lines)
+            current_title = line[3:].strip()
+            current_lines = []
+            continue
+        if current_title is not None:
+            current_lines.append(line)
+        else:
+            require(not line.strip(), "标题后必须直接进入正文栏目，不允许导语或其他前置块")
+
+    if current_title is not None:
+        finalize_section(sections, current_title, current_lines)
+
+    require(sections, "正文必须至少包含一个非空栏目")
+    return sections
+
+
+def finalize_section(sections: list[tuple[str, list[str]]], title: str, lines: list[str]) -> None:
+    validate_reader_section_title(title, field_name="section_title")
+    require(any(line.strip() for line in lines), f"{title} 不能为空栏目")
+    sections.append((title, lines))
+
+
+def extract_body_sources(sections: list[tuple[str, list[str]]]) -> dict[str, list[str]]:
+    body_sources: dict[str, list[str]] = {}
+    for section_title, section_lines in sections:
+        urls = unique_preserving_order(MARKDOWN_LINK_RE.findall("\n".join(section_lines)))
+        require(urls, f"{section_title} 的正文条目必须带段落尾外链引用")
+        body_sources[section_title] = validate_url_list(urls, label=f"{section_title} 正文引用")
+    return body_sources
+
+
+def parse_appendix_sources(lines: list[str]) -> dict[str, list[str]]:
+    sources: dict[str, list[str]] = {}
+    current_title: str | None = None
+    current_urls: list[str] = []
+
+    for raw_line in lines:
+        line = raw_line.rstrip()
+        if not line.strip():
+            continue
+        if line.startswith("### "):
+            if current_title is not None:
+                sources[current_title] = validate_url_list(current_urls, label=f"{current_title} 来源附录")
+            current_title = validate_reader_section_title(line[4:].strip(), field_name="appendix_section")
+            current_urls = []
+            continue
+        require(current_title is not None, "## 来源 后必须直接进入 ### 栏目名 分组")
+        if line.startswith("## "):
+            raise ValueError("## 来源 后不允许再出现正文二级栏目")
+        urls = PLAIN_URL_RE.findall(line)
+        require(urls, f"{current_title} 来源附录条目必须包含原始外链 URL")
+        current_urls.extend(urls)
+
+    require(current_title is not None, "## 来源 下必须至少包含一个栏目分组")
+    sources[current_title] = validate_url_list(current_urls, label=f"{current_title} 来源附录")
+    return sources
+
+
+def unique_preserving_order(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    unique_values: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique_values.append(value)
+    return unique_values
+
+
+def iter_fixture_files(root: Path) -> list[Path]:
+    if root.is_file():
+        return [root]
+    return sorted(path for path in root.glob("*.json") if path.is_file())
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print("用法: uv run python helpers/validate_report_output_contract.py <fixture-dir-or-json>", file=sys.stderr)
+        return 2
+
+    root = Path(sys.argv[1]).resolve()
+    try:
+        fixture_files = iter_fixture_files(root)
+        require(fixture_files, "没有找到 report-output-contract fixture")
+        for fixture_file in fixture_files:
+            validate_fixture_case(fixture_file, load_json(fixture_file))
+            print(f"[validate_report_output_contract] 通过: {fixture_file.name}")
+    except Exception as error:  # noqa: BLE001
+        print(f"[validate_report_output_contract] 失败: {error}", file=sys.stderr)
+        return 1
+
+    print(f"[validate_report_output_contract] 共验证 {len(fixture_files)} 个 fixture")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Daily Report Final Artifact",
+  "description": "Minimal final report artifact boundary. Reader-facing layout details are defined in contracts/report-output-contract.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "report_date",
+    "title",
+    "body_markdown",
+    "useful_item_count",
+    "source_lanes"
+  ],
+  "properties": {
+    "artifact_type": {
+      "type": "string",
+      "const": "final_report"
+    },
+    "report_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Final reader-facing report title."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Optional internal summary field; reader-facing output contract is governed by body_markdown."
+    },
+    "body_markdown": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Final reader-facing Markdown report body, including sectioned content and the unified 来源 appendix."
+    },
+    "useful_item_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source_lanes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Internal lane ids that contributed to the final report artifact.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

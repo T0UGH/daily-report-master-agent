@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Daily Report Verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "reason_summary",
+    "has_report",
+    "should_publish",
+    "should_archive",
+    "should_notify_ops"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "degraded",
+        "blocked"
+      ]
+    },
+    "reason_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "has_report": {
+      "type": "boolean"
+    },
+    "should_publish": {
+      "type": "boolean"
+    },
+    "should_archive": {
+      "type": "boolean"
+    },
+    "should_notify_ops": {
+      "type": "boolean"
+    }
+  }
+}

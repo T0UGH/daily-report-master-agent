@@ -1,0 +1,55 @@
+{
+  "host": "hermes",
+  "run_key": "2026-04-12:daily-report",
+  "report_date": "2026-04-12",
+  "verdict": {
+    "status": "normal",
+    "reason_summary": "内容与交付链路完整",
+    "has_report": true,
+    "should_publish": true,
+    "should_archive": true,
+    "should_notify_ops": false
+  },
+  "run_state": {
+    "run_key": "2026-04-12:daily-report",
+    "report_date": "2026-04-12",
+    "trigger_kind": "cron",
+    "status": "finished",
+    "last_verdict": "normal",
+    "has_report_artifact": true,
+    "publish_state": {
+      "status": "succeeded",
+      "summary": "published to Feishu",
+      "reference": "feishu://daily-report/2026-04-12"
+    },
+    "archive_state": {
+      "status": "succeeded",
+      "summary": "archived to Obsidian",
+      "reference": "obsidian://daily-report/2026-04-12.md"
+    }
+  },
+  "report_artifact": {
+    "artifact_type": "final_report",
+    "report_date": "2026-04-12",
+    "title": "AI Agent 日报（2026-04-12）",
+    "summary": "今日共整理 2 条有用内容。",
+    "body_markdown": "# AI Agent 日报（2026-04-12）\n\n## X 推荐流\n- **@alpha/status/1**：社区开始把远程审计划工作流说得更具体。 [原帖](https://x.com/alpha/status/1)\n\n## Claude Code\n- **v2.1.101**：团队上手和远程协作能力继续补齐。 [Release](https://github.com/anthropics/claude-code/releases/tag/v2.1.101)\n\n## 来源\n\n### X 推荐流\n- 来源 1：https://x.com/alpha/status/1\n\n### Claude Code\n- 来源 1：https://github.com/anthropics/claude-code/releases/tag/v2.1.101\n",
+    "useful_item_count": 2,
+    "source_lanes": [
+      "x-feed",
+      "claude-code-watch"
+    ]
+  },
+  "publish_result": {
+    "status": "succeeded",
+    "target": "feishu",
+    "reference": "feishu://daily-report/2026-04-12",
+    "error_summary": null
+  },
+  "archive_result": {
+    "status": "succeeded",
+    "target": "obsidian",
+    "reference": "obsidian://daily-report/2026-04-12.md",
+    "error_summary": null
+  }
+}

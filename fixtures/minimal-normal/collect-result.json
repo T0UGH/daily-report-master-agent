@@ -1,0 +1,20 @@
+{
+  "report_date": "2026-04-12",
+  "source": "signals-engine",
+  "lanes": [
+    {
+      "name": "x-feed",
+      "status": "ok",
+      "useful_item_count": 1
+    },
+    {
+      "name": "claude-code-watch",
+      "status": "ok",
+      "useful_item_count": 1
+    }
+  ],
+  "summary": {
+    "useful_item_count": 2,
+    "partial_lane_count": 0
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "host": "hermes",
+  "run_key": "2026-04-14:daily-report",
+  "report_date": "2026-04-14",
+  "verdict": {
+    "status": "blocked",
+    "reason_summary": "无可用内容，日报不成立",
+    "has_report": false,
+    "should_publish": false,
+    "should_archive": false,
+    "should_notify_ops": true
+  },
+  "run_state": {
+    "run_key": "2026-04-14:daily-report",
+    "report_date": "2026-04-14",
+    "trigger_kind": "cron",
+    "status": "finished",
+    "last_verdict": "blocked",
+    "has_report_artifact": false,
+    "publish_state": {
+      "status": "skipped",
+      "summary": "blocked before publish",
+      "reference": null
+    },
+    "archive_state": {
+      "status": "skipped",
+      "summary": "publish not succeeded",
+      "reference": null
+    }
+  },
+  "report_artifact": null,
+  "publish_result": {
+    "status": "skipped",
+    "target": "feishu",
+    "reference": null,
+    "error_summary": null
+  },
+  "archive_result": {
+    "status": "skipped",
+    "target": "obsidian",
+    "reference": null,
+    "error_summary": null
+  }
+}

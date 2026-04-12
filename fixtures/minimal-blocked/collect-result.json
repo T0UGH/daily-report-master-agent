@@ -1,0 +1,23 @@
+{
+  "report_date": "2026-04-14",
+  "source": "signals-engine",
+  "lanes": [
+    {
+      "name": "x-feed",
+      "status": "error",
+      "useful_item_count": 0
+    },
+    {
+      "name": "claude-code-watch",
+      "status": "error",
+      "useful_item_count": 0
+    }
+  ],
+  "summary": {
+    "useful_item_count": 0,
+    "partial_lane_count": 2
+  },
+  "errors": [
+    "all lanes unavailable"
+  ]
+}

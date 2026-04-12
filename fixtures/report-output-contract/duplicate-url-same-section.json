@@ -1,0 +1,12 @@
+{
+  "report_date": "2026-04-12",
+  "report_markdown": "# AI Agent 日报（2026-04-12）\n\n## Reddit 社区\n- **Claude Code 的长期记忆工作流开始被用户自发产品化。** 这条 Reddit 热帖把 Obsidian 作为 project brain，再配合 `/resume`、`/wrap-up` 一类命令，把会话间记忆问题转成可交接的团队流程。[Reddit](https://www.reddit.com/r/ClaudeAI/comments/1rv5ox0/i_used_obsidian_as_a_persistent_brain_for_claude/)\n- **同一条帖子继续带动了“多 agent + 持久记忆”讨论。** 评论区已经把它扩展到 hooks、语义记忆服务器和并行 agent 场景，说明需求不只停留在个人效率技巧。[Reddit](https://www.reddit.com/r/ClaudeAI/comments/1rv5ox0/i_used_obsidian_as_a_persistent_brain_for_claude/)\n\n## 来源\n\n### Reddit 社区\n- I used Obsidian as a persistent brain for Claude Code — https://www.reddit.com/r/ClaudeAI/comments/1rv5ox0/i_used_obsidian_as_a_persistent_brain_for_claude/\n",
+  "expected_section_titles": [
+    "Reddit 社区"
+  ],
+  "expected_sources": {
+    "Reddit 社区": [
+      "https://www.reddit.com/r/ClaudeAI/comments/1rv5ox0/i_used_obsidian_as_a_persistent_brain_for_claude/"
+    ]
+  }
+}
