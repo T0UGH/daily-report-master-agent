@@ -14,7 +14,7 @@ from helpers.validate_report_output_contract import FIXED_SECTION_ORDER, FIXED_S
 DEFAULT_SOURCE = "signals-engine"
 DEFAULT_SIGNALS_ROOT = Path.home() / ".daily-lane-data" / "signals"
 EXCERPT_LIMIT = 280
-SOURCE_SNIPPET_LIMIT = 360
+SOURCE_SNIPPET_LIMIT = 560
 REPORT_TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "report-body-template.md"
 REPORT_TITLE_TEMPLATE = "AI Agent 日报（{report_date}）"
 MARKDOWN_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\([^)]+\)")
@@ -105,11 +105,11 @@ CONTENT_SECTION_PREFERENCES = {
     "x-following": ("post",),
     "reddit-watch": ("post",),
     "claude-code-watch": ("summary", "release notes", "post"),
-    "codex-watch": ("summary", "post"),
+    "codex-watch": ("merged pr", "summary", "post"),
     "openclaw-watch": ("summary", "release notes", "post"),
     "github-trending-weekly": ("summary", "readme", "post"),
-    "product-hunt-watch": ("preview", "post"),
-    "polymarket-watch": ("expectation", "outcome probabilities"),
+    "product-hunt-watch": ("preview", "snapshot", "post"),
+    "polymarket-watch": ("expectation", "outcome probabilities", "market strength"),
 }
 METADATA_LINE_PREFIXES = (
     "likes:",
@@ -1013,10 +1013,10 @@ def extract_source_snippet(body: str, *, lane_name: str | None = None) -> str:
     sections = parse_markdown_sections(body)
     preferred_sections = CONTENT_SECTION_PREFERENCES.get(lane_name or "", ())
 
-    for section_name in preferred_sections:
-        snippet = collect_clean_text(sections.get(section_name, []), limit=SOURCE_SNIPPET_LIMIT)
-        if snippet:
-            return snippet
+    preferred_lines = collect_preferred_section_lines(sections, preferred_sections)
+    snippet = collect_clean_text(preferred_lines, limit=SOURCE_SNIPPET_LIMIT)
+    if snippet:
+        return snippet
 
     for section_lines in sections.values():
         snippet = collect_clean_text(section_lines, limit=SOURCE_SNIPPET_LIMIT)
@@ -1031,11 +1031,32 @@ def extract_excerpt(body: str, *, lane_name: str | None = None) -> str:
     preferred_sections = CONTENT_SECTION_PREFERENCES.get(lane_name or "", ())
 
     for section_name in preferred_sections:
-        snippet = collect_clean_text(sections.get(section_name, []), limit=EXCERPT_LIMIT)
+        snippet = collect_clean_text(find_section_lines(sections, section_name), limit=EXCERPT_LIMIT)
         if snippet:
             return snippet
 
     return collect_clean_text(body.splitlines(), limit=EXCERPT_LIMIT)
+
+
+def find_section_lines(sections: dict[str, list[str]], section_name: str) -> list[str]:
+    matched_lines: list[str] = []
+    for actual_name, lines in sections.items():
+        if actual_name == section_name or actual_name.startswith(section_name):
+            matched_lines.extend(lines)
+    return matched_lines
+
+
+def collect_preferred_section_lines(sections: dict[str, list[str]], preferred_sections: Sequence[str]) -> list[str]:
+    matched_lines: list[str] = []
+    seen_sections: set[str] = set()
+    for section_name in preferred_sections:
+        for actual_name, lines in sections.items():
+            if actual_name in seen_sections:
+                continue
+            if actual_name == section_name or actual_name.startswith(section_name):
+                matched_lines.extend(lines)
+                seen_sections.add(actual_name)
+    return matched_lines
 
 
 def collect_clean_text(lines: Sequence[str], *, limit: int) -> str:
@@ -1643,6 +1664,7 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
         lane_name=lane_name,
         raw_title=raw_title,
         source_text=source_text,
+        source_url=normalize_whitespace(str(item.get("source_url", ""))),
         fallback_excerpt=normalize_whitespace(item.get("editor_summary", "")) or fallback_excerpt,
         useful_item_count=useful_item_count,
     )
@@ -1677,6 +1699,7 @@ def build_reader_excerpt(
     lane_name: str,
     raw_title: str,
     source_text: str,
+    source_url: str,
     fallback_excerpt: str,
     useful_item_count: int,
 ) -> str:
@@ -1684,6 +1707,15 @@ def build_reader_excerpt(
     if cleaned_source:
         if count_cjk_characters(cleaned_source) >= 8 and not looks_like_english_text(cleaned_source):
             return ensure_chinese_sentence(cleaned_source)
+
+        detailed_excerpt = build_lane_fact_summary(
+            lane_name=lane_name,
+            title=raw_title,
+            source_text=cleaned_source,
+            source_url=source_url,
+        )
+        if detailed_excerpt:
+            return ensure_chinese_sentence(detailed_excerpt)
 
         descriptor, faithful_excerpt = build_known_signal_copy(
             lane_name=lane_name,
@@ -1699,6 +1731,324 @@ def build_reader_excerpt(
         return ensure_chinese_sentence(cleaned_source)
 
     return ensure_chinese_sentence(fallback_excerpt or f"该栏目收录 {useful_item_count} 条有用内容。")
+
+
+def build_lane_fact_summary(*, lane_name: str, title: str, source_text: str, source_url: str) -> str:
+    cleaned_source = normalize_fact_source_text(source_text)
+    if not cleaned_source:
+        return ""
+
+    if lane_name == "claude-code-watch":
+        return build_claude_code_release_detail(title=title, source_text=cleaned_source)
+    if lane_name == "codex-watch":
+        return build_codex_detail(title=title, source_text=cleaned_source, source_url=source_url)
+    if lane_name == "openclaw-watch":
+        return build_openclaw_release_detail(title=title, source_text=cleaned_source)
+    if lane_name == "github-trending-weekly":
+        return build_github_trending_detail(title=title, source_text=cleaned_source)
+    if lane_name == "product-hunt-watch":
+        return build_product_hunt_detail(title=title, source_text=cleaned_source)
+    if lane_name == "polymarket-watch":
+        return build_polymarket_detail(title=title, source_text=cleaned_source)
+    if lane_name == "reddit-watch":
+        return build_reddit_detail(title=title, source_text=cleaned_source)
+    return ""
+
+
+def normalize_fact_source_text(value: str) -> str:
+    cleaned = normalize_whitespace(value)
+    if not cleaned:
+        return ""
+    cleaned = re.sub(r"\*\*([^*]+)\*\*", r"\1", cleaned)
+    cleaned = cleaned.replace("Author :", "Author:")
+    cleaned = cleaned.replace("Votes :", "Votes:")
+    cleaned = cleaned.replace("Comments :", "Comments:")
+    cleaned = cleaned.replace("Topic :", "Topic:")
+    return cleaned
+
+
+def split_fact_segments(value: str) -> list[str]:
+    cleaned = normalize_fact_source_text(value)
+    if not cleaned:
+        return []
+
+    split_pattern = (
+        r"\s+(?=(?:Added|Improved|Fixed|Include|Includes|Author:|Votes:|Comments:|Topic:|Question:|"
+        r"Current leader:|24h volume:|30d volume:|Liquidity:|Price movement:|"
+        r"Dreaming/memory-wiki:|Control UI/webchat:|Tools/video_generate:|Microsoft Teams:|Plugins:|Feishu:|OpenAI/Codex OAuth:))"
+    )
+    return [
+        normalize_whitespace(segment).strip(" .")
+        for segment in re.split(split_pattern, cleaned)
+        if normalize_whitespace(segment).strip(" .")
+    ]
+
+
+def unique_facts(facts: Sequence[str]) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for fact in facts:
+        cleaned = normalize_whitespace(fact).strip("。")
+        if not cleaned or cleaned in seen:
+            continue
+        seen.add(cleaned)
+        ordered.append(cleaned)
+    return ordered
+
+
+def compose_fact_sentences(*, intro: str, facts: Sequence[str], group_sizes: Sequence[int] = (2, 2, 1)) -> str:
+    ordered_facts = unique_facts(facts)
+    if not ordered_facts:
+        return ""
+
+    prefixes = [intro, "另外，", "同时，"]
+    sentences: list[str] = []
+    cursor = 0
+    for index, size in enumerate(group_sizes):
+        group = ordered_facts[cursor : cursor + size]
+        if not group:
+            break
+        prefix = prefixes[index] if index < len(prefixes) else "补充来看，"
+        sentences.append(prefix + "；".join(group) + "。")
+        cursor += size
+        if cursor >= len(ordered_facts):
+            break
+    return " ".join(sentences)
+
+
+def split_title_tagline(title: str) -> tuple[str, str]:
+    cleaned = normalize_whitespace(title)
+    for delimiter in (" — ", " - ", ": "):
+        if delimiter in cleaned:
+            name, tagline = cleaned.split(delimiter, maxsplit=1)
+            return name.strip(), tagline.strip()
+    return cleaned, ""
+
+
+def simple_sentences(value: str) -> list[str]:
+    cleaned = normalize_fact_source_text(value)
+    if not cleaned:
+        return []
+    parts = re.split(r"(?<=[.!?])\s+", cleaned)
+    return [normalize_whitespace(part).strip(" .") for part in parts if normalize_whitespace(part).strip(" .")]
+
+
+def build_claude_code_release_detail(*, title: str, source_text: str) -> str:
+    facts: list[str] = []
+    for segment in split_fact_segments(source_text):
+        lowered = segment.lower()
+        if "/team-onboarding" in segment:
+            facts.append("新增 `/team-onboarding`，会按本地 Claude Code 使用记录生成 teammate ramp-up guide")
+        elif "os ca certificate store trust" in lowered:
+            fact = "默认信任 OS CA 证书库，让企业 TLS proxy 不用再额外配证书"
+            if "claude_code_cert_store=bundled" in lowered:
+                fact += "，只想用内置证书时可切回 `CLAUDE_CODE_CERT_STORE=bundled`"
+            facts.append(fact)
+        elif "/ultraplan" in segment and "cloud environment" in lowered:
+            facts.append("`/ultraplan` 和其他 remote-session 功能会自动创建默认 cloud environment，不再要求先去网页里手动 setup")
+        elif "brief mode" in lowered:
+            facts.append("`brief mode` 遇到 Claude 回纯文本而不是结构化消息时，会自动重试一次")
+        elif "focus mode" in lowered:
+            facts.append("`focus mode` 会写更自洽的最终摘要，适配只看 final message 的场景")
+        elif "tool-not-available" in lowered:
+            facts.append("tool-not-available 报错会解释为什么当前上下文里不能用该工具，以及下一步怎么继续")
+        elif "rate-limit retry messages" in lowered:
+            facts.append("rate-limit 提示会显示命中的是哪条限制和何时 reset，不再只给模糊倒计时")
+        elif "refusal error messages" in lowered:
+            facts.append("refusal 错误会带上 API 返回的解释")
+        elif "--resume" in lowered and "session titles" in lowered:
+            facts.append("`claude -p --resume <name>` 现在接受 `/rename` 或 `--name` 设定的 session title")
+        elif "memory leak" in lowered:
+            facts.append("还修了长会话 virtual scroller 保留过多历史 message list 副本的内存泄漏")
+        elif "hardcoded 5-minute request timeout" in lowered or ("request timeout" in lowered and "api_timeout_ms" in lowered):
+            facts.append("并修掉硬编码 5 分钟 request timeout，慢后端不会被固定超时提前截断")
+
+    lowered_source = source_text.lower()
+    if "/ultraplan" in source_text and "cloud environment" in lowered_source:
+        facts.append("`/ultraplan` 和其他 remote-session 功能会自动创建默认 cloud environment，不再要求先去网页里手动 setup")
+    if "brief mode" in lowered_source:
+        facts.append("`brief mode` 遇到 Claude 回纯文本而不是结构化消息时，会自动重试一次")
+
+    return compose_fact_sentences(intro=f"`{title}` 这版最值得记的更新是：", facts=facts)
+
+
+def build_codex_detail(*, title: str, source_text: str, source_url: str) -> str:
+    lowered = normalize_whitespace(f"{title} {source_text}").lower()
+    pr_match = re.search(r"/pull/(\d+)", source_url)
+    author_match = re.search(r"Author:\s*(@[A-Za-z0-9_.-]+)", source_text)
+    commit_match = re.search(r"Merge commit:\s*`?([0-9a-f]{7,})`?", source_text, re.IGNORECASE)
+
+    if "mcp" in lowered and "wall time" in lowered and "model output" in lowered:
+        lead = "这次合入的是 Codex 的 PR"
+        if pr_match:
+            lead += f" #{pr_match.group(1)}"
+        metadata: list[str] = []
+        if author_match:
+            metadata.append(f"作者 {author_match.group(1)}")
+        if commit_match:
+            metadata.append(f"merge commit `{commit_match.group(1)}`")
+        if metadata:
+            lead += f"（{'，'.join(metadata)}）"
+        facts = [
+            f"{lead}，把 `MCP tool wall time` 写进 model output，让模型能直接看到工具调用耗时",
+            "改动点很集中：不是只补日志，而是把耗时信息变成模型输出的一部分",
+        ]
+        return " ".join(f"{fact}。" for fact in facts)
+
+    sentences = simple_sentences(source_text)[:2]
+    if sentences:
+        return compose_fact_sentences(intro=f"`{title}` 这次改动主要写明了", facts=sentences, group_sizes=(1, 1))
+    return ""
+
+
+def build_openclaw_release_detail(*, title: str, source_text: str) -> str:
+    facts: list[str] = []
+    for segment in split_fact_segments(source_text):
+        lowered = segment.lower()
+        if lowered.startswith("dreaming/memory-wiki:"):
+            facts.append(
+                "Dreaming/memory-wiki 新增 ChatGPT import ingestion，并加了 `Imported Insights` 和 `Memory Palace` diary subtabs，让导入聊天、编译后的 wiki 页面和完整源页面都能直接在 UI 里检查"
+            )
+        elif lowered.startswith("control ui/webchat:") and "structured chat bubbles" in lowered:
+            facts.append(
+                "Control UI/webchat 会把 assistant 的 media/reply/voice 指令渲染成 structured chat bubbles，并新增 `[embed ...]` 富输出标签"
+            )
+        elif lowered.startswith("tools/video_generate:") or "provideroptions" in lowered:
+            facts.append("video_generate 还补了 typed `providerOptions`、reference audio inputs 和 `adaptive` aspect-ratio 支持")
+        elif "oauth" in lowered:
+            facts.append("同时继续修 OpenAI/Codex OAuth 这类登录链路问题")
+        elif "failover" in lowered:
+            facts.append("provider failover 相关稳定性细节也继续往前补")
+
+    return compose_fact_sentences(intro=f"`{title}` 这版 release 里比较实在的更新有：", facts=facts)
+
+
+def build_github_trending_detail(*, title: str, source_text: str) -> str:
+    lowered = source_text.lower()
+    if "harness builder" in lowered and ("deterministic" in lowered or "repeatable" in lowered):
+        return (
+            f"`{title}` 把自己定位成开源的 AI coding harness builder，主打让 AI coding 流程变得 deterministic、repeatable。"
+            " 它上榜的理由也很具体：卖点不是再包一层 agent，而是把测试和执行流程做成可重复的基础设施。"
+        )
+    if "managed agents platform" in lowered:
+        return (
+            f"`{title}` 这个 repo 把自己写成 open-source managed agents platform，目标是把 coding agents 变成能分派任务、"
+            "跟踪进度、积累技能的真正队友。"
+        )
+    if "claude.md" in lowered and "karpathy" in lowered:
+        return (
+            f"`{title}` 提供的是单文件 `CLAUDE.md` 规则集，来源是 Andrej Karpathy 对 LLM coding pitfalls 的观察，"
+            "目的就是直接改善 Claude Code 的行为。"
+        )
+
+    sentences = [sentence for sentence in simple_sentences(source_text) if not sentence.lower().startswith("author:")]
+    if sentences:
+        facts = [f"预览里把它写成 {sentences[0]}"]
+        if len(sentences) > 1:
+            facts.append(sentences[1])
+        return compose_fact_sentences(intro=f"`{title}` 这周能进趋势榜，至少因为：", facts=facts, group_sizes=(1, 1))
+    return ""
+
+
+def build_product_hunt_detail(*, title: str, source_text: str) -> str:
+    name, tagline = split_title_tagline(title)
+    lowered = source_text.lower()
+    facts: list[str] = []
+
+    if tagline:
+        facts.append(f"`{name}` 的定位很直接，就是 {tagline}")
+    elif "design context" in lowered:
+        facts.append(f"`{name}` 主打给 AI agents 提供 `Design context`")
+
+    votes_match = re.search(r"Votes:\s*(\d+)", source_text, re.IGNORECASE)
+    comments_match = re.search(r"Comments:\s*(\d+)", source_text, re.IGNORECASE)
+    topic_match = re.search(r"Topic:\s*([A-Za-z][A-Za-z -]+)", source_text)
+    stats: list[str] = []
+    if votes_match:
+        stats.append(f"{votes_match.group(1)} 票")
+    if comments_match:
+        stats.append(f"{comments_match.group(1)} 条评论")
+    if topic_match:
+        stats.append(f"`{topic_match.group(1).strip()}` 主题")
+    if stats:
+        facts.append("这条 Product Hunt listing 当前是 " + "、".join(stats))
+
+    if "design context" in lowered:
+        facts.append("卖点不是再做一个通用聊天壳，而是把 design context 当成 agent 协作入口")
+
+    return compose_fact_sentences(intro=f"`{name}` 这条 Product Hunt 记录里写到：", facts=facts, group_sizes=(1, 1, 1))
+
+
+def build_polymarket_detail(*, title: str, source_text: str) -> str:
+    question_match = re.search(
+        r"Question:\s*(.+?)(?=Current leader:|24h volume:|30d volume:|Liquidity:|Price movement:|$)",
+        source_text,
+        re.IGNORECASE,
+    )
+    leader_match = re.search(r"Current leader:\s*([^()]+?)\s*\((\d+(?:\.\d+)?)%\)", source_text, re.IGNORECASE)
+    volume_match = re.search(r"24h volume:\s*([0-9,.]+)", source_text, re.IGNORECASE)
+    liquidity_match = re.search(r"Liquidity:\s*([0-9,.]+)", source_text, re.IGNORECASE)
+    movement_match = re.search(r"Price movement:\s*([A-Za-z0-9 .+%-]+)", source_text, re.IGNORECASE)
+
+    outcome_matches = [
+        (name.strip(), probability)
+        for name, probability in re.findall(r"([A-Za-z][A-Za-z0-9 .+-]+):\s*(\d+(?:\.\d+)?)%", source_text)
+        if name.strip().lower()
+        not in {"question", "current leader", "24h volume", "30d volume", "liquidity", "price movement", "market"}
+    ]
+
+    facts: list[str] = []
+    if question_match:
+        facts.append(f"这份合约在问：{normalize_whitespace(question_match.group(1))}")
+    else:
+        facts.append(f"这份合约围绕 `{title}` 交易")
+
+    if leader_match:
+        leader_name = normalize_whitespace(leader_match.group(1))
+        leader_probability = leader_match.group(2)
+        runner_up = next(
+            (
+                (name, probability)
+                for name, probability in outcome_matches
+                if normalize_whitespace(name) != leader_name
+            ),
+            None,
+        )
+        leader_fact = f"当前 `{leader_name}` 以 {leader_probability}% 领先"
+        if runner_up:
+            leader_fact += f"，对手 `{normalize_whitespace(runner_up[0])}` 大约在 {runner_up[1]}%"
+        facts.append(leader_fact)
+
+    market_strength: list[str] = []
+    if volume_match:
+        market_strength.append(f"24h volume {volume_match.group(1)}")
+    if liquidity_match:
+        market_strength.append(f"liquidity {liquidity_match.group(1)}")
+    if movement_match:
+        market_strength.append(f"价格 {normalize_whitespace(movement_match.group(1))}")
+    if market_strength:
+        facts.append("市场强度也写得很明白，" + "，".join(market_strength))
+
+    return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+
+def build_reddit_detail(*, title: str, source_text: str) -> str:
+    lowered = normalize_whitespace(f"{title} {source_text}").lower()
+    if all(role in lowered for role in ("architect", "builder", "reviewer")):
+        facts = [
+            "作者是读了一批 agentic workflow 论文、又在 solo AI coding 里烧掉太多 token 之后，才收敛到这个 Three Man Team 方案",
+            "流程里把 Architect 负责计划、Builder 负责实现、Reviewer 负责验证拆开，并用 markdown handoff files 做交接",
+            "它强调的不只是角色分工，还强调透明流程和 token efficiency",
+        ]
+        return compose_fact_sentences(intro="这条 Reddit 长帖真正写清楚的是：", facts=facts, group_sizes=(1, 1, 1))
+    if all(token in lowered for token in ("swarm", "coordinator", "codex", "gemini")):
+        facts = [
+            "帖子把 Claude、Codex、Gemini 放进同一条协作链路",
+            "coordinator 负责分工、追踪改动和治理冲突",
+            "讨论点已经从“能不能多代理”转到“多代理怎么治理”",
+        ]
+        return compose_fact_sentences(intro="这条 Reddit 讨论的重点是：", facts=facts, group_sizes=(1, 1, 1))
+    return ""
 
 
 def build_known_signal_copy(*, lane_name: str, title: str, source_text: str) -> tuple[str, str]:

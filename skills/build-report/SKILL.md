@@ -59,6 +59,7 @@ reader-facing 产物必须遵守 `contracts/report-output-contract.md` 的固定
 - 当单个 lane 的信号很多时，优先把相关 signal 合并成更完整的主题项，而不是堆更多低信息密度条目
 - `X 推荐流`、`X 关注流` 的条目必须写出帖子到底说了什么，至少交代核心观点、做法、实验结果、批评点、争议点中的一项
 - `Claude Code`、`Codex`、`OpenClaw`、`GitHub 趋势项目` 以及其他 GitHub / release / repo 类内容，必须展开具体更新点，例如版本号、repo、产品名、功能点、接口变化、发布内容、作者说明；不能只剩一句方向判断
+- 当 `source_snippet` 已经带出多个功能点、概率或项目定位时，正文默认应整理成 2~3 句连续事实，不要再缩成一句概括
 
 ### 2. Humanizer
 

@@ -169,6 +169,90 @@ Claude Code 新增 /ultraplan：先在网页上生成实施计划，读完可以
         self.assertNotIn("Likes:", item["source_snippet"])
         self.assertNotIn("Retweets:", item["source_snippet"])
 
+    def test_build_selected_items_combines_product_and_market_sections_into_source_snippet(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="product-hunt-watch",
+                signal_text_by_name={
+                    "nicelydone.md": """---
+type: producthunt_topic_hit
+lane: product-hunt-watch
+source: producthunt
+entity_type: product
+entity_id: nicelydone-mcp
+title: Nicelydone MCP — Design context for AI agents
+url: https://www.producthunt.com/products/nicely-done
+fetched_at: 2026-04-12T10:58:49+0000
+created_at: '2026-04-12T10:58:00Z'
+---
+
+## Preview
+
+Design context for AI agents
+
+## Snapshot
+
+- **Votes**: 316
+- **Comments**: 4
+- **Topic**: Artificial Intelligence
+""",
+                },
+            )
+            self.write_signal_bundle(
+                signals_root,
+                lane="polymarket-watch",
+                signal_text_by_name={
+                    "benchmark.md": """---
+type: prediction_market
+lane: polymarket-watch
+source: polymarket
+entity_type: event
+entity_id: '79080'
+title: AI model scores ≥ 90% on FrontierMath Benchmark before 2027?
+url: https://polymarket.com/event/ai-model-scores-90-on-frontiermath-benchmark-before-2027
+fetched_at: 2026-04-12T10:58:49+0000
+created_at: '2026-04-12T10:58:00Z'
+---
+
+## Expectation
+
+- Question: AI model scores ≥ 90% on FrontierMath Benchmark before 2027?
+- Current leader: No (82.0%)
+
+## Outcome Probabilities
+
+- No: 82.0%
+- Yes: 18.0%
+
+## Market Strength
+
+- 24h volume: 13,577.3
+- Liquidity: 6,870.6
+- Price movement: down 6.5% today
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["product-hunt-watch", "polymarket-watch"],
+                per_lane_limit=1,
+            )
+
+        product_item = selected_items["selected_items"][0]
+        self.assertIn("Design context for AI agents", product_item["source_snippet"])
+        self.assertIn("Votes", product_item["source_snippet"])
+        self.assertIn("Artificial Intelligence", product_item["source_snippet"])
+
+        market_item = selected_items["selected_items"][1]
+        self.assertIn("Current leader: No (82.0%)", market_item["source_snippet"])
+        self.assertIn("No: 82.0%", market_item["source_snippet"])
+        self.assertIn("24h volume: 13,577.3", market_item["source_snippet"])
+        self.assertIn("Liquidity: 6,870.6", market_item["source_snippet"])
+
     def test_build_selected_items_preserves_folded_front_matter_titles(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             signals_root = Path(temp_dir)
@@ -725,6 +809,333 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
         self.assertIn("flattened handler aliases 和 deferred MCP 工具调用路径", body_markdown)
         self.assertNotIn("这次改动更清楚了", body_markdown)
         self.assertNotIn("更像工作流了", body_markdown)
+
+    def test_build_report_artifact_expands_target_lanes_with_multiple_concrete_facts(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "reddit-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "claude-code-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "codex-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "openclaw-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1},
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "polymarket-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 7, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "reddit-watch",
+                    "title": "I replaced chaotic solo Claude coding with a simple 3-agent team (Architect + Builder + Reviewer) — it's stupidly effective and token-efficient",
+                    "source_url": "https://www.reddit.com/r/ClaudeAI/comments/example/three-man-team/",
+                    "signal_path": "reddit-watch/2026-04-12/signals/reddit.md",
+                    "fetched_at": "2026-04-12T11:00:00+0000",
+                    "source_snippet": (
+                        "After reading a bunch of papers on agentic workflows and burning way too many tokens on solo AI coding sessions, "
+                        "I settled on a structured Three Man Team: Architect plans, Builder implements, Reviewer validates. "
+                        "Everything moves through markdown handoff files so the process stays transparent and token-efficient."
+                    ),
+                    "excerpt": (
+                        "After reading a bunch of papers on agentic workflows and burning way too many tokens on solo AI coding sessions, "
+                        "I settled on a structured Three Man Team: Architect plans, Builder implements, Reviewer validates. "
+                        "Everything moves through markdown handoff files so the process stays transparent and token-efficient."
+                    ),
+                    "editor_summary": "讨论把角色拆分讲清楚了。",
+                },
+                {
+                    "lane": "claude-code-watch",
+                    "title": "v2.1.101",
+                    "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.101",
+                    "signal_path": "claude-code-watch/2026-04-12/signals/v2.1.101.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Added `/team-onboarding` command to generate a teammate ramp-up guide from your local Claude Code usage "
+                        "Added OS CA certificate store trust by default, so enterprise TLS proxies work without extra setup "
+                        "(set `CLAUDE_CODE_CERT_STORE=bundled` to use only bundled CAs) "
+                        "`/ultraplan` and other remote-session features now auto-create a default cloud environment "
+                        "Improved brief mode to retry once when Claude responds with plain text instead of a structured message"
+                    ),
+                    "excerpt": (
+                        "Added `/team-onboarding` command to generate a teammate ramp-up guide from your local Claude Code usage "
+                        "Added OS CA certificate store trust by default, so enterprise TLS proxies work without extra setup "
+                        "(set `CLAUDE_CODE_CERT_STORE=bundled` to use only bundled CAs) "
+                        "`/ultraplan` and other remote-session features now auto-create a default cloud environment "
+                        "Improved brief mode to retry once when Claude responds with plain text instead of a structured message"
+                    ),
+                    "editor_summary": "这版更新更清楚了。",
+                },
+                {
+                    "lane": "codex-watch",
+                    "title": "Add MCP tool wall time to model output",
+                    "source_url": "https://github.com/openai/codex/pull/17406",
+                    "signal_path": "codex-watch/2026-04-12/signals/pr-17406.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Title: Add MCP tool wall time to model output "
+                        "Author: @pakrym-oai "
+                        "Merge commit: `7c1e41c` "
+                        "Include MCP wall time in the output so the model is aware of how long it's calls are taking."
+                    ),
+                    "excerpt": (
+                        "Title: Add MCP tool wall time to model output "
+                        "Author: @pakrym-oai "
+                        "Merge commit: `7c1e41c` "
+                        "Include MCP wall time in the output so the model is aware of how long it's calls are taking."
+                    ),
+                    "editor_summary": "这次改动更清楚了。",
+                },
+                {
+                    "lane": "openclaw-watch",
+                    "title": "openclaw 2026.4.11",
+                    "source_url": "https://github.com/openclaw/openclaw/releases/tag/v2026.4.11",
+                    "signal_path": "openclaw-watch/2026-04-12/signals/v2026.4.11.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Dreaming/memory-wiki: add ChatGPT import ingestion plus new `Imported Insights` and `Memory Palace` diary subtabs so Dreaming can inspect imported source chats, compiled wiki pages, and full source pages directly from the UI. "
+                        "Control UI/webchat: render assistant media/reply/voice directives as structured chat bubbles and add the `[embed ...]` rich output tag."
+                    ),
+                    "excerpt": (
+                        "Dreaming/memory-wiki: add ChatGPT import ingestion plus new `Imported Insights` and `Memory Palace` diary subtabs so Dreaming can inspect imported source chats, compiled wiki pages, and full source pages directly from the UI. "
+                        "Control UI/webchat: render assistant media/reply/voice directives as structured chat bubbles and add the `[embed ...]` rich output tag."
+                    ),
+                    "editor_summary": "新版本更偏向真实使用场景。",
+                },
+                {
+                    "lane": "github-trending-weekly",
+                    "title": "Archon",
+                    "source_url": "https://github.com/coleam00/Archon",
+                    "signal_path": "github-trending-weekly/2026-04-12/signals/archon.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "The first open-source harness builder for AI coding. "
+                        "Make AI coding deterministic and repeatable. "
+                        "Author: @coleam00/Archon"
+                    ),
+                    "excerpt": (
+                        "The first open-source harness builder for AI coding. "
+                        "Make AI coding deterministic and repeatable. "
+                        "Author: @coleam00/Archon"
+                    ),
+                    "editor_summary": "这个项目值得关注。",
+                },
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "Nicelydone MCP — Design context for AI agents",
+                    "source_url": "https://www.producthunt.com/products/nicely-done",
+                    "signal_path": "product-hunt-watch/2026-04-12/signals/nicelydone.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Design context for AI agents "
+                        "Votes: 316 Comments: 4 Topic: Artificial Intelligence "
+                        "Author: @Nicelydone MCP"
+                    ),
+                    "excerpt": (
+                        "Design context for AI agents "
+                        "Votes: 316 Comments: 4 Topic: Artificial Intelligence "
+                        "Author: @Nicelydone MCP"
+                    ),
+                    "editor_summary": "这个产品更像工作流了。",
+                },
+                {
+                    "lane": "polymarket-watch",
+                    "title": "Will Anthropic have the second-best Coding AI model at the end of April 2026?",
+                    "source_url": "https://polymarket.com/event/which-company-has-the-second-best-coding-ai-model-end-of-april",
+                    "signal_path": "polymarket-watch/2026-04-12/signals/anthropic.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%) "
+                        "OpenAI: 8.0% "
+                        "24h volume: 48,320.1 Liquidity: 21,405.0 Price movement: up 4.2% today"
+                    ),
+                    "excerpt": (
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%) "
+                        "OpenAI: 8.0% "
+                        "24h volume: 48,320.1 Liquidity: 21,405.0 Price movement: up 4.2% today"
+                    ),
+                    "editor_summary": "市场判断继续收敛。",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 7,
+                "lane_counts": [
+                    {"lane": "reddit-watch", "selected_item_count": 1},
+                    {"lane": "claude-code-watch", "selected_item_count": 1},
+                    {"lane": "codex-watch", "selected_item_count": 1},
+                    {"lane": "openclaw-watch", "selected_item_count": 1},
+                    {"lane": "github-trending-weekly", "selected_item_count": 1},
+                    {"lane": "product-hunt-watch", "selected_item_count": 1},
+                    {"lane": "polymarket-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        def body_line_for(title: str) -> str:
+            return next(line for line in body_markdown.splitlines() if f"**{title}**" in line)
+
+        reddit_line = body_line_for(
+            "I replaced chaotic solo Claude coding with a simple 3-agent team (Architect + Builder + Reviewer) — it's stupidly effective and token-efficient"
+        )
+        self.assertIn("Architect", reddit_line)
+        self.assertIn("Builder", reddit_line)
+        self.assertIn("Reviewer", reddit_line)
+        self.assertIn("markdown handoff", reddit_line)
+        self.assertGreaterEqual(len(reddit_line), 150)
+
+        claude_line = body_line_for("v2.1.101")
+        self.assertIn("/team-onboarding", claude_line)
+        self.assertIn("CLAUDE_CODE_CERT_STORE=bundled", claude_line)
+        self.assertIn("cloud environment", claude_line)
+        self.assertIn("brief mode", claude_line)
+        self.assertGreaterEqual(len(claude_line), 160)
+
+        codex_line = body_line_for("Add MCP tool wall time to model output")
+        self.assertIn("17406", codex_line)
+        self.assertIn("MCP tool wall time", codex_line)
+        self.assertIn("model output", codex_line)
+        self.assertGreaterEqual(len(codex_line), 120)
+
+        openclaw_line = body_line_for("openclaw 2026.4.11")
+        self.assertIn("ChatGPT import ingestion", openclaw_line)
+        self.assertIn("Imported Insights", openclaw_line)
+        self.assertIn("Memory Palace", openclaw_line)
+        self.assertIn("structured chat bubbles", openclaw_line)
+        self.assertGreaterEqual(len(openclaw_line), 150)
+
+        archon_line = body_line_for("Archon")
+        self.assertIn("harness builder", archon_line)
+        self.assertIn("deterministic", archon_line)
+        self.assertIn("repeatable", archon_line)
+        self.assertGreaterEqual(len(archon_line), 110)
+
+        product_line = body_line_for("Nicelydone MCP — Design context for AI agents")
+        self.assertIn("Nicelydone MCP", product_line)
+        self.assertIn("Design context", product_line)
+        self.assertIn("316", product_line)
+        self.assertIn("Artificial Intelligence", product_line)
+        self.assertGreaterEqual(len(product_line), 120)
+
+        market_line = body_line_for("Will Anthropic have the second-best Coding AI model at the end of April 2026?")
+        self.assertIn("Anthropic", market_line)
+        self.assertIn("90.0%", market_line)
+        self.assertIn("OpenAI", market_line)
+        self.assertIn("48,320.1", market_line)
+        self.assertIn("21,405.0", market_line)
+        self.assertIn("4.2%", market_line)
+        self.assertGreaterEqual(len(market_line), 150)
+
+    def test_build_report_artifact_live_like_key_lanes_keep_more_than_one_short_summary_clause(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "claude-code-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "codex-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "openclaw-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "polymarket-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 4, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "claude-code-watch",
+                    "title": "v2.1.101",
+                    "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.101",
+                    "signal_path": "claude-code-watch/2026-04-12/signals/v2.1.101.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Added `/team-onboarding` command to generate a teammate ramp-up guide from your local Claude Code usage "
+                        "Added OS CA certificate store trust by default, so enterprise TLS proxies work without extra setup "
+                        "(set `CLAUDE_CODE_CERT_STORE=bundled` to use only bundled CAs) "
+                        "`/ultraplan` and other remote-session features now auto-create a default cloud environment"
+                    ),
+                    "excerpt": (
+                        "Added `/team-onboarding` command to generate a teammate ramp-up guide from your local Claude Code usage "
+                        "Added OS CA certificate store trust by default, so enterprise TLS proxies work without extra setup "
+                        "(set `CLAUDE_CODE_CERT_STORE=bundled` to use only bundled CAs) "
+                        "`/ultraplan` and other remote-session features now auto-create a default cloud environment"
+                    ),
+                },
+                {
+                    "lane": "codex-watch",
+                    "title": "Add MCP tool wall time to model output",
+                    "source_url": "https://github.com/openai/codex/pull/17406",
+                    "signal_path": "codex-watch/2026-04-12/signals/pr-17406.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": "Include MCP wall time in the output so the model is aware of how long it's calls are taking.",
+                    "excerpt": "Include MCP wall time in the output so the model is aware of how long it's calls are taking.",
+                },
+                {
+                    "lane": "openclaw-watch",
+                    "title": "openclaw 2026.4.11",
+                    "source_url": "https://github.com/openclaw/openclaw/releases/tag/v2026.4.11",
+                    "signal_path": "openclaw-watch/2026-04-12/signals/v2026.4.11.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Dreaming/memory-wiki: add ChatGPT import ingestion plus new `Imported Insights` and `Memory Palace` diary subtabs "
+                        "so Dreaming can inspect imported source chats, compiled wiki pages, and full source pages directly from the UI."
+                    ),
+                    "excerpt": (
+                        "Dreaming/memory-wiki: add ChatGPT import ingestion plus new `Imported Insights` and `Memory Palace` diary subtabs "
+                        "so Dreaming can inspect imported source chats, compiled wiki pages, and full source pages directly from the UI."
+                    ),
+                },
+                {
+                    "lane": "polymarket-watch",
+                    "title": "Will Anthropic have the second-best Coding AI model at the end of April 2026?",
+                    "source_url": "https://polymarket.com/event/which-company-has-the-second-best-coding-ai-model-end-of-april",
+                    "signal_path": "polymarket-watch/2026-04-12/signals/anthropic.md",
+                    "fetched_at": "2026-04-12T12:00:00+0000",
+                    "source_snippet": (
+                        "Market: Which company has the second best Coding AI model end of April? "
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%)"
+                    ),
+                    "excerpt": (
+                        "Market: Which company has the second best Coding AI model end of April? "
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%)"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 4,
+                "lane_counts": [
+                    {"lane": "claude-code-watch", "selected_item_count": 1},
+                    {"lane": "codex-watch", "selected_item_count": 1},
+                    {"lane": "openclaw-watch", "selected_item_count": 1},
+                    {"lane": "polymarket-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("/team-onboarding", body_markdown)
+        self.assertIn("CLAUDE_CODE_CERT_STORE=bundled", body_markdown)
+        self.assertIn("17406", body_markdown)
+        self.assertIn("MCP tool wall time", body_markdown)
+        self.assertIn("Imported Insights", body_markdown)
+        self.assertIn("Memory Palace", body_markdown)
+        self.assertIn("Anthropic", body_markdown)
+        self.assertIn("90.0%", body_markdown)
+        self.assertNotIn("这版更新把 onboarding、云环境、证书和 brief mode 一起推进", body_markdown)
+        self.assertNotIn("原文围绕 MCP 展开，具体变化见来源", body_markdown)
+        self.assertNotIn("新版本一边补导入和富媒体能力", body_markdown)
+        self.assertNotIn("这份 Polymarket 合约当前把 Anthropic 放在显著领先位置", body_markdown)
 
     def test_build_report_artifact_rewrites_truncated_english_x_snippet_into_reader_facing_chinese(self) -> None:
         collect_result = {
