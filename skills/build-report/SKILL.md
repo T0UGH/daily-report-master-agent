@@ -27,6 +27,7 @@ reader-facing 产物必须遵守 `contracts/report-output-contract.md` 的固定
   - `source_url`
   - `signal_path`
   - `fetched_at`
+  - `source_snippet`
   - `excerpt`
 - `selected_items` 可以是 `collect result` 的子集，但不得引用 collect 中不存在的 lane。
 
@@ -52,12 +53,19 @@ reader-facing 产物必须遵守 `contracts/report-output-contract.md` 的固定
 - 标题后直接进入第一个非空栏目，不生成 `今日要点`、`正文`、`编辑结论`
 - repo-specific lane 直接渲染为 `## Claude Code`、`## Codex`、`## OpenClaw`，不再挂到总 `GitHub` 栏位下
 - 栏目内部使用条目式 bullet / 短段落，不再生成 `###` repo 小节壳或跨 lane 主题总论
+- 日报默认是“忠实原文的中文转写/整理优先，判断总结次之”
+- 默认正文输入优先级为 `source_snippet > excerpt > editor_summary`；不要默认优先吃 `editor_headline/editor_summary`
+- 禁止使用“值得跟踪”“更清楚了”“更成型了”“更像工作流了”“更偏向真实使用场景”之类空心模板句充当正文；这类判断句只能补充，不能替代事实
+- 当单个 lane 的信号很多时，优先把相关 signal 合并成更完整的主题项，而不是堆更多低信息密度条目
+- `X 推荐流`、`X 关注流` 的条目必须写出帖子到底说了什么，至少交代核心观点、做法、实验结果、批评点、争议点中的一项
+- `Claude Code`、`Codex`、`OpenClaw`、`GitHub 趋势项目` 以及其他 GitHub / release / repo 类内容，必须展开具体更新点，例如版本号、repo、产品名、功能点、接口变化、发布内容、作者说明；不能只剩一句方向判断
 
 ### 2. Humanizer
 
 - 负责把中间稿润色为最终可交付文本
 - 不允许改变主事实，不允许扩写成 section 级复杂结构
 - 可以保留粗体判断句提升扫读效率，但不得把所有条目机械化成单一模板
+- Humanizer 不得把已经写明的事实压成更短、更空的句子；如果改写后只剩抽象判断，必须保留或恢复原事实
 - 真正承载信息的条目必须在段落尾部附 1~3 个极简外链引用，例如 `原帖`、`Release`、`GitHub`、`Reddit`、`Product Hunt`、`Polymarket`
 - 外链必须直达原始来源，不允许引用内部 signal 路径
 - 每个栏目末尾不再输出 `### Sources`

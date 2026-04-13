@@ -33,8 +33,12 @@
 - 只在日报成立时调用
 - 内部顺序固定为 `Editor -> Humanizer -> final report artifact`
 - 主 agent 只消费最终 artifact
+- `build-report` 的目标是“带筛选的原始情报整理”，不是 signal dump，也不是把已有 signal 再压成更空摘要的压缩器
+- 日报默认是“忠实原文的中文转写/整理优先，判断总结次之”
 - 最终产物必须符合 `contracts/report-output-contract.md`
 - `build-report` 的完成条件包含 output-contract validation，而不只是生成任意 Markdown
+- 最终 reader-facing 日报必须保留足够事实颗粒度，不能只剩方向判断
+- 如果正文能被替换成“值得跟踪”“更清楚了”“更成型了”“更像工作流了”而不影响意思，视为不合格，必须回退补事实
 
 ### 4. `verdict`
 
@@ -80,6 +84,7 @@
 - 不增加额外主入口脚本。
 - 不增加平台层包装或长期状态系统。
 - reader-facing 日报固定使用 old daily-lane 风格的栏目式输出 contract。
+- reader-facing 日报不是 signal dump，也不是摘要压缩器；它必须保留对读者有判断价值的事实颗粒度。
 - 最小回归验证至少包含：
   - `uv run python helpers/validate_report_output_contract.py fixtures/report-output-contract`
   - `uv run python helpers/evaluate_real_2026_04_12_output_contract.py fixtures/real-2026-04-12-output-contract`
