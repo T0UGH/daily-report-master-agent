@@ -1,0 +1,47 @@
+version: 1
+repo_root: /Users/haha/workspace/daily-report-master-agent
+paths:
+  signals_root: ~/.daily-lane-data/signals
+  runtime_root: ~/.daily-lane-data/runtime/daily-report-master
+  reports_root: ~/.daily-lane-data/reports
+  drafts_root: ~/.daily-lane-data/drafts
+  reviews_root: ~/.daily-lane-data/reviews
+  contracts_dir: /Users/haha/workspace/daily-report-master-agent/contracts
+  helpers_dir: /Users/haha/workspace/daily-report-master-agent/helpers
+  templates_dir: /Users/haha/workspace/daily-report-master-agent/templates
+selection:
+  default_per_lane_limit: 10
+  per_lane_limits:
+    x-feed: 10
+    x-following: 10
+    reddit-watch: 10
+    claude-code-watch: 10
+    codex-watch: 10
+    openclaw-watch: 10
+    github-trending-weekly: 10
+    product-hunt-watch: 10
+    polymarket-watch: 10
+reader_facing:
+  title_template: "AI Agent 日报（{report_date}）"
+  lane_paragraph_targets:
+    x-feed:
+      min_paragraphs: 6
+      max_paragraphs: 10
+    x-following:
+      min_paragraphs: 6
+      max_paragraphs: 10
+  fixed_section_order:
+    - x-feed
+    - x-following
+    - reddit-watch
+    - claude-code-watch
+    - codex-watch
+    - openclaw-watch
+    - github-trending-weekly
+    - product-hunt-watch
+    - polymarket-watch
+runtime:
+  timezone: Asia/Shanghai
+  cron_job_name: daily-report-master-0600
+  cron_schedule: "0 6 * * *"
+  cron_deliver: feishu

@@ -1,5 +1,10 @@
 # Daily Report Master Agent v0
 
+> 状态说明：本文件不再作为与 cron prompt 平级竞争 authority 的“主入口”。
+>
+> 从 2026-04-14 起，`main-prompt.md` 是当前唯一主入口 / cron authority prompt 源文件。
+> 本文件保留为主链路说明与兼容参考，不应再被当作实际 runtime 主 prompt。
+
 ## 角色
 
 这个主 agent 对单日日报链路的最终交付负责。它只执行一条固定主链路，并以 Feishu 作为主交付面。

@@ -12,6 +12,7 @@ from helpers.signals_adapter import (
     build_selected_items,
     dump_json,
 )
+from helpers.runtime_config import DEFAULT_RUNTIME_CONFIG_PATH, load_runtime_config, resolve_lane_item_limits
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,17 +21,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-date", required=True)
     parser.add_argument("--lanes", nargs="*")
     parser.add_argument("--per-lane-limit", type=int)
+    parser.add_argument("--config", type=Path, default=DEFAULT_RUNTIME_CONFIG_PATH)
     parser.add_argument("--output", type=Path)
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    config = load_runtime_config(args.config)
     result = build_selected_items(
         signals_root=args.signals_root.expanduser(),
         report_date=args.report_date,
         lane_names=args.lanes,
         per_lane_limit=args.per_lane_limit,
+        lane_item_limits=resolve_lane_item_limits(config),
     )
     dump_json(result, output_path=args.output)
     return 0

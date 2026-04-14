@@ -358,6 +358,7 @@ def build_selected_items(
     report_date: str,
     lane_names: Sequence[str] | None = None,
     per_lane_limit: int | None = None,
+    lane_item_limits: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     selected_items: list[dict[str, Any]] = []
     lane_counts: list[dict[str, Any]] = []
@@ -369,6 +370,8 @@ def build_selected_items(
             for signal_path in lane_snapshot.signal_paths
         ]
         lane_limit = per_lane_limit
+        if lane_limit is None and lane_item_limits is not None:
+            lane_limit = lane_item_limits.get(lane_name)
         if lane_limit is None:
             lane_limit = DEFAULT_LANE_ITEM_LIMITS.get(lane_name)
 
@@ -824,12 +827,32 @@ def curate_lane_candidates(
 
     scored_candidates.sort(key=lambda candidate: candidate.get("_sort_key", ("", "")), reverse=True)
     if lane_limit is not None:
+        if lane_name in NOISY_X_LANES:
+            return pick_noisy_x_candidates(candidates=scored_candidates, lane_limit=lane_limit)
         return pick_diverse_lane_candidates(
             lane_name=lane_name,
             candidates=scored_candidates,
             lane_limit=lane_limit,
         )
     return scored_candidates
+
+
+def pick_noisy_x_candidates(*, candidates: Sequence[dict[str, Any]], lane_limit: int) -> list[dict[str, Any]]:
+    if lane_limit <= 0:
+        return []
+
+    selected: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    for candidate in candidates:
+        source_url = str(candidate.get("source_url", ""))
+        if source_url and source_url in seen_urls:
+            continue
+        selected.append(candidate)
+        if source_url:
+            seen_urls.add(source_url)
+        if len(selected) >= lane_limit:
+            break
+    return selected
 
 
 def pick_diverse_lane_candidates(

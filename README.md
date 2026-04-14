@@ -1,11 +1,32 @@
 # daily-report-master-agent
 
-这是 Daily Report Master Agent v0 的最小实现仓库。
-
-- 第一阶段宿主是 Hermes cronjob
+- 当前 authority 仓库：`daily-report-master-agent`
+- 当前唯一主入口：`main-prompt.md`（cron runtime 使用的主 prompt 源文件）
+- 第一阶段宿主：Hermes cronjob
 - 主链路固定为 `collect -> assess -> build-report -> verdict -> publish -> archive`
 - `build-report` 对主 agent 只暴露一个最终 artifact
-- 当前仓库只落 contracts、agent、skills、templates、helpers、fixtures 的最小闭环
+- 当前仓库保存：主 prompt 源、Hermes skill 源、contracts、templates、helpers、fixtures、安装脚本
+
+## 安装到 Hermes runtime
+
+```bash
+cd ~/workspace/daily-report-master-agent
+./install.sh
+./verify-install.sh
+```
+
+安装脚本会：
+
+- 同步 `main-prompt.md` 到 Hermes runtime
+- 同步 `config/runtime.yaml` 到 Hermes runtime
+- 把 `hermes-skills/productivity/*` 安装到 `~/.hermes/skills/productivity/`
+- 创建或更新 `daily-report-master-0600` cron job
+
+校验脚本会验证：
+
+- repo prompt 与 Hermes runtime prompt 一致
+- daily report skills 已安装
+- `daily-report-master-0600` cron 存在且 prompt 来自当前主 prompt
 
 ## 从现成 signals 生成验证输入
 
