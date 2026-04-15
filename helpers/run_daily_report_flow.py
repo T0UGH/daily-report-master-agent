@@ -9,6 +9,9 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+from uuid import uuid4
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -30,6 +33,21 @@ class CommandResult:
     command: list[str]
     exit_code: int
     output_path: str
+    stdout: str
+    stderr: str
+
+
+DEFAULT_AUDIO_VOICE_ID = "Chinese (Mandarin)_Soft_Girl"
+DEFAULT_AUDIO_TTS_MODEL = "speech-2.8-hd"
+DEFAULT_AUDIO_INTERMEDIATE_FORMAT = "mp3"
+DEFAULT_FEISHU_APP_ID_ENV = "FEISHU_APP_ID"
+DEFAULT_FEISHU_APP_SECRET_ENV = "FEISHU_APP_SECRET"
+DEFAULT_FEISHU_RECEIVE_ID_ENV = "FEISHU_HOME_CHANNEL"
+DEFAULT_FEISHU_RECEIVE_ID_TYPE = "chat_id"
+FEISHU_OPEN_API_BASE = "https://open.feishu.cn/open-apis"
+FEISHU_AUDIO_SKILL_DIR = Path.home() / ".hermes" / "skills" / "productivity" / "feishu-playable-daily-audio"
+MINIMAX_TTS_SCRIPT = FEISHU_AUDIO_SKILL_DIR / "scripts" / "generate_minimax_tts.py"
+FEISHU_OPUS_SCRIPT = FEISHU_AUDIO_SKILL_DIR / "scripts" / "convert_to_feishu_opus.py"
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,12 +77,71 @@ def shanghai_date() -> str:
     return result.stdout.strip()
 
 
-def run_and_capture(command: list[str], output_path: Path, *, cwd: Path | None = None) -> CommandResult:
+def parse_dotenv_value(raw_value: str) -> str:
+    value = raw_value.strip()
+    quoted_match = re.match(r"""^(['"])(.*)\1(?:\s+#.*)?$""", value)
+    if quoted_match:
+        return quoted_match.group(2)
+    return re.split(r"\s+#", value, maxsplit=1)[0].strip()
+
+
+def load_hermes_minimax_env() -> dict[str, str]:
+    env_path = Path.home() / ".hermes" / ".env"
+    try:
+        raw_text = env_path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+
+    minimax_env: dict[str, str] = {}
+    for raw_line in raw_text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[len("export ") :].strip()
+        if "=" not in line:
+            continue
+        key, raw_value = line.split("=", 1)
+        key = key.strip()
+        if not key.startswith("MINIMAX_"):
+            continue
+        value = parse_dotenv_value(raw_value)
+        if value:
+            minimax_env[key] = value
+    return minimax_env
+
+
+def build_minimax_tts_env() -> dict[str, str]:
+    env = os.environ.copy()
+    for key, value in load_hermes_minimax_env().items():
+        env.setdefault(key, value)
+    return env
+
+
+def run_and_capture(
+    command: list[str],
+    output_path: Path,
+    *,
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
+) -> CommandResult:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    completed = subprocess.run(command, cwd=str(cwd) if cwd else None, capture_output=True, text=True)
+    completed = subprocess.run(
+        command,
+        cwd=str(cwd) if cwd else None,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
     rendered = f"$ {' '.join(command)}\n\nSTDOUT:\n{completed.stdout}\n\nSTDERR:\n{completed.stderr}"
     output_path.write_text(rendered, encoding="utf-8")
-    return CommandResult(command=command, exit_code=completed.returncode, output_path=str(output_path))
+    return CommandResult(
+        command=command,
+        exit_code=completed.returncode,
+        output_path=str(output_path),
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+    )
 
 
 def run_collect_with_retry(*, lane: str, report_date: str, data_dir: Path, run_dir: Path, verbose: bool) -> dict[str, Any]:
@@ -117,10 +194,553 @@ def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, 
     cmd = ["feishu-cli", "doc", "import", str(report_path), "--title", title]
     result = run_and_capture(cmd, run_dir / "logs" / "feishu-import.log")
     if result.exit_code != 0:
-        return {"status": "failed", "log": result.output_path}
-    text = Path(result.output_path).read_text(encoding="utf-8")
+        return {
+            "status": "failed",
+            "log": result.output_path,
+            "error_summary": "Feishu doc import failed",
+        }
+    text = f"{result.stdout}\n{result.stderr}"
     match = re.search(r"链接:\s*(https://\S+)", text)
-    return {"status": "succeeded", "log": result.output_path, "doc_url": match.group(1) if match else None}
+    if match is None:
+        match = re.search(r"(https://\S+)", text)
+    return {
+        "status": "succeeded",
+        "log": result.output_path,
+        "doc_url": match.group(1) if match else None,
+    }
+
+
+def resolve_audio_settings(config: dict[str, Any]) -> dict[str, Any]:
+    audio = config.get("audio") or {}
+    tts = audio.get("tts") or {}
+    delivery = audio.get("delivery") or {}
+    intermediate_format = str(tts.get("intermediate_format") or DEFAULT_AUDIO_INTERMEDIATE_FORMAT).lstrip(".").lower()
+    if not intermediate_format:
+        intermediate_format = DEFAULT_AUDIO_INTERMEDIATE_FORMAT
+    return {
+        "tts": {
+            "default_voice_id": str(tts.get("default_voice_id") or DEFAULT_AUDIO_VOICE_ID),
+            "model": str(tts.get("model") or DEFAULT_AUDIO_TTS_MODEL),
+            "intermediate_format": intermediate_format,
+        },
+        "delivery": {
+            "receive_id_env": str(delivery.get("receive_id_env") or DEFAULT_FEISHU_RECEIVE_ID_ENV),
+            "receive_id_type": str(delivery.get("receive_id_type") or DEFAULT_FEISHU_RECEIVE_ID_TYPE),
+        },
+    }
+
+
+def build_audio_artifact_paths(*, report_date: str, run_dir: Path, intermediate_format: str) -> dict[str, Path]:
+    suffix = intermediate_format.lstrip(".").lower() or DEFAULT_AUDIO_INTERMEDIATE_FORMAT
+    return {
+        "readout_path": run_dir / f"{report_date}-readout.txt",
+        "intermediate_path": run_dir / f"{report_date}-tts.{suffix}",
+        "opus_path": run_dir / f"{report_date}-feishu.opus",
+    }
+
+
+def build_readout_text(report_markdown: str) -> str:
+    text = report_markdown.replace("\r\n", "\n").strip()
+    sources_match = re.search(r"^##\s*来源\s*$", text, flags=re.M)
+    if sources_match:
+        text = text[: sources_match.start()].rstrip()
+    text = re.sub(r"```.*?```", "\n", text, flags=re.S)
+    text = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    text = re.sub(r"^\s*#{1,6}\s*", "", text, flags=re.M)
+    text = re.sub(r"^\s*[-*+]\s+", "", text, flags=re.M)
+    text = re.sub(r"^\s*\d+\.\s+", "", text, flags=re.M)
+    text = re.sub(r"^\s*>\s?", "", text, flags=re.M)
+    text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
+    text = re.sub(r"__([^_]+)__", r"\1", text)
+    text = re.sub(r"\*([^*\n]+)\*", r"\1", text)
+    text = re.sub(r"_([^_\n]+)_", r"\1", text)
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    lines = [line.strip() for line in text.splitlines()]
+    compact = "\n".join(line for line in lines if line)
+    return compact.strip()
+
+
+def generate_audio_bundle(*, report_markdown: str, report_date: str, run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
+    settings = resolve_audio_settings(config)
+    tts_settings = settings["tts"]
+    paths = build_audio_artifact_paths(
+        report_date=report_date,
+        run_dir=run_dir,
+        intermediate_format=tts_settings["intermediate_format"],
+    )
+    tts_log_path = run_dir / "logs" / "audio-tts.log"
+    convert_log_path = run_dir / "logs" / "audio-opus.log"
+
+    try:
+        for artifact_path in (*paths.values(), tts_log_path, convert_log_path):
+            artifact_path.parent.mkdir(parents=True, exist_ok=True)
+
+        readout_text = build_readout_text(report_markdown)
+        if not readout_text:
+            return {
+                "status": "failed",
+                "readout_path": str(paths["readout_path"]),
+                "intermediate_path": str(paths["intermediate_path"]),
+                "intermediate_format": tts_settings["intermediate_format"],
+                "opus_path": str(paths["opus_path"]),
+                "tts_log": str(tts_log_path),
+                "convert_log": str(convert_log_path),
+                "error_summary": "Readout text is empty after markdown cleanup",
+            }
+
+        if not MINIMAX_TTS_SCRIPT.is_file():
+            return {
+                "status": "failed",
+                "readout_path": str(paths["readout_path"]),
+                "intermediate_path": str(paths["intermediate_path"]),
+                "intermediate_format": tts_settings["intermediate_format"],
+                "opus_path": str(paths["opus_path"]),
+                "tts_log": str(tts_log_path),
+                "convert_log": str(convert_log_path),
+                "error_summary": f"Missing MiniMax TTS script: {MINIMAX_TTS_SCRIPT}",
+            }
+
+        if not FEISHU_OPUS_SCRIPT.is_file():
+            return {
+                "status": "failed",
+                "readout_path": str(paths["readout_path"]),
+                "intermediate_path": str(paths["intermediate_path"]),
+                "intermediate_format": tts_settings["intermediate_format"],
+                "opus_path": str(paths["opus_path"]),
+                "tts_log": str(tts_log_path),
+                "convert_log": str(convert_log_path),
+                "error_summary": f"Missing Feishu opus script: {FEISHU_OPUS_SCRIPT}",
+            }
+
+        paths["readout_path"].write_text(readout_text, encoding="utf-8")
+        tts_result = run_and_capture(
+            [
+                "python3",
+                str(MINIMAX_TTS_SCRIPT),
+                "--input",
+                str(paths["readout_path"]),
+                "--output",
+                str(paths["intermediate_path"]),
+                "--voice-id",
+                tts_settings["default_voice_id"],
+                "--model",
+                tts_settings["model"],
+                "--format",
+                tts_settings["intermediate_format"],
+            ],
+            tts_log_path,
+            env=build_minimax_tts_env(),
+        )
+        if tts_result.exit_code != 0:
+            return {
+                "status": "failed",
+                "readout_path": str(paths["readout_path"]),
+                "intermediate_path": str(paths["intermediate_path"]),
+                "intermediate_format": tts_settings["intermediate_format"],
+                "opus_path": str(paths["opus_path"]),
+                "tts_log": tts_result.output_path,
+                "convert_log": str(convert_log_path),
+                "error_summary": "MiniMax TTS generation failed",
+            }
+
+        convert_result = run_and_capture(
+            [
+                "python3",
+                str(FEISHU_OPUS_SCRIPT),
+                str(paths["intermediate_path"]),
+                str(paths["opus_path"]),
+            ],
+            convert_log_path,
+        )
+        if convert_result.exit_code != 0:
+            return {
+                "status": "failed",
+                "readout_path": str(paths["readout_path"]),
+                "intermediate_path": str(paths["intermediate_path"]),
+                "intermediate_format": tts_settings["intermediate_format"],
+                "opus_path": str(paths["opus_path"]),
+                "tts_log": tts_result.output_path,
+                "convert_log": convert_result.output_path,
+                "error_summary": "Feishu opus conversion failed",
+            }
+
+        return {
+            "status": "succeeded",
+            "readout_path": str(paths["readout_path"]),
+            "intermediate_path": str(paths["intermediate_path"]),
+            "intermediate_format": tts_settings["intermediate_format"],
+            "opus_path": str(paths["opus_path"]),
+            "tts_log": tts_result.output_path,
+            "convert_log": convert_result.output_path,
+        }
+    except Exception as exc:
+        return {
+            "status": "failed",
+            "readout_path": str(paths["readout_path"]),
+            "intermediate_path": str(paths["intermediate_path"]),
+            "intermediate_format": tts_settings["intermediate_format"],
+            "opus_path": str(paths["opus_path"]),
+            "tts_log": str(tts_log_path),
+            "convert_log": str(convert_log_path),
+            "error_summary": f"Audio bundle generation failed: {exc}",
+        }
+
+
+def extract_json_payload(text: str) -> Any | None:
+    candidate = text.strip()
+    if not candidate:
+        return None
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        match = re.search(r"(\{.*\})", candidate, flags=re.S)
+        if not match:
+            return None
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            return None
+
+
+def find_nested_value(payload: Any, candidate_keys: set[str]) -> str | None:
+    if isinstance(payload, dict):
+        for key in candidate_keys:
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        for value in payload.values():
+            found = find_nested_value(value, candidate_keys)
+            if found:
+                return found
+    if isinstance(payload, list):
+        for item in payload:
+            found = find_nested_value(item, candidate_keys)
+            if found:
+                return found
+    return None
+
+
+def write_json_log(log_path: Path, payload: Any) -> str:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(log_path)
+
+
+def post_http_request(*, url: str, body: bytes, headers: dict[str, str]) -> tuple[int, str, Any | None]:
+    request = Request(url, data=body, headers=headers, method="POST")
+    try:
+        with urlopen(request) as response:
+            status_code = getattr(response, "status", 200)
+            raw_body = response.read()
+    except HTTPError as exc:
+        status_code = exc.code
+        raw_body = exc.read()
+    return status_code, raw_body.decode("utf-8", errors="replace"), extract_json_payload(raw_body.decode("utf-8", errors="replace"))
+
+
+def build_multipart_form_data(*, fields: dict[str, str], file_field: str, file_name: str, file_bytes: bytes) -> tuple[bytes, str]:
+    boundary = f"----daily-report-{uuid4().hex}"
+    chunks: list[bytes] = []
+    for name, value in fields.items():
+        chunks.extend(
+            [
+                f"--{boundary}\r\n".encode("utf-8"),
+                f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"),
+                value.encode("utf-8"),
+                b"\r\n",
+            ]
+        )
+    chunks.extend(
+        [
+            f"--{boundary}\r\n".encode("utf-8"),
+            f'Content-Disposition: form-data; name="{file_field}"; filename="{file_name}"\r\n'.encode("utf-8"),
+            b"Content-Type: application/octet-stream\r\n\r\n",
+            file_bytes,
+            b"\r\n",
+            f"--{boundary}--\r\n".encode("utf-8"),
+        ]
+    )
+    return b"".join(chunks), f"multipart/form-data; boundary={boundary}"
+
+
+def resolve_feishu_audio_delivery(config: dict[str, Any]) -> dict[str, str]:
+    raw_delivery = ((config.get("audio") or {}).get("delivery") or {})
+    settings = resolve_audio_settings(config)["delivery"]
+    receive_id_env = settings["receive_id_env"]
+    app_id_env = str(raw_delivery.get("app_id_env") or DEFAULT_FEISHU_APP_ID_ENV)
+    app_secret_env = str(raw_delivery.get("app_secret_env") or DEFAULT_FEISHU_APP_SECRET_ENV)
+
+    app_id = os.getenv(DEFAULT_FEISHU_APP_ID_ENV, "").strip()
+    if not app_id and app_id_env != DEFAULT_FEISHU_APP_ID_ENV:
+        app_id = os.getenv(app_id_env, "").strip()
+    if not app_id:
+        app_id = str(raw_delivery.get("app_id") or "").strip()
+
+    app_secret = os.getenv(DEFAULT_FEISHU_APP_SECRET_ENV, "").strip()
+    if not app_secret and app_secret_env != DEFAULT_FEISHU_APP_SECRET_ENV:
+        app_secret = os.getenv(app_secret_env, "").strip()
+    if not app_secret:
+        app_secret = str(raw_delivery.get("app_secret") or "").strip()
+
+    receive_id = os.getenv(DEFAULT_FEISHU_RECEIVE_ID_ENV, "").strip()
+    if not receive_id and receive_id_env != DEFAULT_FEISHU_RECEIVE_ID_ENV:
+        receive_id = os.getenv(receive_id_env, "").strip()
+    if not receive_id:
+        receive_id = str(raw_delivery.get("receive_id") or "").strip()
+
+    return {
+        "app_id": app_id,
+        "app_secret": app_secret,
+        "receive_id": receive_id,
+        "receive_id_type": settings["receive_id_type"],
+    }
+
+
+def get_feishu_api_error(payload: Any | None, status_code: int) -> str | None:
+    if isinstance(payload, dict):
+        code = payload.get("code")
+        if isinstance(code, int) and code != 0:
+            message = find_nested_value(payload, {"msg", "message"}) or f"HTTP {status_code}"
+            return f"code={code}, msg={message}"
+    if status_code >= 400:
+        if isinstance(payload, dict):
+            message = find_nested_value(payload, {"msg", "message"}) or f"HTTP {status_code}"
+            return f"HTTP {status_code}: {message}"
+        return f"HTTP {status_code}"
+    return None
+
+
+def send_audio_to_feishu(*, opus_path: Path, run_dir: Path, doc_url: str | None, config: dict[str, Any]) -> dict[str, Any]:
+    del doc_url
+    delivery = resolve_feishu_audio_delivery(config)
+    log_path = run_dir / "logs" / "feishu-audio.log"
+    events: list[dict[str, Any]] = []
+
+    if not opus_path.is_file():
+        return {
+            "status": "failed",
+            "log": write_json_log(log_path, {"events": events, "error": f"Missing audio file: {opus_path}"}),
+            "opus_path": str(opus_path),
+            "error_summary": f"Missing audio file: {opus_path}",
+        }
+    if not delivery["app_id"] or not delivery["app_secret"]:
+        return {
+            "status": "failed",
+            "log": write_json_log(
+                log_path,
+                {"events": events, "error": f"Missing {DEFAULT_FEISHU_APP_ID_ENV}/{DEFAULT_FEISHU_APP_SECRET_ENV} for Feishu audio delivery"},
+            ),
+            "opus_path": str(opus_path),
+            "error_summary": f"Missing {DEFAULT_FEISHU_APP_ID_ENV}/{DEFAULT_FEISHU_APP_SECRET_ENV} for Feishu audio delivery",
+        }
+    if not delivery["receive_id"]:
+        return {
+            "status": "failed",
+            "log": write_json_log(log_path, {"events": events, "error": f"Missing {DEFAULT_FEISHU_RECEIVE_ID_ENV} for Feishu audio delivery"}),
+            "opus_path": str(opus_path),
+            "error_summary": f"Missing {DEFAULT_FEISHU_RECEIVE_ID_ENV} for Feishu audio delivery",
+        }
+
+    try:
+        auth_body = json.dumps(
+            {"app_id": delivery["app_id"], "app_secret": delivery["app_secret"]},
+            ensure_ascii=False,
+        ).encode("utf-8")
+        auth_status, auth_text, auth_payload = post_http_request(
+            url=f"{FEISHU_OPEN_API_BASE}/auth/v3/tenant_access_token/internal",
+            body=auth_body,
+            headers={"Content-Type": "application/json; charset=utf-8"},
+        )
+        events.append(
+            {
+                "step": "tenant_access_token",
+                "request": {
+                    "url": f"{FEISHU_OPEN_API_BASE}/auth/v3/tenant_access_token/internal",
+                    "app_id": delivery["app_id"],
+                    "app_secret_present": True,
+                },
+                "response": {
+                    "status_code": auth_status,
+                    "code": auth_payload.get("code") if isinstance(auth_payload, dict) else None,
+                    "msg": find_nested_value(auth_payload, {"msg", "message"}) if auth_payload is not None else None,
+                    "tenant_access_token_present": bool(
+                        find_nested_value(auth_payload, {"tenant_access_token"}) if auth_payload is not None else None
+                    ),
+                },
+            }
+        )
+        auth_error = get_feishu_api_error(auth_payload, auth_status)
+        token = find_nested_value(auth_payload, {"tenant_access_token"}) if auth_payload is not None else None
+        if auth_error or not token:
+            return {
+                "status": "failed",
+                "log": write_json_log(log_path, {"events": events}),
+                "opus_path": str(opus_path),
+                "error_summary": f"Feishu tenant token request failed: {auth_error or 'missing tenant_access_token'}",
+            }
+
+        upload_body, upload_content_type = build_multipart_form_data(
+            fields={"file_type": "opus", "file_name": opus_path.name},
+            file_field="file",
+            file_name=opus_path.name,
+            file_bytes=opus_path.read_bytes(),
+        )
+        upload_status, upload_text, upload_payload = post_http_request(
+            url=f"{FEISHU_OPEN_API_BASE}/im/v1/files",
+            body=upload_body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": upload_content_type,
+            },
+        )
+        events.append(
+            {
+                "step": "upload_audio_file",
+                "request": {
+                    "url": f"{FEISHU_OPEN_API_BASE}/im/v1/files",
+                    "file_type": "opus",
+                    "file_name": opus_path.name,
+                    "authorization_present": True,
+                },
+                "response": {"status_code": upload_status, "body": upload_text},
+            }
+        )
+        upload_error = get_feishu_api_error(upload_payload, upload_status)
+        file_key = find_nested_value(upload_payload, {"file_key"}) if upload_payload is not None else None
+        if upload_error or not file_key:
+            return {
+                "status": "failed",
+                "log": write_json_log(log_path, {"events": events}),
+                "opus_path": str(opus_path),
+                "error_summary": f"Feishu audio upload failed: {upload_error or 'missing file_key'}",
+            }
+
+        message_body = json.dumps(
+            {
+                "receive_id": delivery["receive_id"],
+                "msg_type": "audio",
+                "content": json.dumps({"file_key": file_key}, ensure_ascii=False, separators=(",", ":")),
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+        message_url = f"{FEISHU_OPEN_API_BASE}/im/v1/messages?receive_id_type={delivery['receive_id_type']}"
+        message_status, message_text, message_payload = post_http_request(
+            url=message_url,
+            body=message_body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json; charset=utf-8",
+            },
+        )
+        events.append(
+            {
+                "step": "send_audio_message",
+                "request": {
+                    "url": message_url,
+                    "receive_id": delivery["receive_id"],
+                    "receive_id_type": delivery["receive_id_type"],
+                    "msg_type": "audio",
+                    "authorization_present": True,
+                },
+                "response": {"status_code": message_status, "body": message_text},
+            }
+        )
+        message_error = get_feishu_api_error(message_payload, message_status)
+        message_id = find_nested_value(message_payload, {"message_id", "new_message_id"}) if message_payload is not None else None
+        if message_error:
+            return {
+                "status": "failed",
+                "log": write_json_log(log_path, {"events": events}),
+                "opus_path": str(opus_path),
+                "error_summary": f"Feishu audio send failed: {message_error}",
+            }
+
+        return {
+            "status": "succeeded",
+            "log": write_json_log(log_path, {"events": events}),
+            "opus_path": str(opus_path),
+            "message_id": message_id,
+        }
+    except URLError as exc:
+        return {
+            "status": "failed",
+            "log": write_json_log(log_path, {"events": events, "error": str(exc)}),
+            "opus_path": str(opus_path),
+            "error_summary": f"Feishu audio send failed: {exc}",
+        }
+    except Exception as exc:
+        return {
+            "status": "failed",
+            "log": write_json_log(log_path, {"events": events, "error": str(exc)}),
+            "opus_path": str(opus_path),
+            "error_summary": f"Feishu audio send failed: {exc}",
+        }
+
+
+def publish_report_bundle(
+    *,
+    report_path: Path,
+    report_markdown: str,
+    report_date: str,
+    title: str,
+    run_dir: Path,
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    audio_result = generate_audio_bundle(
+        report_markdown=report_markdown,
+        report_date=report_date,
+        run_dir=run_dir,
+        config=config,
+    )
+    doc_result = import_to_feishu(report_path, title, run_dir)
+
+    publish_result: dict[str, Any] = {
+        "target": "feishu",
+        "doc_status": doc_result["status"],
+        "doc_log": doc_result.get("log"),
+        "doc_url": doc_result.get("doc_url"),
+        "audio_generation_status": audio_result["status"],
+        "audio_status": "skipped",
+        "audio_readout_path": audio_result.get("readout_path"),
+        "audio_intermediate_path": audio_result.get("intermediate_path"),
+        "audio_intermediate_format": audio_result.get("intermediate_format"),
+        "audio_opus_path": audio_result.get("opus_path"),
+        "audio_tts_log": audio_result.get("tts_log"),
+        "audio_convert_log": audio_result.get("convert_log"),
+    }
+
+    if doc_result["status"] != "succeeded":
+        publish_result["status"] = "failed"
+        publish_result["error_summary"] = doc_result.get("error_summary") or "Feishu doc import failed"
+        return publish_result
+
+    if audio_result["status"] != "succeeded":
+        publish_result["status"] = "degraded"
+        publish_result["audio_status"] = "failed"
+        publish_result["error_summary"] = audio_result.get("error_summary") or "Audio bundle generation failed"
+        return publish_result
+
+    sent_audio = send_audio_to_feishu(
+        opus_path=Path(audio_result["opus_path"]),
+        run_dir=run_dir,
+        doc_url=doc_result.get("doc_url"),
+        config=config,
+    )
+    publish_result["audio_status"] = sent_audio["status"]
+    publish_result["audio_message_log"] = sent_audio.get("log")
+    publish_result["audio_message_id"] = sent_audio.get("message_id")
+
+    if sent_audio["status"] != "succeeded":
+        publish_result["status"] = "degraded"
+        publish_result["error_summary"] = sent_audio.get("error_summary") or "Feishu audio send failed"
+        return publish_result
+
+    publish_result["status"] = "succeeded"
+    return publish_result
 
 
 def main() -> int:
@@ -213,7 +833,14 @@ def main() -> int:
 
     if args.publish:
         title = f"AI 日报（{args.report_date}）{args.title_suffix}" if args.title_suffix else f"AI 日报（{args.report_date}）"
-        summary["publish"] = import_to_feishu(report_path, title, run_dir)
+        summary["publish"] = publish_report_bundle(
+            report_path=report_path,
+            report_markdown=report_markdown,
+            report_date=args.report_date,
+            title=title,
+            run_dir=run_dir,
+            config=config,
+        )
     else:
         summary["publish"] = {"status": "skipped"}
 

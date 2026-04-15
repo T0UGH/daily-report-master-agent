@@ -53,6 +53,7 @@
 - `notify-ops` 只在 `degraded` 或 `blocked` 时触发。
 - `build-report` 只返回一个最终 `report artifact`。
 - `publish-report` 成功后才允许进入 `archive-report`。
+- `publish-report` 默认主交付包含两部分：`Feishu 文档 + Feishu 原生可播放音频`。
 - 本 cron run 自己拥有 `collect-signals`，不要假设今天的 signals 已提前存在。
 
 ## 当天 collect 所有权
@@ -93,8 +94,20 @@ python3 /Users/haha/workspace/daily-report-master-agent/helpers/run_daily_report
 - 日期一律使用 `Asia/Shanghai`。
 - 先读取 `config/runtime.yaml`。
 - 优先使用 config 中声明的路径与 reader-facing 数值约束。
+- publish 音频配置也从 `config/runtime.yaml` 的 `audio.tts / audio.delivery` 读取。
 - 真实 signals 根目录默认在 `~/.daily-lane-data/signals`。
 - 临时运行产物默认写入 `~/.daily-lane-data/runtime/daily-report-master/<report_date>/`。
+
+## 发布要求
+
+- Feishu 文档继续通过 `feishu-cli doc import` 发布。
+- 朗读音频必须先生成原始 TTS，再转成 `.opus`（Ogg/Opus）。
+- 发给贵平的音频必须走 Feishu 原生音频消息，不要退回外链、附件说明页或下载页。
+- publish 顺序固定为：先产出朗读稿和 `.opus`，再发布 Feishu 文档，最后发送 Feishu 原生音频消息。
+- publish 语义固定为：
+  - 文档失败 => `publish failed`
+  - 文档成功但音频失败 => `publish degraded`
+  - 文档和音频都成功 => `publish succeeded`
 
 ## 报告写作规则
 

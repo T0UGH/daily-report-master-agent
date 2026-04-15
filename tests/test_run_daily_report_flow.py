@@ -1,0 +1,419 @@
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+from helpers import run_daily_report_flow as flow
+
+
+def _runtime_config() -> dict:
+    return {
+        "audio": {
+            "tts": {
+                "default_voice_id": "Chinese (Mandarin)_Soft_Girl",
+                "model": "speech-2.8-hd",
+                "intermediate_format": "mp3",
+            },
+            "delivery": {
+                "receive_id_env": "FEISHU_HOME_CHANNEL",
+                "receive_id_type": "chat_id",
+            },
+        }
+    }
+
+
+def _write_report(tmp_path: Path) -> Path:
+    report_path = tmp_path / "report.md"
+    report_path.write_text(
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "- **OpenAI** 发布了 [新模型](https://example.com/model)\n"
+        "- `Claude Code` 增强了 review 流程\n\n"
+        "## 来源\n"
+        "- https://example.com/source\n",
+        encoding="utf-8",
+    )
+    return report_path
+
+
+def test_build_readout_text_strips_markdown_controls() -> None:
+    report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "- **OpenAI** 发布了 [新模型](https://example.com/model)\n"
+        "1. `Claude Code` 增强了 review 流程\n\n"
+        "## 来源\n"
+        "- https://example.com/source\n"
+    )
+
+    text = flow.build_readout_text(report_markdown)
+
+    assert "OpenAI 发布了 新模型" in text
+    assert "Claude Code 增强了 review 流程" in text
+    assert "#" not in text
+    assert "**" not in text
+    assert "`" not in text
+    assert "https://example.com" not in text
+    assert "## 来源" not in text
+
+
+def test_generate_audio_bundle_creates_missing_run_dir_before_writing_outputs(monkeypatch, tmp_path: Path) -> None:
+    run_dir = tmp_path / "artifacts" / "2026-04-16"
+    report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "- **OpenAI** 发布了 [新模型](https://example.com/model)\n"
+    )
+    minimax_script = tmp_path / "generate_minimax_tts.py"
+    opus_script = tmp_path / "convert_to_feishu_opus.py"
+    minimax_script.write_text("# mock minimax tts\n", encoding="utf-8")
+    opus_script.write_text("# mock opus converter\n", encoding="utf-8")
+
+    monkeypatch.setattr(flow, "MINIMAX_TTS_SCRIPT", minimax_script)
+    monkeypatch.setattr(flow, "FEISHU_OPUS_SCRIPT", opus_script)
+
+    def fake_run_and_capture(
+        command: list[str],
+        output_path: Path,
+        *,
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
+    ) -> flow.CommandResult:
+        del env
+        output_path.write_text("mock log\n", encoding="utf-8")
+        if output_path.name == "audio-tts.log":
+            readout_path = Path(command[command.index("--input") + 1])
+            intermediate_path = Path(command[command.index("--output") + 1])
+            assert readout_path.exists()
+            intermediate_path.write_bytes(b"fake-mp3")
+        elif output_path.name == "audio-opus.log":
+            intermediate_path = Path(command[2])
+            opus_path = Path(command[3])
+            assert intermediate_path.exists()
+            opus_path.write_bytes(b"fake-opus")
+        return flow.CommandResult(
+            command=command,
+            exit_code=0,
+            output_path=str(output_path),
+            stdout="ok",
+            stderr="",
+        )
+
+    monkeypatch.setattr(flow, "run_and_capture", fake_run_and_capture)
+
+    result = flow.generate_audio_bundle(
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        run_dir=run_dir,
+        config=_runtime_config(),
+    )
+
+    readout_path = run_dir / "2026-04-16-readout.txt"
+    assert result["status"] == "succeeded"
+    assert readout_path.exists()
+    assert "OpenAI 发布了 新模型" in readout_path.read_text(encoding="utf-8")
+    assert (run_dir / "logs" / "audio-tts.log").exists()
+    assert (run_dir / "2026-04-16-tts.mp3").exists()
+    assert (run_dir / "2026-04-16-feishu.opus").exists()
+
+
+def test_generate_audio_bundle_passes_minimax_env_from_hermes_dotenv(monkeypatch, tmp_path: Path) -> None:
+    run_dir = tmp_path / "artifacts" / "2026-04-16"
+    report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "- **OpenAI** 发布了 [新模型](https://example.com/model)\n"
+    )
+    minimax_script = tmp_path / "generate_minimax_tts.py"
+    opus_script = tmp_path / "convert_to_feishu_opus.py"
+    minimax_script.write_text("# mock minimax tts\n", encoding="utf-8")
+    opus_script.write_text("# mock opus converter\n", encoding="utf-8")
+    hermes_env_dir = tmp_path / ".hermes"
+    hermes_env_dir.mkdir(parents=True, exist_ok=True)
+    (hermes_env_dir / ".env").write_text(
+        'MINIMAX_API_KEY="from-hermes-env"\n'
+        "MINIMAX_TOKEN=from-hermes-token\n"
+        "IGNORED_KEY=ignored\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("MINIMAX_API_KEY", raising=False)
+    monkeypatch.delenv("MINIMAX_TOKEN", raising=False)
+    monkeypatch.setattr(flow, "MINIMAX_TTS_SCRIPT", minimax_script)
+    monkeypatch.setattr(flow, "FEISHU_OPUS_SCRIPT", opus_script)
+
+    tts_envs: list[dict[str, str] | None] = []
+
+    def fake_subprocess_run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+        env = kwargs.get("env")
+        if command[:2] == ["python3", str(minimax_script)]:
+            tts_envs.append(env)
+            assert env is not None
+            output_path = Path(command[command.index("--output") + 1])
+            output_path.write_bytes(b"fake-mp3")
+        elif command[:2] == ["python3", str(opus_script)]:
+            output_path = Path(command[3])
+            output_path.write_bytes(b"fake-opus")
+        return subprocess.CompletedProcess(command, 0, "ok", "")
+
+    monkeypatch.setattr(flow.subprocess, "run", fake_subprocess_run)
+
+    result = flow.generate_audio_bundle(
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        run_dir=run_dir,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "succeeded"
+    assert len(tts_envs) == 1
+    assert tts_envs[0]["MINIMAX_API_KEY"] == "from-hermes-env"
+    assert tts_envs[0]["MINIMAX_TOKEN"] == "from-hermes-token"
+    assert "IGNORED_KEY" not in tts_envs[0]
+
+
+def test_send_audio_to_feishu_uses_native_api_success(monkeypatch, tmp_path: Path) -> None:
+    opus_path = tmp_path / "feishu-native-audio-test.opus"
+    opus_path.write_bytes(b"opus-audio-bytes")
+    config = _runtime_config()
+    config["audio"]["delivery"]["receive_id_env"] = "ALT_FEISHU_CHANNEL"
+    monkeypatch.setenv("FEISHU_APP_ID", "env-app-id")
+    monkeypatch.setenv("FEISHU_APP_SECRET", "env-app-secret")
+    monkeypatch.setenv("FEISHU_HOME_CHANNEL", "oc_home_from_env")
+    monkeypatch.setenv("ALT_FEISHU_CHANNEL", "oc_channel_from_config_env")
+
+    def fail_if_cli_is_used(*args, **kwargs):
+        raise AssertionError("send_audio_to_feishu should not shell out to feishu-cli")
+
+    monkeypatch.setattr(flow, "run_and_capture", fail_if_cli_is_used)
+
+    requests_seen: list[tuple[str, dict[str, str], bytes]] = []
+
+    class FakeHttpResponse:
+        def __init__(self, payload: dict) -> None:
+            self.payload = json.dumps(payload).encode("utf-8")
+
+        def read(self) -> bytes:
+            return self.payload
+
+        def __enter__(self) -> "FakeHttpResponse":
+            return self
+
+        def __exit__(self, exc_type, exc, tb) -> bool:
+            return False
+
+    def fake_urlopen(request):
+        headers = {key.lower(): value for key, value in request.header_items()}
+        body = request.data or b""
+        requests_seen.append((request.full_url, headers, body))
+
+        if request.full_url.endswith("/auth/v3/tenant_access_token/internal"):
+            assert json.loads(body.decode("utf-8")) == {
+                "app_id": "env-app-id",
+                "app_secret": "env-app-secret",
+            }
+            return FakeHttpResponse({"tenant_access_token": "tenant-token"})
+
+        if request.full_url.endswith("/im/v1/files"):
+            assert headers["authorization"] == "Bearer tenant-token"
+            assert "multipart/form-data" in headers["content-type"]
+            assert b'name="file_type"' in body
+            assert b"\r\n\r\nopus\r\n" in body
+            assert b'name="file_name"' in body
+            assert b"feishu-native-audio-test.opus" in body
+            assert b'name="file"; filename="feishu-native-audio-test.opus"' in body
+            assert b"opus-audio-bytes" in body
+            return FakeHttpResponse({"data": {"file_key": "file-key-123"}})
+
+        if request.full_url.endswith("/im/v1/messages?receive_id_type=chat_id"):
+            assert headers["authorization"] == "Bearer tenant-token"
+            assert headers["content-type"] == "application/json; charset=utf-8"
+            assert json.loads(body.decode("utf-8")) == {
+                "receive_id": "oc_home_from_env",
+                "msg_type": "audio",
+                "content": "{\"file_key\":\"file-key-123\"}",
+            }
+            return FakeHttpResponse({"data": {"message_id": "om_audio_success"}, "msg_type": "audio"})
+
+        raise AssertionError(f"Unexpected request URL: {request.full_url}")
+
+    monkeypatch.setattr(flow, "urlopen", fake_urlopen, raising=False)
+
+    result = flow.send_audio_to_feishu(
+        opus_path=opus_path,
+        run_dir=tmp_path,
+        doc_url="https://feishu.example/doc",
+        config=config,
+    )
+
+    assert result["status"] == "succeeded"
+    assert result["message_id"] == "om_audio_success"
+    assert result["opus_path"] == str(opus_path)
+    assert [url for url, _, _ in requests_seen] == [
+        "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "https://open.feishu.cn/open-apis/im/v1/files",
+        "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id",
+    ]
+
+
+def test_publish_report_bundle_succeeds(monkeypatch, tmp_path: Path) -> None:
+    report_path = _write_report(tmp_path)
+    report_markdown = report_path.read_text(encoding="utf-8")
+    opus_path = tmp_path / "2026-04-16-feishu.opus"
+    sent: dict[str, str] = {}
+
+    monkeypatch.setattr(
+        flow,
+        "generate_audio_bundle",
+        lambda **_: {
+            "status": "succeeded",
+            "readout_path": str(tmp_path / "2026-04-16-readout.txt"),
+            "intermediate_path": str(tmp_path / "2026-04-16-tts.mp3"),
+            "intermediate_format": "mp3",
+            "opus_path": str(opus_path),
+            "tts_log": str(tmp_path / "logs" / "audio-tts.log"),
+            "convert_log": str(tmp_path / "logs" / "audio-opus.log"),
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "import_to_feishu",
+        lambda report_path, title, run_dir: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-import.log"),
+            "doc_url": "https://feishu.example/doc",
+        },
+    )
+
+    def fake_send_audio_to_feishu(*, opus_path: Path, run_dir: Path, doc_url: str | None, config: dict) -> dict:
+        sent["opus_path"] = str(opus_path)
+        sent["doc_url"] = doc_url or ""
+        return {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-audio.log"),
+            "message_id": "om_audio_success",
+        }
+
+    monkeypatch.setattr(flow, "send_audio_to_feishu", fake_send_audio_to_feishu)
+
+    result = flow.publish_report_bundle(
+        report_path=report_path,
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "succeeded"
+    assert result["target"] == "feishu"
+    assert result["doc_status"] == "succeeded"
+    assert result["audio_status"] == "succeeded"
+    assert result["audio_opus_path"] == str(opus_path)
+    assert result["audio_message_id"] == "om_audio_success"
+    assert sent == {
+        "opus_path": str(opus_path),
+        "doc_url": "https://feishu.example/doc",
+    }
+
+
+def test_publish_report_bundle_degrades_when_audio_send_fails(monkeypatch, tmp_path: Path) -> None:
+    report_path = _write_report(tmp_path)
+    report_markdown = report_path.read_text(encoding="utf-8")
+    opus_path = tmp_path / "2026-04-16-feishu.opus"
+
+    monkeypatch.setattr(
+        flow,
+        "generate_audio_bundle",
+        lambda **_: {
+            "status": "succeeded",
+            "readout_path": str(tmp_path / "2026-04-16-readout.txt"),
+            "intermediate_path": str(tmp_path / "2026-04-16-tts.mp3"),
+            "intermediate_format": "mp3",
+            "opus_path": str(opus_path),
+            "tts_log": str(tmp_path / "logs" / "audio-tts.log"),
+            "convert_log": str(tmp_path / "logs" / "audio-opus.log"),
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "import_to_feishu",
+        lambda report_path, title, run_dir: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-import.log"),
+            "doc_url": "https://feishu.example/doc",
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "send_audio_to_feishu",
+        lambda **_: {
+            "status": "failed",
+            "log": str(tmp_path / "logs" / "feishu-audio.log"),
+            "error_summary": "Feishu audio send failed",
+        },
+    )
+
+    result = flow.publish_report_bundle(
+        report_path=report_path,
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "degraded"
+    assert result["doc_status"] == "succeeded"
+    assert result["audio_status"] == "failed"
+    assert result["audio_opus_path"] == str(opus_path)
+    assert result["error_summary"] == "Feishu audio send failed"
+
+
+def test_publish_report_bundle_fails_when_doc_import_fails(monkeypatch, tmp_path: Path) -> None:
+    report_path = _write_report(tmp_path)
+    report_markdown = report_path.read_text(encoding="utf-8")
+    send_calls = 0
+
+    monkeypatch.setattr(
+        flow,
+        "generate_audio_bundle",
+        lambda **_: {
+            "status": "succeeded",
+            "readout_path": str(tmp_path / "2026-04-16-readout.txt"),
+            "intermediate_path": str(tmp_path / "2026-04-16-tts.mp3"),
+            "intermediate_format": "mp3",
+            "opus_path": str(tmp_path / "2026-04-16-feishu.opus"),
+            "tts_log": str(tmp_path / "logs" / "audio-tts.log"),
+            "convert_log": str(tmp_path / "logs" / "audio-opus.log"),
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "import_to_feishu",
+        lambda report_path, title, run_dir: {
+            "status": "failed",
+            "log": str(tmp_path / "logs" / "feishu-import.log"),
+            "error_summary": "Feishu doc import failed",
+        },
+    )
+
+    def fake_send_audio_to_feishu(**_: object) -> dict:
+        nonlocal send_calls
+        send_calls += 1
+        return {"status": "succeeded"}
+
+    monkeypatch.setattr(flow, "send_audio_to_feishu", fake_send_audio_to_feishu)
+
+    result = flow.publish_report_bundle(
+        report_path=report_path,
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "failed"
+    assert result["doc_status"] == "failed"
+    assert result["audio_status"] == "skipped"
+    assert result["error_summary"] == "Feishu doc import failed"
+    assert send_calls == 0
