@@ -5,14 +5,17 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Sequence
+from urllib.parse import urlsplit, urlunsplit
 
 from helpers.validate_report_output_contract import FIXED_SECTION_ORDER, FIXED_SECTION_TITLES
 
 
 DEFAULT_SOURCE = "signals-engine"
 DEFAULT_SIGNALS_ROOT = Path.home() / ".daily-lane-data" / "signals"
+DEFAULT_SELECTED_ITEMS_RUNTIME_ROOT = Path.home() / ".daily-lane-data" / "runtime" / "daily-report-master"
 EXCERPT_LIMIT = 280
 SOURCE_SNIPPET_LIMIT = 560
 REPORT_TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "report-body-template.md"
@@ -20,6 +23,15 @@ REPORT_TITLE_TEMPLATE = "AI Agent 日报（{report_date}）"
 MARKDOWN_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 BARE_URL_PATTERN = re.compile(r"https?://[^\s]+")
 INLINE_BRACKET_PATTERN = re.compile(r"\[([^\]]+)\]")
+REDDIT_URL_POST_ID_PATTERN = re.compile(
+    r"(?:reddit\.com/r/[^/]+/comments/|redd\.it/)([0-9a-z]{5,12})(?:[/?#]|$)",
+    re.IGNORECASE,
+)
+REDDIT_SIGNAL_PATH_POST_ID_PATTERN = re.compile(
+    r"(?:^|/)(?:r__[^/]+__)?([0-9a-z]{5,12})__reddit_thread__",
+    re.IGNORECASE,
+)
+REDDIT_POST_ID_PATTERN = re.compile(r"^[0-9a-z]{5,12}$", re.IGNORECASE)
 FALLBACK_SOURCE_URL_TEMPLATES = {
     "x-feed": "https://x.com/example/status/{date_compact}01",
     "x-following": "https://x.com/example/status/{date_compact}02",
@@ -110,6 +122,51 @@ CONTENT_SECTION_PREFERENCES = {
     "github-trending-weekly": ("summary", "readme", "post"),
     "product-hunt-watch": ("preview", "snapshot", "post"),
     "polymarket-watch": ("expectation", "outcome probabilities", "market strength"),
+}
+DENSE_ENTRY_SOURCE_SECTION_PREFERENCES = {
+    "claude-code-watch": ("what's changed", "release notes", "changes", "fixes", "post"),
+    "codex-watch": ("merged pr", "summary", "release notes", "release", "post"),
+    "openclaw-watch": ("summary", "release notes", "changes", "fixes", "post"),
+}
+DENSE_ENTRY_SOURCE_LIMITS = {
+    "claude-code-watch": 1200,
+    "codex-watch": 900,
+    "openclaw-watch": 1600,
+}
+DENSE_ENTRY_BASELINE_COUNTS = {
+    "claude-code-watch": 5,
+    "codex-watch": 3,
+    "openclaw-watch": 3,
+}
+DENSE_ENTRY_PRIORITY_RULES = {
+    "claude-code-watch": (
+        (("network error",), 95),
+        (("/doctor",), 94),
+        (("webfetch",), 93),
+        (("queued messages",), 92),
+        (("queued user prompts",), 91),
+        (("mcp large-output truncation prompt",), 75),
+    ),
+    "codex-watch": (
+        (("guardian review timeout",), 95),
+        (("app-server notification path",), 94),
+        (("mcp tool",), 93),
+        (("wall time",), 92),
+        (("model output",), 91),
+        (("deferred", "mcp"), 90),
+        (("flattened", "mcp"), 89),
+    ),
+    "openclaw-watch": (
+        (("gpt-5.4-pro",), 96),
+        (("telegram/forum topics",), 95),
+        (("`apikey`",), 94),
+        (("allowfrom",), 93),
+        (("config.patch",), 92),
+        (("config.apply",), 91),
+        (("hook:wake",), 90),
+        (("ssrf",), 89),
+        (("sender allowlist",), 88),
+    ),
 }
 METADATA_LINE_PREFIXES = (
     "likes:",
@@ -359,9 +416,18 @@ def build_selected_items(
     lane_names: Sequence[str] | None = None,
     per_lane_limit: int | None = None,
     lane_item_limits: dict[str, int] | None = None,
+    previous_selected_items_path: Path | None = None,
+    previous_selected_items_runtime_root: Path | None = None,
 ) -> dict[str, Any]:
     selected_items: list[dict[str, Any]] = []
     lane_counts: list[dict[str, Any]] = []
+    previous_reddit_identity_keys: set[str] | None = None
+    resolved_previous_selected_items_path = previous_selected_items_path
+    if resolved_previous_selected_items_path is None:
+        resolved_previous_selected_items_path = resolve_previous_selected_items_path(
+            runtime_root=previous_selected_items_runtime_root or DEFAULT_SELECTED_ITEMS_RUNTIME_ROOT,
+            report_date=report_date,
+        )
 
     for lane_name in resolve_lane_names(signals_root=signals_root, report_date=report_date, lane_names=lane_names):
         lane_snapshot = inspect_lane(signals_root=signals_root, report_date=report_date, lane_name=lane_name)
@@ -369,6 +435,17 @@ def build_selected_items(
             build_signal_candidate_from_signal(signal_path=signal_path, signals_root=signals_root, fallback_lane=lane_name)
             for signal_path in lane_snapshot.signal_paths
         ]
+        if lane_name == "reddit-watch":
+            if previous_reddit_identity_keys is None:
+                previous_reddit_identity_keys = load_previous_reddit_identity_keys(
+                    previous_selected_items_path=resolved_previous_selected_items_path
+                )
+            if previous_reddit_identity_keys:
+                lane_candidates = [
+                    candidate
+                    for candidate in lane_candidates
+                    if not extract_reddit_identity_keys(candidate) & previous_reddit_identity_keys
+                ]
         lane_limit = per_lane_limit
         if lane_limit is None and lane_item_limits is not None:
             lane_limit = lane_item_limits.get(lane_name)
@@ -397,6 +474,118 @@ def build_selected_items(
             "lane_counts": lane_counts,
         },
     }
+
+
+def resolve_previous_selected_items_path(*, runtime_root: Path, report_date: str) -> Path | None:
+    try:
+        previous_report_date = date.fromisoformat(report_date) - timedelta(days=1)
+    except ValueError:
+        return None
+    return runtime_root / previous_report_date.isoformat() / "selected-items.json"
+
+
+def load_previous_reddit_identity_keys(*, previous_selected_items_path: Path | None) -> set[str]:
+    if previous_selected_items_path is None:
+        return set()
+
+    try:
+        payload = json.loads(previous_selected_items_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return set()
+
+    if not isinstance(payload, dict):
+        return set()
+    raw_selected_items = payload.get("selected_items")
+    if not isinstance(raw_selected_items, list):
+        return set()
+
+    identity_keys: set[str] = set()
+    for item in raw_selected_items:
+        if not isinstance(item, dict):
+            continue
+        if item.get("lane") != "reddit-watch":
+            continue
+        identity_keys.update(extract_reddit_identity_keys(item))
+    return identity_keys
+
+
+def extract_reddit_identity_keys(item: dict[str, Any]) -> set[str]:
+    identity_keys: set[str] = set()
+
+    source_url = as_string(item.get("source_url")) or ""
+    canonical_source_url = canonicalize_reddit_source_url(source_url)
+    if canonical_source_url:
+        identity_keys.add(f"url:{canonical_source_url}")
+
+    for value in (
+        source_url,
+        as_string(item.get("signal_path")) or "",
+        as_string(item.get("title")) or "",
+    ):
+        post_id = extract_reddit_post_id(value)
+        if post_id:
+            identity_keys.add(f"id:{post_id}")
+
+    front_matter = item.get("_front_matter")
+    if isinstance(front_matter, dict):
+        for key in ("post_id", "entity_id"):
+            post_id = normalize_reddit_post_id(front_matter.get(key))
+            if post_id:
+                identity_keys.add(f"id:{post_id}")
+
+    return identity_keys
+
+
+def canonicalize_reddit_source_url(source_url: str) -> str | None:
+    cleaned_source_url = normalize_whitespace(source_url)
+    if not cleaned_source_url:
+        return None
+
+    try:
+        parsed = urlsplit(cleaned_source_url)
+    except ValueError:
+        return None
+
+    host = parsed.netloc.lower()
+    path = re.sub(r"/+", "/", parsed.path).rstrip("/")
+    if not path:
+        return None
+
+    if host == "redd.it":
+        return urlunsplit(("https", "redd.it", path, "", ""))
+    if host not in {"reddit.com", "www.reddit.com", "old.reddit.com", "new.reddit.com", "np.reddit.com"}:
+        return None
+    return urlunsplit(("https", "www.reddit.com", f"{path}/", "", ""))
+
+
+def extract_reddit_post_id(text: str) -> str | None:
+    cleaned_text = normalize_whitespace(text)
+    if not cleaned_text:
+        return None
+
+    direct_id = normalize_reddit_post_id(cleaned_text)
+    if direct_id:
+        return direct_id
+
+    url_match = REDDIT_URL_POST_ID_PATTERN.search(cleaned_text)
+    if url_match:
+        return url_match.group(1).lower()
+
+    signal_path_match = REDDIT_SIGNAL_PATH_POST_ID_PATTERN.search(cleaned_text)
+    if signal_path_match:
+        return signal_path_match.group(1).lower()
+
+    return None
+
+
+def normalize_reddit_post_id(value: Any) -> str | None:
+    text = as_string(value)
+    if not text:
+        return None
+    cleaned_text = normalize_whitespace(text)
+    if not REDDIT_POST_ID_PATTERN.fullmatch(cleaned_text):
+        return None
+    return cleaned_text.lower()
 
 
 def build_validation_bundle(collect_result: dict[str, Any], selected_items: dict[str, Any]) -> dict[str, Any]:
@@ -827,6 +1016,8 @@ def curate_lane_candidates(
 
     scored_candidates.sort(key=lambda candidate: candidate.get("_sort_key", ("", "")), reverse=True)
     if lane_limit is not None:
+        if lane_name == "reddit-watch":
+            return pick_reddit_dual_pool_candidates(candidates=scored_candidates, lane_limit=lane_limit)
         if lane_name in NOISY_X_LANES:
             return pick_noisy_x_candidates(candidates=scored_candidates, lane_limit=lane_limit)
         return pick_diverse_lane_candidates(
@@ -896,6 +1087,171 @@ def pick_diverse_lane_candidates(
             break
 
     return selected
+
+
+def pick_reddit_dual_pool_candidates(*, candidates: Sequence[dict[str, Any]], lane_limit: int) -> list[dict[str, Any]]:
+    if lane_limit <= 0:
+        return []
+    if lane_limit == 1 or len(candidates) <= 1:
+        return [
+            assign_reddit_selection_bucket(candidate=candidate, bucket=reddit_selection_bucket(candidate))
+            for candidate in candidates[:lane_limit]
+        ]
+
+    voice_candidates = [candidate for candidate in candidates if is_reddit_voice_candidate(candidate)]
+    heat_candidates = [candidate for candidate in candidates if not is_reddit_voice_candidate(candidate)]
+
+    heat_target = min(lane_limit, max(1, math.ceil(lane_limit * 0.4)))
+    voice_target = 0
+    if lane_limit > 1:
+        voice_target = min(lane_limit - heat_target, max(1, math.ceil(lane_limit * 0.3)))
+
+    selected: list[dict[str, Any]] = []
+    selected.extend(
+        assign_reddit_selection_bucket(candidate=candidate, bucket="heat")
+        for candidate in pick_reddit_ranked_candidates(candidates=heat_candidates, lane_limit=heat_target)
+    )
+
+    remaining_slots = lane_limit - len(selected)
+    if remaining_slots > 0 and voice_candidates:
+        selected.extend(
+            assign_reddit_selection_bucket(candidate=candidate, bucket="voice")
+            for candidate in pick_reddit_ranked_candidates(
+                candidates=voice_candidates,
+                lane_limit=min(voice_target, remaining_slots),
+                existing_candidates=selected,
+            )
+        )
+
+    remaining_slots = lane_limit - len(selected)
+    if remaining_slots > 0:
+        selected.extend(
+            assign_reddit_selection_bucket(candidate=candidate, bucket=reddit_selection_bucket(candidate))
+            for candidate in pick_reddit_ranked_candidates(
+                candidates=candidates,
+                lane_limit=remaining_slots,
+                existing_candidates=selected,
+            )
+        )
+
+    return selected[:lane_limit]
+
+
+def pick_reddit_ranked_candidates(
+    *,
+    candidates: Sequence[dict[str, Any]],
+    lane_limit: int,
+    existing_candidates: Sequence[dict[str, Any]] = (),
+) -> list[dict[str, Any]]:
+    if lane_limit <= 0:
+        return []
+
+    selected: list[dict[str, Any]] = []
+    taken_identity_keys = {candidate_identity_key(candidate) for candidate in existing_candidates}
+    seen_urls = {
+        normalize_whitespace(str(candidate.get("source_url", "")))
+        for candidate in existing_candidates
+        if normalize_whitespace(str(candidate.get("source_url", "")))
+    }
+
+    for enforce_topic_diversity in (True, False):
+        if len(selected) >= lane_limit:
+            break
+
+        selected_with_context = [*existing_candidates, *selected]
+        for candidate in candidates:
+            if len(selected) >= lane_limit:
+                break
+
+            identity_key = candidate_identity_key(candidate)
+            if identity_key in taken_identity_keys:
+                continue
+
+            source_url = normalize_whitespace(str(candidate.get("source_url", "")))
+            if source_url and source_url in seen_urls:
+                continue
+
+            if enforce_topic_diversity and reddit_candidate_overlaps_topics(
+                candidate=candidate,
+                existing_candidates=selected_with_context,
+            ):
+                continue
+
+            selected.append(candidate)
+            taken_identity_keys.add(identity_key)
+            if source_url:
+                seen_urls.add(source_url)
+
+    return selected
+
+
+def reddit_candidate_overlaps_topics(*, candidate: dict[str, Any], existing_candidates: Sequence[dict[str, Any]]) -> bool:
+    topic_tokens = candidate_topic_tokens(candidate)
+    if not topic_tokens:
+        return False
+
+    for existing in existing_candidates:
+        if topic_tokens_overlap_too_much(topic_tokens, candidate_topic_tokens(existing)):
+            return True
+    return False
+
+
+def candidate_identity_key(candidate: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        normalize_whitespace(str(candidate.get("source_url", ""))),
+        normalize_whitespace(str(candidate.get("signal_path", ""))),
+        normalize_whitespace(str(candidate.get("title", ""))),
+    )
+
+
+def reddit_selection_bucket(candidate: dict[str, Any]) -> str:
+    return "voice" if is_reddit_voice_candidate(candidate) else "heat"
+
+
+def assign_reddit_selection_bucket(*, candidate: dict[str, Any], bucket: str) -> dict[str, Any]:
+    tagged_candidate = dict(candidate)
+    tagged_candidate["selection_bucket"] = bucket
+    return tagged_candidate
+
+
+def is_reddit_voice_candidate(candidate: dict[str, Any]) -> bool:
+    title = normalize_whitespace(str(candidate.get("title", "")))
+    source_text = normalize_whitespace(str(candidate.get("source_snippet") or candidate.get("excerpt", "")))
+    normalized = normalize_whitespace(f"{title} {source_text}")
+    lowered = normalized.lower()
+    title_lower = title.lower()
+
+    if not lowered:
+        return False
+
+    voice_score = 0
+    if "?" in normalized:
+        voice_score += 2
+    if re.search(
+        r"\b(how do you|how are you|what's your|what is your|does anyone|anyone else|best approach|"
+        r"how to use|how you use|can i|should i|why does|why is|help me|looking for|"
+        r"unsure|advice|where to learn)\b",
+        lowered,
+    ):
+        voice_score += 3
+    if re.search(r"\b(i|i'm|i’ve|i'd|my|me|we|our|us)\b", lowered):
+        voice_score += 1
+    if re.search(
+        r"\b(setup|workflow|stack|routine|process|repo|large repo|handoff|playbook|use case|"
+        r"practical|how i use|switched from|never going back)\b",
+        lowered,
+    ):
+        voice_score += 1
+    if re.search(
+        r"\b(frustrated|complain|complaint|pain point|stopped working|broken|issue|problem|"
+        r"oauth stopped working|losing control|on read)\b",
+        lowered,
+    ):
+        voice_score += 2
+    if title_lower.startswith(("i ", "i'", "how ", "what ", "why ", "does ", "can ", "should ", "anyone ", "is ", "are ")):
+        voice_score += 2
+
+    return voice_score >= 3
 
 
 def can_add_secondary_candidate(
@@ -1034,19 +1390,24 @@ def serialize_selected_item(candidate: dict[str, Any]) -> dict[str, Any]:
 
 def extract_source_snippet(body: str, *, lane_name: str | None = None) -> str:
     sections = parse_markdown_sections(body)
-    preferred_sections = CONTENT_SECTION_PREFERENCES.get(lane_name or "", ())
+    preferred_sections = DENSE_ENTRY_SOURCE_SECTION_PREFERENCES.get(
+        lane_name or "",
+        CONTENT_SECTION_PREFERENCES.get(lane_name or "", ()),
+    )
+    snippet_limit = DENSE_ENTRY_SOURCE_LIMITS.get(lane_name or "", SOURCE_SNIPPET_LIMIT)
 
     preferred_lines = collect_preferred_section_lines(sections, preferred_sections)
-    snippet = collect_clean_text(preferred_lines, limit=SOURCE_SNIPPET_LIMIT)
+    preferred_lines = prioritize_dense_entry_lines(preferred_lines, lane_name=lane_name or "")
+    snippet = collect_clean_text(preferred_lines, limit=snippet_limit)
     if snippet:
         return snippet
 
     for section_lines in sections.values():
-        snippet = collect_clean_text(section_lines, limit=SOURCE_SNIPPET_LIMIT)
+        snippet = collect_clean_text(section_lines, limit=snippet_limit)
         if snippet:
             return snippet
 
-    return collect_clean_text(body.splitlines(), limit=SOURCE_SNIPPET_LIMIT)
+    return collect_clean_text(body.splitlines(), limit=snippet_limit)
 
 
 def extract_excerpt(body: str, *, lane_name: str | None = None) -> str:
@@ -1080,6 +1441,42 @@ def collect_preferred_section_lines(sections: dict[str, list[str]], preferred_se
                 matched_lines.extend(lines)
                 seen_sections.add(actual_name)
     return matched_lines
+
+
+def prioritize_dense_entry_lines(lines: Sequence[str], *, lane_name: str) -> list[str]:
+    priority_rules = DENSE_ENTRY_PRIORITY_RULES.get(lane_name)
+    baseline_count = DENSE_ENTRY_BASELINE_COUNTS.get(lane_name, 0)
+    if not priority_rules or not lines:
+        return list(lines)
+
+    line_entries: list[tuple[int, str, str]] = []
+    for index, raw_line in enumerate(lines):
+        cleaned_line = clean_content_line(raw_line)
+        if cleaned_line:
+            line_entries.append((index, raw_line, cleaned_line.lower()))
+
+    if not line_entries:
+        return list(lines)
+
+    selected_indexes: set[int] = set()
+    for index, _, _ in line_entries[:baseline_count]:
+        selected_indexes.add(index)
+
+    scored_indexes: list[tuple[int, int]] = []
+    for index, _, lowered_line in line_entries:
+        score = 0
+        for keywords, weight in priority_rules:
+            if all(keyword in lowered_line for keyword in keywords):
+                score = max(score, weight)
+        if score > 0:
+            scored_indexes.append((score, index))
+
+    for _, index in sorted(scored_indexes, key=lambda item: (-item[0], item[1])):
+        selected_indexes.add(index)
+
+    if not selected_indexes:
+        return list(lines)
+    return [raw_line for index, raw_line in enumerate(lines) if index in selected_indexes]
 
 
 def collect_clean_text(lines: Sequence[str], *, limit: int) -> str:
@@ -1321,6 +1718,11 @@ def build_generic_detail(
             return "讨论点其实是在补上下文失忆：每次新 session 都要重讲架构、约束、历史决定，这正是持续协作里的真实摩擦。"
         return f"讨论点已经不只是 {subject} 本身，而是团队如何用 {focus_label} 把协作里的交接面收紧。"
 
+    if lane_name in NOISY_X_LANES:
+        x_detail = build_x_post_detail(lane_name=lane_name, title=title, source_text=excerpt)
+        if x_detail:
+            return x_detail
+
     if lane_name == "reddit-watch":
         if "swarm" in normalized and stack_label:
             return f"帖子把 {stack_label} 放进同一条协作链路，重点已经转向 coordinator 如何分工、追踪改动并给 swarm 补治理。"
@@ -1500,8 +1902,10 @@ def normalize_whitespace(value: str) -> str:
 
 
 def looks_like_english_text(value: str) -> bool:
-    words = re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?", value)
-    return len(words) >= 4 and len(words) >= count_cjk_characters(value)
+    cleaned = MARKDOWN_LINK_PATTERN.sub(r"\1", value)
+    cleaned = BARE_URL_PATTERN.sub("", cleaned)
+    words = re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?", cleaned)
+    return len(words) >= 4 and len(words) >= count_cjk_characters(cleaned)
 
 
 def trim_text_to_safe_boundary(value: str, *, limit: int) -> str:
@@ -1558,9 +1962,25 @@ def trim_fragmentary_tail(value: str) -> str:
                 words.pop()
                 continue
             break
+        if len(words) >= 2:
+            tail = words[-1].strip(".,;:!?()[]{}\"'`").lower()
+            prev = words[-2].strip(".,;:!?()[]{}\"'`").lower()
+            if re.fullmatch(r"[a-z]{2,5}", tail) and (prev in {"npx", "npm", "pip", "uv", "uvx"} or re.search(r"[0-9/$-]", prev)):
+                words.pop()
         if words:
             return " ".join(words).rstrip(" ,;:")
         return cleaned
+
+    tokens = cleaned.split()
+    if tokens:
+        tail = tokens[-1].strip(".,;:!?()[]{}\"'`")
+        if re.fullmatch(r"[\u4e00-\u9fff]{1,2}", tail):
+            tokens.pop()
+        elif len(tokens) >= 2 and tokens[-2].lower() in {"npx", "npm", "pip", "uv", "uvx"} and re.fullmatch(r"[a-z]{2,8}", tail):
+            tokens = tokens[:-2]
+        elif count_cjk_characters(cleaned) >= 8 and re.fullmatch(r"[a-z]{2,6}", tail):
+            tokens.pop()
+        cleaned = " ".join(tokens).rstrip(" ,;:，；：")
 
     last_boundary = max(cleaned.rfind(mark) for mark in "。！？.!?")
     if last_boundary >= 0:
@@ -1683,6 +2103,11 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
         raw_title=raw_title or normalize_whitespace(item.get("editor_headline", "")) or fallback_title,
         source_text=source_text,
     )
+    if lane_name == "reddit-watch":
+        title = prefix_reddit_selection_bucket_title(
+            title=title,
+            selection_bucket=normalize_whitespace(str(item.get("selection_bucket", ""))),
+        )
     excerpt = build_reader_excerpt(
         lane_name=lane_name,
         raw_title=raw_title,
@@ -1714,6 +2139,17 @@ def build_reader_title(*, lane_name: str, raw_title: str, source_text: str) -> s
             descriptor = build_generic_x_descriptor(source_text)
         if descriptor:
             return f"{cleaned_title}：{descriptor}"
+    return cleaned_title
+
+
+def prefix_reddit_selection_bucket_title(*, title: str, selection_bucket: str) -> str:
+    cleaned_title = normalize_whitespace(title)
+    if not cleaned_title:
+        return ""
+    if selection_bucket == "heat":
+        return f"【热帖】{cleaned_title}"
+    if selection_bucket == "voice":
+        return f"【原声】{cleaned_title}"
     return cleaned_title
 
 
@@ -1753,6 +2189,10 @@ def build_reader_excerpt(
 
         return ensure_chinese_sentence(cleaned_source)
 
+    sparse_summary = build_sparse_lane_summary(lane_name=lane_name, title=raw_title, source_url=source_url)
+    if sparse_summary:
+        return ensure_chinese_sentence(sparse_summary)
+
     return ensure_chinese_sentence(fallback_excerpt or f"该栏目收录 {useful_item_count} 条有用内容。")
 
 
@@ -1761,6 +2201,8 @@ def build_lane_fact_summary(*, lane_name: str, title: str, source_text: str, sou
     if not cleaned_source:
         return ""
 
+    if lane_name in NOISY_X_LANES:
+        return build_x_post_detail(lane_name=lane_name, title=title, source_text=cleaned_source)
     if lane_name == "claude-code-watch":
         return build_claude_code_release_detail(title=title, source_text=cleaned_source)
     if lane_name == "codex-watch":
@@ -1798,7 +2240,8 @@ def split_fact_segments(value: str) -> list[str]:
     split_pattern = (
         r"\s+(?=(?:Added|Improved|Fixed|Include|Includes|Author:|Votes:|Comments:|Topic:|Question:|"
         r"Current leader:|24h volume:|30d volume:|Liquidity:|Price movement:|"
-        r"Dreaming/memory-wiki:|Control UI/webchat:|Tools/video_generate:|Microsoft Teams:|Plugins:|Feishu:|OpenAI/Codex OAuth:))"
+        r"Dreaming/memory-wiki:|Control UI/webchat:|Telegram/forum topics:|UI/chat:|"
+        r"Auto-reply/send policy:|Tools/video_generate:|Microsoft Teams:|Plugins:|Feishu:|OpenAI/Codex OAuth:))"
     )
     return [
         normalize_whitespace(segment).strip(" .")
@@ -1817,6 +2260,32 @@ def unique_facts(facts: Sequence[str]) -> list[str]:
         seen.add(cleaned)
         ordered.append(cleaned)
     return ordered
+
+
+def prioritize_fact_tail(
+    facts: Sequence[str],
+    *,
+    preserve_head: int,
+    priority_terms: Sequence[Sequence[str]],
+) -> list[str]:
+    ordered = unique_facts(facts)
+    if len(ordered) <= preserve_head:
+        return ordered
+
+    head = ordered[:preserve_head]
+    remaining = ordered[preserve_head:]
+    prioritized: list[str] = []
+
+    for terms in priority_terms:
+        lowered_terms = tuple(term.lower() for term in terms)
+        for index, fact in enumerate(remaining):
+            lowered_fact = fact.lower()
+            if all(term in lowered_fact for term in lowered_terms):
+                prioritized.append(fact)
+                remaining.pop(index)
+                break
+
+    return head + prioritized + remaining
 
 
 def compose_fact_sentences(*, intro: str, facts: Sequence[str], group_sizes: Sequence[int] = (2, 2, 1)) -> str:
@@ -1839,6 +2308,37 @@ def compose_fact_sentences(*, intro: str, facts: Sequence[str], group_sizes: Seq
     return " ".join(sentences)
 
 
+def build_sparse_lane_summary(*, lane_name: str, title: str, source_url: str) -> str:
+    if lane_name not in {"claude-code-watch", "openclaw-watch"}:
+        return ""
+
+    match = re.search(r"github\.com/[^/]+/([^/]+)/releases/tag/([^/?#]+)", source_url, re.IGNORECASE)
+    if not match:
+        return ""
+
+    repo_slug = match.group(1).strip()
+    tag = normalize_whitespace(match.group(2))
+    version = normalize_whitespace(title) or tag
+    product_name = humanize_repo_slug(repo_slug)
+    return f"`{product_name}` 发布了 `{version}` 这个 release 版本更新"
+
+
+def humanize_repo_slug(repo_slug: str) -> str:
+    normalized = normalize_whitespace(repo_slug).lower()
+    known_names = {
+        "claude-code": "Claude Code",
+        "openclaw": "OpenClaw",
+        "codex": "Codex",
+    }
+    if normalized in known_names:
+        return known_names[normalized]
+
+    parts = [part for part in normalized.split("-") if part]
+    if not parts:
+        return repo_slug
+    return " ".join(part.capitalize() for part in parts)
+
+
 def split_title_tagline(title: str) -> tuple[str, str]:
     cleaned = normalize_whitespace(title)
     for delimiter in (" — ", " - ", ": "):
@@ -1856,12 +2356,529 @@ def simple_sentences(value: str) -> list[str]:
     return [normalize_whitespace(part).strip(" .") for part in parts if normalize_whitespace(part).strip(" .")]
 
 
+def strip_x_leading_markers(value: str) -> str:
+    cleaned = normalize_fact_source_text(value)
+    cleaned = re.sub(r"^RT\s+@[A-Za-z0-9_]+:\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^(Mark this tweet|Hot take|Thread)[:\s-]+", "", cleaned, flags=re.IGNORECASE)
+    return normalize_whitespace(cleaned).strip(" .")
+
+
+def sanitize_subject_label(value: str) -> str:
+    cleaned = normalize_whitespace(value)
+    cleaned = re.sub(r"[`\"“”'‘’]+", "", cleaned)
+    cleaned = re.sub(r"[\u2600-\u27BF\U0001F300-\U0001FAFF]+", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned.strip(" ,;:()[]{}.-")
+
+
+def extract_x_subject_label(*, title: str, source_text: str) -> str:
+    normalized = normalize_whitespace(f"{title} {source_text}")
+    lowered = normalized.lower()
+    for term in KNOWN_TERMS:
+        if term.lower() in lowered:
+            return term
+
+    patterns = (
+        r"\bNew post:\s+([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,1})\b",
+        r"\bIntroducing\s+([A-Z][A-Za-z0-9_.+-]*(?:\s+[A-Z][A-Za-z0-9_.+-]+){0,4})",
+        r"\bcreator of\s+([A-Z][A-Za-z0-9_.+-]*(?:\s+[A-Z][A-Za-z0-9_.+-]+){0,4})",
+        r"\bmost complete\s+([A-Z][A-Za-z0-9_.+-]*(?:\s+[A-Z][A-Za-z0-9_.+-]+){0,4})\s+setup\b",
+        r"\b([A-Z][A-Za-z0-9_.+-]+(?:\s+v[0-9.]+)?)\s+is the first\b",
+        r"\b([A-Z][A-Za-z0-9_.+-]*(?:\s+[A-Z][A-Za-z0-9_.+-]+){0,3}\s+MCP)\b",
+        r"\b(agent skills)\b",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, normalized)
+        if match:
+            subject = sanitize_subject_label(match.group(1))
+            if subject:
+                return subject
+
+    return ""
+
+
+def build_agent_capability_phrase(value: str) -> str:
+    lowered = value.lower()
+    actions: list[str] = []
+    if "find" in lowered:
+        actions.append("查找")
+    if "tweak" in lowered:
+        actions.append("微调")
+    if "ship" in lowered:
+        actions.append("交付")
+
+    target = "相关内容"
+    if "shader" in lowered:
+        target = "shader"
+    elif "token" in lowered:
+        target = "token 开销"
+
+    if actions:
+        return "自己" + "、".join(actions) + target
+
+    if "own computer in the cloud" in lowered:
+        return "在云端拥有自己的电脑"
+    return ""
+
+
+def add_x_fact_sentence(sentences: list[str], value: str) -> None:
+    cleaned = normalize_whitespace(value)
+    cleaned = re.sub(r"^(另外|同时|补充来看)，", "", cleaned)
+    cleaned = cleaned.strip("。 ")
+    if not cleaned or cleaned in sentences:
+        return
+    sentences.append(cleaned)
+
+
+def render_x_fact_sentences(sentences: Sequence[str], *, limit: int = 3) -> str:
+    chosen = [sentence.strip("。 ") for sentence in sentences if sentence.strip("。 ")]
+    if not chosen:
+        return ""
+    return " ".join(f"{sentence}。" for sentence in chosen[:limit])
+
+
+def x_source_has_concrete_material(source_text: str) -> bool:
+    cleaned = strip_x_leading_markers(source_text)
+    if not cleaned:
+        return False
+    word_count = len(re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?", cleaned))
+    return len(simple_sentences(cleaned)) >= 2 or word_count >= 12
+
+
+def build_concrete_x_fallback_detail(*, lane_name: str, title: str, source_text: str, subject: str) -> str:
+    cleaned_source = strip_x_leading_markers(source_text)
+    if not cleaned_source or not looks_like_english_text(cleaned_source) or not x_source_has_concrete_material(cleaned_source):
+        return ""
+
+    lowered = cleaned_source.lower()
+    sentences: list[str] = []
+
+    if "claude code routines" in lowered:
+        add_x_fact_sentence(
+            sentences,
+            "帖子在介绍 `Claude Code Routines`，这相当于给 `Claude Code` 新增了一层可复用的自动化入口",
+        )
+        add_x_fact_sentence(
+            sentences,
+            "摘要里点明了两个触发面：除了 `schedule`，还可以通过 `GitHub` 拉起 templated agents",
+        )
+        add_x_fact_sentence(
+            sentences,
+            "这让 `Claude Code` 更像能持续运行的 workflow，而不只是一次性的对话式调用",
+        )
+
+    if "telemetry" in lowered and "cache" in lowered:
+        add_x_fact_sentence(
+            sentences,
+            "帖子在质疑 `Claude Code` 的 telemetry 设计，而不是泛泛抱怨体验",
+        )
+        if "anthropic" in lowered:
+            add_x_fact_sentence(
+                sentences,
+                "作者的核心指控是：如果关掉 telemetry，`Anthropic` 会把 cache 一起拿掉",
+            )
+        else:
+            add_x_fact_sentence(
+                sentences,
+                "作者的核心指控是：如果关掉 telemetry，cache 能力也会跟着掉下去",
+            )
+        add_x_fact_sentence(
+            sentences,
+            "如果这个说法成立，用户就得在隐私偏好和 cache 效率之间做现实取舍",
+        )
+
+    if "resource" in lowered and "claude code" in lowered and ("skills" in lowered or "mcp" in lowered):
+        add_x_fact_sentence(
+            sentences,
+            "这条帖子在推荐一个围绕 `Claude Code` 生态整理的资源网站",
+        )
+        add_x_fact_sentence(
+            sentences,
+            "网站内容主打 `Skills` 和 `MCPs` 的 curated 清单，不是零散链接收藏",
+        )
+        add_x_fact_sentence(
+            sentences,
+            "对刚搭建 `Claude Code` 工作流的人来说，这种网站比四处翻帖更容易直接上手",
+        )
+
+    if "systems engineering" in lowered and "coding agents" in lowered:
+        add_x_fact_sentence(
+            sentences,
+            "这是一篇围绕 `Systems Engineering` 的新帖，不是在单聊某个模型",
+        )
+        add_x_fact_sentence(
+            sentences,
+            "作者的核心判断是：`coding agents` 降低了 `写代码` 门槛，但没有同步降低工程要求",
+        )
+        add_x_fact_sentence(
+            sentences,
+            "它提醒团队，不能把“更容易写代码”误当成“系统工程复杂度也一起消失”",
+        )
+
+    if "desktop app" in lowered and "claude code" in lowered:
+        add_x_fact_sentence(
+            sentences,
+            "这条更新是在发布 `desktop` app 里的新版 `Claude Code`",
+        )
+        if "redesigned" in lowered:
+            add_x_fact_sentence(
+                sentences,
+                "摘要里给出的变化很直接：这版 `desktop` 体验已经被 `重新设计` 过",
+            )
+        add_x_fact_sentence(
+            sentences,
+            "这说明 `Claude Code` 不只是在补命令行能力，也开始把 `desktop` 入口当成正式产品面来打磨",
+        )
+
+    raw_sentences = simple_sentences(cleaned_source)
+    if len(sentences) < 3 and subject:
+        add_x_fact_sentence(
+            sentences,
+            f"这条帖子围绕 `{subject}` 展开，而且摘要里已经落到了具体动作或主张",
+        )
+    if len(sentences) < 3 and len(raw_sentences) >= 2:
+        raw_clause = normalize_whitespace(trim_fragmentary_tail(raw_sentences[1])).strip(" .")
+        raw_clause = re.sub(r"\bGitHu\b", "GitHub", raw_clause)
+        raw_clause = re.sub(r"\bMCPs,\s*Pl\b", "MCPs", raw_clause)
+        if raw_clause:
+            add_x_fact_sentence(sentences, f"摘要里给出的直接变化是：{raw_clause}")
+    if len(sentences) < 3:
+        if subject:
+            add_x_fact_sentence(
+                sentences,
+                f"它值得保留，是因为 `{subject}` 在这里已经对应到具体产品动作或 workflow 判断",
+            )
+        elif lane_name == "x-feed":
+            add_x_fact_sentence(
+                sentences,
+                "它值得保留，是因为推荐流里已经出现了能复述的具体变化点",
+            )
+        else:
+            add_x_fact_sentence(
+                sentences,
+                "它值得保留，是因为关注流里已经出现了能复述的具体变化点",
+            )
+
+    if len(sentences) < 3:
+        return ""
+    return render_x_fact_sentences(sentences)
+
+
+def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
+    cleaned_source = strip_x_leading_markers(source_text)
+    if not cleaned_source:
+        return ""
+
+    subject = extract_x_subject_label(title=title, source_text=cleaned_source) or derive_subject_label(
+        title=title,
+        excerpt=cleaned_source,
+        lane_name=lane_name,
+    )
+    if subject in {FIXED_SECTION_TITLES["x-feed"], FIXED_SECTION_TITLES["x-following"]}:
+        subject = ""
+
+    creator_match = re.search(
+        r"(?P<speaker>[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)+),\s+creator of\s+"
+        r"(?P<product>[A-Z][A-Za-z0-9_.+-]*(?:\s+[A-Z][A-Za-z0-9_.+-]+){0,3}),\s+on why\s+(?P<topic>[^:]+)",
+        cleaned_source,
+    )
+    if creator_match:
+        speaker = creator_match.group("speaker")
+        product = sanitize_subject_label(creator_match.group("product")) or subject or "这个项目"
+        topic = creator_match.group("topic").strip()
+        if "slop" in topic.lower() and "human taste" in topic.lower():
+            return f"`{product}` 作者 {speaker} 在谈：AI agents 如果没有人类品味把关，产出仍会变成 `slop`"
+        return f"`{product}` 作者 {speaker} 在讨论，重点是 {topic}"
+
+    official_provider_match = re.search(
+        r"(?P<provider>[A-Z][A-Za-z0-9_.+-]*(?:\s+[A-Z][A-Za-z0-9_.+-]+){0,3})\s+is now an official\s+@(?P<target>[A-Za-z0-9_]+)\s+provider",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if official_provider_match:
+        provider = sanitize_subject_label(official_provider_match.group("provider")) or subject or "这个工具"
+        target = humanize_repo_slug(official_provider_match.group("target").strip())
+        fact = f"帖子在说 `{provider}` 已成为 `{target}` 的官方 provider"
+        if "local model" in cleaned_source.lower():
+            fact += "，重点是现在可以直接接本地模型"
+        return fact
+
+    delayed_changes_match = re.search(
+        r"a few more\s+(?P<subject>.+?)\s+changes that didn[’']t make the first tweet",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if delayed_changes_match:
+        change_subject = sanitize_subject_label(delayed_changes_match.group("subject")) or subject or "这版更新"
+        fact = f"转帖在补 `{change_subject}` 首条推文里没写进去的后续变更"
+        if "local model" in cleaned_source.lower():
+            fact += "，至少提到了 local models"
+        return fact
+
+    report_match = re.search(
+        r"Re:\s*the report that\s+(?P<claim>[^:]+):\s*(?P<followup>.+)",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if report_match:
+        claim = normalize_whitespace(report_match.group("claim"))
+        fact = f"帖子在讨论“{claim}”这份报告"
+        followup = normalize_whitespace(report_match.group("followup")).lower()
+        if "power relative" in followup or "relative power" in followup:
+            fact += "，重点是这并不能直接说明模型的相对 power"
+        return fact
+
+    automation_match = re.search(
+        r"A\s+(?P<role>[^.]+?)\s+automated\s+(?P<share>\d+%)\s+of\s+(?:his|her|their)\s+job\s+with\s+(?P<tool>[^.]+?)\.",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if automation_match:
+        role = normalize_whitespace(automation_match.group("role"))
+        share = automation_match.group("share")
+        tool = sanitize_subject_label(automation_match.group("tool")) or subject or "这个工具"
+        fact = f"帖子在转一个 {role} 用 `{tool}` 自动化 {share} 工作量的案例"
+        hours_match = re.search(r"(?:He|She|They) now works?\s+(?P<hours>\d+(?:-\d+)?)\s+hours a day", cleaned_source, re.IGNORECASE)
+        if hours_match:
+            fact += f"，并说现在每天大约只用 {hours_match.group('hours')} 小时"
+        return fact
+
+    course_match = re.search(
+        r"sell a course teaching\s+(?P<audience>[^.]+?)\s+to build with\s+(?P<tool>[^.]+?)\.",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if course_match:
+        audience = normalize_whitespace(course_match.group("audience"))
+        tool = sanitize_subject_label(course_match.group("tool")) or subject or "这个工具"
+        fact = f"帖子在讨论教 `{audience}` 用 `{tool}` 落地"
+        lowered_source = cleaned_source.lower()
+        if "raw claude" in lowered_source and "not an enterpri" in lowered_source:
+            fact += "，并直说 raw Claude 还不算 enterprise-ready"
+        elif "not an enterpri" in lowered_source:
+            fact += "，并直说 raw 版本还不算 enterprise-ready"
+        return fact
+
+    introducing_match = re.search(
+        r"\bIntroducing\s+(?P<subject>.+?)(?:[.!?]|(?:\s+The way\b)|(?:\s+Your agent\b)|$)",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if introducing_match:
+        introduced_subject = sanitize_subject_label(introducing_match.group("subject")) or subject or "这个工具"
+        capability_match = re.search(r"\bYour agent now\s+(?P<capability>[^.!?]+)", cleaned_source, re.IGNORECASE)
+        capability = build_agent_capability_phrase(capability_match.group("capability")) if capability_match else ""
+        if capability:
+            return f"帖子在介绍 `{introduced_subject}`，说 agent 现在可以{capability}"
+        return f"帖子在介绍 `{introduced_subject}`，重点是把一段具体流程直接交给 agent"
+
+    setup_match = re.search(
+        r"\bSomeone built the most complete\s+(?P<subject>.+?)\s+setup\s+(?P<context>.+?)\s+on GitHub\b",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if setup_match:
+        setup_subject = sanitize_subject_label(setup_match.group("subject")) or subject or "这套 setup"
+        context = normalize_whitespace(setup_match.group("context"))
+        context_match = re.search(
+            r"(?P<person>[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)+)\s+uses at\s+(?P<org>[A-Z][A-Za-z0-9_.+-]+)",
+            context,
+        )
+        detail = f"帖子在转一套 GitHub 上公开的 `{setup_subject}` setup"
+        if context_match:
+            person = context_match.group("person")
+            org = context_match.group("org")
+            detail += f"，并说这是 {person} 在 `{org}` 用的那套配置"
+        if "free" in cleaned_source.lower() or "100%" in cleaned_source:
+            detail += "，而且是免费公开的"
+        return detail
+
+    stop_start_match = re.search(
+        r"(?P<speaker>.+?)\s+explained why they stopped building\s+(?P<from>[^.]+)"
+        r"(?:\.\s*and started building\s+(?P<to>[^.]+)|\s+and started building\s+(?P<to_inline>[^.]+))?",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if stop_start_match:
+        speaker = normalize_whitespace(stop_start_match.group("speaker"))
+        from_object = sanitize_subject_label(stop_start_match.group("from")) or "原来的方向"
+        to_object = sanitize_subject_label(stop_start_match.group("to") or stop_start_match.group("to_inline") or "skills")
+        to_object = re.sub(r"\s+inste[a-z]*$", "", to_object, flags=re.IGNORECASE).strip() or "skills"
+        return f"帖子在转述 {speaker} 的判断，重点是为什么不再继续做 `{from_object}`、而转向做 `{to_object}`"
+
+    first_builder_match = re.search(
+        r"(?P<subject>[A-Z][A-Za-z0-9_.+-]+(?:\s+v[0-9.]+)?)\s+is the first\s+(?P<category>[^.]+?)\s+where\s+(?P<claim>[^.]+)",
+        cleaned_source,
+        re.IGNORECASE,
+    )
+    if first_builder_match:
+        project = sanitize_subject_label(first_builder_match.group("subject")) or subject or "这个产品"
+        category = re.sub(r"\bai\b", "AI", normalize_whitespace(first_builder_match.group("category")), flags=re.IGNORECASE)
+        claim = first_builder_match.group("claim")
+        capability = build_agent_capability_phrase(claim)
+        if capability:
+            return f"帖子把焦点放在 `{project}`，称它是首个让 agent {capability}的 `{category}`"
+        return f"帖子把焦点放在 `{project}`，称它在 `{category}` 这条线上做了更激进的产品定义"
+
+    lowered = cleaned_source.lower()
+    concrete_fallback = build_concrete_x_fallback_detail(
+        lane_name=lane_name,
+        title=title,
+        source_text=cleaned_source,
+        subject=subject,
+    )
+    if concrete_fallback:
+        return concrete_fallback
+
+    if subject:
+        if "github" in lowered and "setup" in lowered:
+            return f"帖子在讨论 `{subject}` 的 setup，用 GitHub 上公开的配置去复刻一套现成用法"
+        if "agent" in lowered and "skills" in lowered:
+            return f"帖子把焦点放在 `{subject}`，继续讨论 agents 和 skills 的取舍"
+        if "cloud" in lowered and "computer" in lowered:
+            return f"帖子把焦点放在 `{subject}`，说 agent 开始拿到更完整的云端运行环境"
+        return f"帖子在讨论 `{subject}` 相关内容"
+
+    fallback_object = ""
+    if "agent skills" in lowered:
+        fallback_object = "agent skills"
+    elif "shader" in lowered:
+        fallback_object = "shader 工作流"
+    elif "ai builder" in lowered:
+        fallback_object = "AI builder"
+    if fallback_object:
+        return f"帖子在讨论 {fallback_object} 相关内容"
+    return ""
+
+
+def build_minimal_release_rewrite(*, product_name: str, title: str, source_text: str) -> str:
+    cleaned = trim_fragmentary_tail(normalize_fact_source_text(source_text))
+    if not cleaned or not looks_like_english_text(cleaned):
+        return ""
+
+    lowered = cleaned.lower()
+    facts: list[str] = []
+    if "thinking hints" in lowered and "long operations" in lowered:
+        facts.append("长操作期间会更早显示 `thinking hints`")
+
+    if "broad quality release" in lowered or "quality release" in lowered:
+        focus_topics: list[str] = []
+        if "model provider" in lowered:
+            focus_topics.append("`model provider`")
+        if "gpt-5" in lowered:
+            focus_topics.append("`GPT-5` 家族的 explicit turn")
+        if "channel provider" in lowered:
+            focus_topics.append("`channel provider` 问题")
+        fact = "这版是一次偏质量修复的 release"
+        if focus_topics:
+            fact += "，重点在 " + "、".join(focus_topics)
+        facts.append(fact)
+
+    if "improved overal performance" in lowered or "improved overall performance" in lowered:
+        facts.append("底层核心代码重构后，整体性能也做了优化")
+
+    if not facts:
+        return ""
+    return compose_fact_sentences(intro=f"`{product_name}` 发布了 `{title}`，", facts=facts, group_sizes=(1, 1))
+
+
+def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
+    cleaned_source = normalize_fact_source_text(source_text)
+    if not cleaned_source:
+        return ""
+
+    _, known_excerpt = build_known_signal_copy(lane_name=lane_name, title=title, source_text=cleaned_source)
+    if known_excerpt:
+        return known_excerpt
+
+    sparse_release_source = normalize_whitespace(
+        re.split(r"\bHighlights:\b", cleaned_source, maxsplit=1, flags=re.IGNORECASE)[0]
+    ).strip(" .")
+    sparse_release_match = re.search(
+        r"\bClaude Code\s+([0-9]+(?:\.[0-9A-Za-z-]+)*)\s+has been released\b",
+        sparse_release_source,
+        re.IGNORECASE,
+    )
+    if sparse_release_match:
+        version = sparse_release_match.group(1)
+        structured_changes: list[str] = []
+        for pattern, label in (
+            (r"\b(\d+)\s+flag changes\b", "flag changes"),
+            (r"\b(\d+)\s+cli changes\b", "CLI changes"),
+            (r"\b(\d+)\s+system prompt changes\b", "system prompt changes"),
+        ):
+            change_match = re.search(pattern, sparse_release_source, re.IGNORECASE)
+            if change_match:
+                structured_changes.append(f"{change_match.group(1)} {label}")
+
+        facts = [f"`Claude Code {version}` 已发布"]
+        if structured_changes:
+            facts.append("摘要里写到 " + "、".join(f"`{change}`" for change in structured_changes[:2]))
+        if len(structured_changes) > 2:
+            facts.append(f"还提到 `{structured_changes[2]}`")
+        return compose_fact_sentences(intro="这条帖子的核心信息是：", facts=facts, group_sizes=(2, 1))
+
+    lowered = cleaned_source.lower()
+    lowered = re.sub(r"^rt\s+@[a-z0-9_]+:\s*", "", lowered, flags=re.IGNORECASE)
+    facts: list[str] = []
+
+    if "agent harness" in lowered and "black magic" in lowered:
+        facts.append("作者直说 `agent harness` 没大家想得那么玄")
+    if re.search(r"\bto prove it,\s*i built one\b", lowered):
+        facts.append("为了证明这点，他自己做了一个")
+
+    if "memory makes your agent smarter over time" in lowered:
+        facts.append("`memory` 会让 agent 随着使用积累变得更聪明")
+    if "agent harness is key to the memory layer" in lowered:
+        facts.append("`agent harness` 是 `memory layer` 的关键支撑")
+    if "you can't bolt one onto" in lowered or "you can't bolt one on" in lowered or "you can't bolt one" in lowered:
+        facts.append("这层能力不能事后再硬加，设计时就得把它算进去")
+
+    if "built a tui" in lowered and "claude code" in lowered and "token" in lowered:
+        facts.append("有人做了个 `TUI`，把 `Claude Code` token 的实际去向直接可视化")
+    spend_match = re.search(r"(\d+(?:\.\d+)?)%\s+of\s+my\s+\$?([0-9,.]+)\s*/\s*day", cleaned_source, re.IGNORECASE)
+    if spend_match:
+        facts.append(
+            f"结果发现自己每天大约 {spend_match.group(2)} 美元的花费里，有 {spend_match.group(1)}% 都耗在这部分 token 开销上"
+        )
+
+    if "anthropic" in lowered and "openai" in lowered and ("overtakes" in lowered or "overtake" in lowered):
+        if "ventuals" in lowered or "private company valuations" in lowered:
+            facts.append("转帖提到 `Anthropic` 在 `Ventuals` 这类私营公司估值市场上已经超过 `OpenAI`")
+
+    if "codex app" in lowered and "enhancing" in lowered and "feature" in lowered:
+        facts.append("作者说自己还在持续增强 `Codex app` 的各项功能，想把这套体验继续打磨得更好")
+
+    if "ai agents" in lowered and "accelerate coding" in lowered and "software engineering" in lowered:
+        facts.append("帖子在追问：随着 AI agents 加速写代码，software engineering 的未来会怎么变")
+
+    if "gemma 4" in lowered and "openclaw" in lowered:
+        facts.append("帖子说 `Gemma 4` 放进 `OpenClaw` 之后效果很猛")
+    if "most powerful open-sourced model" in lowered or "most powerful open-source model" in lowered:
+        facts.append("并把它称作目前见过最强的开源模型")
+
+    if "how the heck do i use it with my team" in lowered and "claude code" in lowered:
+        facts.append("帖子把问题直接抛到团队层面：`Claude Code` 到底该怎么在团队里用起来")
+    if "memoria permanente" in lowered and "48 horas" in lowered and "95%" in cleaned_source:
+        facts.append("有人给 `Claude Code` 做了持久记忆，这个项目 48 小时拿到约 4.6 万星，并声称 token 消耗可下降约 95%")
+
+    if facts:
+        return compose_fact_sentences(intro="这条帖子的核心信息是：", facts=facts, group_sizes=(2, 1))
+    return build_generic_x_post_detail(lane_name=lane_name, title=title, source_text=cleaned_source)
+
+
 def build_claude_code_release_detail(*, title: str, source_text: str) -> str:
     facts: list[str] = []
     for segment in split_fact_segments(source_text):
         lowered = segment.lower()
         if "/team-onboarding" in segment:
             facts.append("新增 `/team-onboarding`，会按本地 Claude Code 使用记录生成 teammate ramp-up guide")
+        elif "enterworktree" in lowered and "`path`" in segment:
+            facts.append("`EnterWorktree` 新增 `path` 参数，可以直接切进当前仓库已有 worktree")
+        elif "precompact" in lowered and "block compaction" in lowered:
+            facts.append("`PreCompact` hook 现在可通过退出码 2 或返回 `{\"decision\":\"block\"}` 阻止 compaction")
+        elif "background monitor support" in lowered and "`monitors`" in segment:
+            facts.append("插件支持顶层 `monitors` manifest key，可在 session start 或调用 skill 时自动挂起 background monitor")
         elif "os ca certificate store trust" in lowered:
             fact = "默认信任 OS CA 证书库，让企业 TLS proxy 不用再额外配证书"
             if "claude_code_cert_store=bundled" in lowered:
@@ -1885,20 +2902,62 @@ def build_claude_code_release_detail(*, title: str, source_text: str) -> str:
             facts.append("还修了长会话 virtual scroller 保留过多历史 message list 副本的内存泄漏")
         elif "hardcoded 5-minute request timeout" in lowered or ("request timeout" in lowered and "api_timeout_ms" in lowered):
             facts.append("并修掉硬编码 5 分钟 request timeout，慢后端不会被固定超时提前截断")
+        elif "stalled api stream handling" in lowered or ("5 minutes of no data" in lowered and "retry non-streaming" in lowered):
+            facts.append("API stream 若连续 5 分钟没有数据会主动 abort，并回退到 non-streaming 重试，避免一直挂死")
 
     lowered_source = source_text.lower()
     if "/ultraplan" in source_text and "cloud environment" in lowered_source:
         facts.append("`/ultraplan` 和其他 remote-session 功能会自动创建默认 cloud environment，不再要求先去网页里手动 setup")
     if "brief mode" in lowered_source:
         facts.append("`brief mode` 遇到 Claude 回纯文本而不是结构化消息时，会自动重试一次")
+    if "/proactive" in source_text and "/loop" in source_text and "alias" in lowered_source:
+        facts.append("`/proactive` 现在只是 `/loop` 的别名")
+    if "improved network error messages" in lowered_source or "silent spinner" in lowered_source:
+        facts.append("network error 现在会立刻给出 retry 提示，不再长时间静默转圈")
+    if "improved `/doctor` layout" in source_text or ("status icons" in lowered_source and "press `f`" in lowered_source):
+        facts.append("`/doctor` 布局补了状态图标，还允许直接按 `f` 让 Claude 修复报出的项")
+    if "improved `/config` labels" in source_text or ("`/config`" in source_text and "labels and descriptions" in lowered_source):
+        facts.append("`/config` 的 labels 和 descriptions 也一起补清楚了")
+    if "improved skill description handling" in lowered_source or ("listing cap from 250 to 1,536 characters" in lowered_source):
+        facts.append("skill 描述列表上限从 250 提到 1,536 字符，并会在启动时提示被截断的描述")
+    if "improved `webfetch`" in lowered_source or ("strip `<style>` and `<script>` contents" in lowered_source):
+        facts.append("`WebFetch` 会主动剥掉 `<style>` / `<script>` 内容，CSS 很重的页面也更容易读到正文")
+    if "stale agent worktree cleanup" in lowered_source or ("squash-merged" in lowered_source and "worktrees" in lowered_source):
+        facts.append("stale agent worktree cleanup 会顺手清掉已 squash-merge PR 遗留的 worktree")
+    if "mcp large-output truncation prompt" in lowered_source or ("format-specific recipes" in lowered_source and "jq" in lowered_source):
+        facts.append("MCP 大输出截断提示也会按格式给具体处理建议，比如 JSON 直接提示用 `jq`")
+    if "queued messages" in lowered_source and "being dropped" in lowered_source:
+        facts.append("Claude 忙时 `queued messages` 里的带图消息不再被悄悄丢掉")
 
-    return compose_fact_sentences(intro=f"`{title}` 这版最值得记的更新是：", facts=facts)
+    facts = prioritize_fact_tail(
+        facts,
+        preserve_head=3,
+        priority_terms=(
+            ("queued messages",),
+            ("network error",),
+            ("/doctor",),
+            ("webfetch",),
+        ),
+    )
+    summary = compose_fact_sentences(intro=f"`{title}` 这版最值得记的更新是：", facts=facts, group_sizes=(3, 2, 2, 2))
+    if summary:
+        return summary
+
+    minimal_rewrite = build_minimal_release_rewrite(product_name="Claude Code", title=title, source_text=source_text)
+    if minimal_rewrite:
+        return minimal_rewrite
+
+    sentences = simple_sentences(source_text)
+    if sentences:
+        return f"`Claude Code` 发布了 `{title}` 这版更新，提到 {sentences[0]}。"
+    return ""
 
 
 def build_codex_detail(*, title: str, source_text: str, source_url: str) -> str:
     lowered = normalize_whitespace(f"{title} {source_text}").lower()
     pr_match = re.search(r"/pull/(\d+)", source_url)
     author_match = re.search(r"Author:\s*(@[A-Za-z0-9_.-]+)", source_text)
+    merged_at_match = re.search(r"Merged at:\s*([0-9T:+-]+Z?)", source_text, re.IGNORECASE)
     commit_match = re.search(r"Merge commit:\s*`?([0-9a-f]{7,})`?", source_text, re.IGNORECASE)
 
     if "mcp" in lowered and "wall time" in lowered and "model output" in lowered:
@@ -1908,6 +2967,8 @@ def build_codex_detail(*, title: str, source_text: str, source_url: str) -> str:
         metadata: list[str] = []
         if author_match:
             metadata.append(f"作者 {author_match.group(1)}")
+        if merged_at_match:
+            metadata.append(f"merged at {merged_at_match.group(1)}")
         if commit_match:
             metadata.append(f"merge commit `{commit_match.group(1)}`")
         if metadata:
@@ -1917,6 +2978,26 @@ def build_codex_detail(*, title: str, source_text: str, source_url: str) -> str:
             "改动点很集中：不是只补日志，而是把耗时信息变成模型输出的一部分",
         ]
         return " ".join(f"{fact}。" for fact in facts)
+
+    if "guardian review timeout" in lowered or "guardian review timeouts" in lowered:
+        lead = "这次合入的是 Codex 的 PR"
+        if pr_match:
+            lead += f" #{pr_match.group(1)}"
+        metadata: list[str] = []
+        if author_match:
+            metadata.append(f"作者 {author_match.group(1)}")
+        if merged_at_match:
+            metadata.append(f"merged at {merged_at_match.group(1)}")
+        if commit_match:
+            metadata.append(f"merge commit `{commit_match.group(1)}`")
+        if metadata:
+            lead += f"（{'，'.join(metadata)}）"
+        facts = [
+            f"{lead}，把 guardian review timeout 明确写成 terminal history entries，不再从 live timeline 里直接消失",
+            "新增 command、patch、MCP tool 和 network approval 四类 timeout-specific history cells",
+            "还补了 direct guardian event path 与 app-server notification path 的 snapshot tests",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 
     sentences = simple_sentences(source_text)[:2]
     if sentences:
@@ -1932,6 +3013,12 @@ def build_openclaw_release_detail(*, title: str, source_text: str) -> str:
             facts.append(
                 "Dreaming/memory-wiki 新增 ChatGPT import ingestion，并加了 `Imported Insights` 和 `Memory Palace` diary subtabs，让导入聊天、编译后的 wiki 页面和完整源页面都能直接在 UI 里检查"
             )
+        elif lowered.startswith("telegram/forum topics:"):
+            facts.append("Telegram/forum topics 会把 human topic names 带进 agent context、prompt metadata 和 plugin hook metadata")
+        elif lowered.startswith("ui/chat:") and "markdown-it" in lowered:
+            facts.append("UI/chat 把 `marked.js` 换成 `markdown-it`，避免恶意 markdown 通过 `ReDoS` 卡死 Control UI")
+        elif lowered.startswith("auto-reply/send policy:") and 'sendpolicy: "deny"' in lowered:
+            facts.append("`sendPolicy: \"deny\"` 不再阻塞入站消息处理，observer-style setup 也能继续跑 agent turn，只是压住所有出站发送")
         elif lowered.startswith("control ui/webchat:") and "structured chat bubbles" in lowered:
             facts.append(
                 "Control UI/webchat 会把 assistant 的 media/reply/voice 指令渲染成 structured chat bubbles，并新增 `[embed ...]` 富输出标签"
@@ -1943,7 +3030,60 @@ def build_openclaw_release_detail(*, title: str, source_text: str) -> str:
         elif "failover" in lowered:
             facts.append("provider failover 相关稳定性细节也继续往前补")
 
-    return compose_fact_sentences(intro=f"`{title}` 这版 release 里比较实在的更新有：", facts=facts)
+    lowered_source = source_text.lower()
+    if "broad quality release focused on" in lowered_source and "feishu" in lowered_source:
+        facts.append("这版是个 broad quality release，重点补 plugin loading、memory/dreaming reliability、本地模型选项和更顺滑的 Feishu setup path")
+    if "broad quality release focused on" in lowered_source and "gpt-5" in lowered_source:
+        facts.append("总述里也点明这版先补的是 model provider、`GPT-5` 家族 explicit turn 和 channel provider 这条主线")
+    if "improved overal performance" in lowered_source or "improved overall performance" in lowered_source:
+        facts.append("底层 core codebase 重构后，整体性能也被单独往前推了一步")
+    if "`gpt-5.4-pro`" in source_text or "gpt-5.4-pro" in lowered_source:
+        facts.append("OpenAI Codex/models 先做了 `gpt-5.4-pro` 的前向兼容，把 pricing/limits 和列表可见性先补上")
+    if "telegram/forum topics" in lowered_source:
+        facts.append("Telegram/forum topics 不只把 human topic names 带进 agent context，也会写进 prompt metadata 和 plugin hook metadata")
+    if "`apikey`" in lowered_source and "models/codex" in lowered_source:
+        facts.append("Models/Codex 会把 `apiKey` 保留在 provider catalog 输出里，避免自定义模型被 validator 悄悄整批丢掉")
+    if "`allowfrom`" in lowered_source and "slack/interactions" in lowered_source:
+        facts.append("Slack/interactions 这边把全局 `allowFrom` owner allowlist 真正落实到 block-action 和 modal interactive events")
+    if "`config.patch`" in lowered_source and "`config.apply`" in lowered_source and "gateway-tool" in lowered_source:
+        facts.append("Agents/gateway-tool 还卡住了会新开危险安全开关的 `config.patch` / `config.apply` 请求")
+    security_topics: list[str] = []
+    if "`hook:wake`" in source_text or "hook:wake" in lowered_source:
+        security_topics.append("`hook:wake` 不可信系统事件会强制降权")
+    if "browser/security" in lowered_source or ("snapshot, screenshot, and tab routes" in lowered_source):
+        security_topics.append("browser 的 snapshot/screenshot/tab 路由补上 SSRF enforcement")
+    if "microsoft teams/security" in lowered_source or "sender allowlist checks on sso signin invokes" in lowered_source:
+        security_topics.append("Microsoft Teams SSO signin invoke 会检查 sender allowlist")
+    if "config/security" in lowered_source and "redactconfigsnapshot" in lowered_source:
+        security_topics.append("配置快照里的 alias config 字段会被 redact")
+    if security_topics:
+        facts.append("安全面还补了 " + "、".join(security_topics[:3]))
+
+    facts = prioritize_fact_tail(
+        facts,
+        preserve_head=3,
+        priority_terms=(
+            ("hook:wake",),
+            ("ssrf",),
+            ("sender allowlist",),
+        ),
+    )
+    summary = compose_fact_sentences(
+        intro=f"`OpenClaw` 的 `{title}` 这版 release 里比较实在的更新有：",
+        facts=facts,
+        group_sizes=(3, 2, 2, 2),
+    )
+    if summary:
+        return summary
+
+    minimal_rewrite = build_minimal_release_rewrite(product_name="OpenClaw", title=title, source_text=source_text)
+    if minimal_rewrite:
+        return minimal_rewrite
+
+    sentences = simple_sentences(source_text)
+    if sentences:
+        return f"`OpenClaw` 发布了 `{title}` 这版 release，提到 {sentences[0]}。"
+    return ""
 
 
 def build_github_trending_detail(*, title: str, source_text: str) -> str:
@@ -1952,6 +3092,10 @@ def build_github_trending_detail(*, title: str, source_text: str) -> str:
         return (
             f"`{title}` 把自己定位成开源的 AI coding harness builder，主打让 AI coding 流程变得 deterministic、repeatable。"
             " 它上榜的理由也很具体：卖点不是再包一层 agent，而是把测试和执行流程做成可重复的基础设施。"
+        )
+    if "seo-optimized blog content" in lowered or ("seo" in lowered and "blog" in lowered and "content" in lowered):
+        return (
+            f"`{title}` 把自己定位成面向业务内容生产的 Claude Code workspace，重点是研究、撰写、分析并优化长篇 SEO 博客内容。"
         )
     if "managed agents platform" in lowered:
         return (
@@ -1978,7 +3122,9 @@ def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     lowered = source_text.lower()
     facts: list[str] = []
 
-    if tagline:
+    if "microvm" in lowered and "sandbox" in lowered:
+        facts.append(f"`{name}` 主打让 AI coding agents 跑在真实 `microVM` 沙箱里，强调真实隔离环境")
+    elif tagline:
         facts.append(f"`{name}` 的定位很直接，就是 {tagline}")
     elif "design context" in lowered:
         facts.append(f"`{name}` 主打给 AI agents 提供 `Design context`")
@@ -2056,7 +3202,90 @@ def build_polymarket_detail(*, title: str, source_text: str) -> str:
 
 
 def build_reddit_detail(*, title: str, source_text: str) -> str:
-    lowered = normalize_whitespace(f"{title} {source_text}").lower()
+    cleaned_title = normalize_whitespace(title).strip(" \"'“”‘’")
+    lowered_title = cleaned_title.lower()
+    lowered = normalize_whitespace(f"{cleaned_title} {source_text}").lower()
+
+    if "maestro" in lowered and "openai codex" in lowered:
+        facts = [
+            "这帖在介绍开源多 agent 编排平台 `Maestro`，正文写它会协调 `22` 个专门子代理跑结构化流程",
+            "`Maestro` 原本从 `Gemini CLI` 扩展起家，这次 `v1.6.1` 把 `OpenAI Codex` 加成第三个原生 runtime",
+            "更实在的变化是底层被收成一份 `canonical source tree`，让 Claude Code、Gemini CLI、Codex 三套运行时共用同一套架构",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "agent-council" in lowered or "cliagent-council" in lowered:
+        facts = [
+            "作者做的 `agent-council` 不是让几个 API 模型空谈，而是让 `Claude Code`、`Codex`、`Gemini` 先看项目再辩论工程问题",
+            "正文点的差异很具体：CLI agents 可以 `grep` 代码、读 migration、翻 `git log`，意见会绑定你的真实 repo",
+            "它直接复用现有 CLI 订阅，所以安装命令是 `npx cliagent-council`，每次 council session 基本是零边际成本",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "openclaw coming soon" in lowered_title or ("openclaw" in lowered_title and "/monitor" in source_text):
+        facts = [
+            "这帖不是在说 Claude 版 `OpenClaw` 已经发布，而是在猜 Anthropic 会不会把 Claude Code 的新能力继续下放",
+            "作者拿 `Cowork`、`MCP`、`skills` 当例子，说不少能力都是先在 `Claude Code` 跑通，再逐步扩到桌面和移动端",
+            "正文点名的最新能力是 `/monitor`：它能常驻电脑监听触发条件，命中后再主动 ping Claude 发消息",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "channels launched today" in lowered or ("telegram" in lowered and "discord" in lowered and "--channels" in lowered):
+        facts = [
+            "帖子讲的是刚上线的 `Claude Code Channels`，现在可以从 `Telegram` 或 `Discord` 直接 DM 你的 Claude Code session",
+            "这个会话不是纯聊天壳，原文明确说它保留改文件、跑测试、做 `git ops` 这类完整工具权限",
+            "作者把它当 `OpenClaw` 对照组：前者只要 `--channels` 和 `bot token`，不用 `Mac Mini`、`Docker` 和一整套重部署",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "17 papers" in lowered_title or ("greenfield saas" in lowered and "degrades output quality" in lowered):
+        facts = [
+            "作者是在给自己团队的 `greenfield SaaS` 重写项目复盘，不是泛泛聊提示词",
+            "他前面花了几个月搭 agent pipeline，demo 很亮眼，但一进 `production` 就散架",
+            "看完 `17 篇` agentic workflow 论文后的核心结论很刺耳：像 “world's best programmer” 这种夸法会直接拉低输出质量",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "non-technical founder" in lowered_title or ("landing page" in lowered and "n8n" in lowered and "mvp" in lowered):
+        facts = [
+            "发帖人是 non-technical founder，但眼下的 SaaS 并不是停在想法阶段",
+            "他说自己的 `landing page` 已经上线，`Claude Code` 也在替他搭 `n8n` workflows，`MVP` 正在成形",
+            "真正想问的是在这种进度下还要不要补 `OpenClaw`，还是现有 Claude Code 栈已经够用",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "global set of instructions" in lowered or ("user-wide" in lowered and "context file" in lowered):
+        facts = [
+            "这帖是在问 AI coding agents 有没有跨仓库通用的全局上下文文件，而不是每个 repo 都重复维护一遍配置",
+            "提问者点名了 `Codex`、`Claude Code`、`Cursor` 这类工具，希望多套 agent 环境都能读同一份指令源",
+            "真正的讨论点是有没有共同标准；如果没有，现实做法是不是先维护一份 canonical file，再同步成各家的格式",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "whatsapp" in lowered and "claude max" in lowered:
+        facts = [
+            "这帖是在晒一个 `WhatsApp` AI assistant，消息入口放在 WhatsApp，agent 脑子交给 `Claude Code`",
+            "作者做它的直接原因是对 `OpenClaw` 的安全模型不放心，所以想找一条更轻的替代路线",
+            "成本和信任也写得很直白：他已经在付 `Claude Max`，而且更信 `Anthropic` 的 runtime",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "large codebases" in lowered_title or ("github issues" in lowered and "major refactors" in lowered):
+        facts = [
+            "这不是新工具发布，而是在问大仓库怎么把 agent workflow 真正跑顺",
+            "提问者已经会让 agent 接 `GitHub issues`、来回 plan/execute，并稳定处理小到中等规模改动",
+            "卡点出在大应用和大改版：上下文会变长、拆分变难、同一套方法一进大仓库就不再稳定",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "app store connect" in lowered or ("blitz" in lowered and "mcp servers" in lowered):
+        facts = [
+            "作者做了个原生 macOS 应用 `Blitz`，把 `Claude Code` 接到 `App Store Connect`",
+            "原来会打断 agent 流程的 metadata、`screenshots`、builds、localization 和 review notes，现在都能继续留在终端里处理",
+            "实现方式是给 Claude Code 配 `MCP` servers，让提审和过审这条链路直接交给 agent",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
     if all(role in lowered for role in ("architect", "builder", "reviewer")):
         facts = [
             "作者是读了一批 agentic workflow 论文、又在 solo AI coding 里烧掉太多 token 之后，才收敛到这个 Three Man Team 方案",

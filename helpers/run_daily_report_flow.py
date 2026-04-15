@@ -14,7 +14,14 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from helpers.runtime_config import DEFAULT_RUNTIME_CONFIG_PATH, load_runtime_config, resolve_lane_item_limits
-from helpers.signals_adapter import build_collect_result, build_report_artifact, build_selected_items, build_validation_bundle, dump_json
+from helpers.signals_adapter import (
+    build_collect_result,
+    build_report_artifact,
+    build_selected_items,
+    build_validation_bundle,
+    dump_json,
+    resolve_previous_selected_items_path,
+)
 from helpers.validate_report_output_contract import validate_report_markdown
 
 
@@ -38,6 +45,13 @@ def parse_args() -> argparse.Namespace:
 
 def expand_path(value: str) -> Path:
     return Path(os.path.expandvars(os.path.expanduser(value))).resolve()
+
+
+def is_path_writable(path: Path) -> bool:
+    candidate = path
+    while not candidate.exists() and candidate != candidate.parent:
+        candidate = candidate.parent
+    return os.access(candidate, os.W_OK)
 
 
 def shanghai_date() -> str:
@@ -114,10 +128,13 @@ def main() -> int:
     config = load_runtime_config(args.config)
     runtime = config["runtime"]
     paths = config["paths"]
+    repo_root = Path(config.get("repo_root", Path(__file__).resolve().parent.parent)).resolve()
     lane_order = list(config["reader_facing"]["fixed_section_order"])
     signals_root = expand_path(paths["signals_root"])
     data_dir = signals_root.parent
     runtime_root = expand_path(paths["runtime_root"])
+    if not is_path_writable(runtime_root):
+        runtime_root = repo_root / ".runtime" / "daily-report-master"
     run_dir = runtime_root / args.report_date
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -128,7 +145,14 @@ def main() -> int:
         "collect": [],
     }
 
-    if not args.skip_collect:
+    should_collect = not args.skip_collect
+    if should_collect and not is_path_writable(data_dir):
+        should_collect = False
+        summary["collect_note"] = f"configured signals data dir not writable; reused existing snapshots from {signals_root}"
+    if runtime_root != expand_path(paths["runtime_root"]):
+        summary["runtime_note"] = f"configured runtime_root not writable; wrote artifacts to {runtime_root}"
+
+    if should_collect:
         for lane in lane_order:
             summary["collect"].append(
                 run_collect_with_retry(
@@ -141,11 +165,13 @@ def main() -> int:
             )
 
     collect_result = build_collect_result(signals_root=signals_root, report_date=args.report_date, lane_names=lane_order)
+    previous_selected_items_path = resolve_previous_selected_items_path(runtime_root=runtime_root, report_date=args.report_date)
     selected_items = build_selected_items(
         signals_root=signals_root,
         report_date=args.report_date,
         lane_names=lane_order,
         lane_item_limits=resolve_lane_item_limits(config),
+        previous_selected_items_path=previous_selected_items_path,
     )
 
     collect_result_path = run_dir / "collect-result.json"

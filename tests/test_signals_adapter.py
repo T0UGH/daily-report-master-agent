@@ -57,6 +57,61 @@ class SignalsAdapterTest(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def write_selected_items_artifact(self, runtime_root: Path, *, report_date: str, items: list[dict[str, object]]) -> Path:
+        artifact_path = runtime_root / report_date / "selected-items.json"
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        artifact_path.write_text(
+            json.dumps(
+                {
+                    "report_date": report_date,
+                    "source": "signals-engine",
+                    "selected_items": items,
+                    "summary": {
+                        "selected_item_count": len(items),
+                        "lane_counts": [],
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return artifact_path
+
+    def build_reddit_signal_text(
+        self,
+        *,
+        post_id: str,
+        slug: str,
+        score: int,
+        comments: int,
+        title: str,
+        post_text: str,
+    ) -> str:
+        return f"""---
+type: reddit_thread
+lane: reddit-watch
+source: reddit
+entity_type: thread
+entity_id: {post_id}
+title: {title}
+url: https://www.reddit.com/r/ClaudeAI/comments/{post_id}/{slug}/
+fetched_at: {REPORT_DATE}T10:58:49+0000
+created_at: '{REPORT_DATE}T10:58:00Z'
+post_id: {post_id}
+---
+
+## Post
+
+{post_text}
+
+## Thread Context
+
+- Score: {score}
+- Comments: {comments}
+"""
+
     def test_build_collect_result_maps_lane_statuses(self) -> None:
         collect_result = build_collect_result(
             signals_root=FIXTURE_ROOT,
@@ -253,6 +308,117 @@ created_at: '2026-04-12T10:58:00Z'
         self.assertIn("24h volume: 13,577.3", market_item["source_snippet"])
         self.assertIn("Liquidity: 6,870.6", market_item["source_snippet"])
 
+    def test_build_selected_items_dense_claude_release_source_snippet_keeps_more_release_points(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="claude-code-watch",
+                signal_text_by_name={
+                    "release.md": """---
+type: release
+lane: claude-code-watch
+source: github
+entity_type: repo
+entity_id: anthropics/claude-code
+title: v2.1.105
+url: https://github.com/anthropics/claude-code/releases/tag/v2.1.105
+fetched_at: 2026-04-14T15:37:24+0000
+created_at: '2026-04-13T21:53:13Z'
+---
+
+## Release Notes
+
+## What's changed
+
+- Added `path` parameter to the `EnterWorktree` tool to switch into an existing worktree of the current repository
+- Added PreCompact hook support: hooks can now block compaction by exiting with code 2 or returning `{"decision":"block"}`
+- Added background monitor support for plugins via a top-level `monitors` manifest key that auto-arms at session start or on skill invoke
+- `/proactive` is now an alias for `/loop`
+- Improved stalled API stream handling: streams now abort after 5 minutes of no data and retry non-streaming instead of hanging indefinitely
+- Improved network error messages: connection errors now show a retry message immediately instead of a silent spinner
+- Improved file write display: long single-line writes (e.g. minified JSON) are now truncated in the UI instead of paginating across many screens
+- Improved `/doctor` layout with status icons; press `f` to have Claude fix reported issues
+- Improved `/config` labels and descriptions for clarity
+- Improved skill description handling: raised the listing cap from 250 to 1,536 characters and added a startup warning when descriptions are truncated
+- Improved `WebFetch` to strip `<style>` and `<script>` contents from fetched pages so CSS-heavy pages no longer exhaust the content budget before reaching actual text
+- Improved stale agent worktree cleanup to remove worktrees whose PR was squash-merged instead of keeping them indefinitely
+- Fixed images attached to queued messages (sent while Claude is working) being dropped
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["claude-code-watch"],
+                per_lane_limit=1,
+            )
+
+        item = selected_items["selected_items"][0]
+        self.assertIn("Improved network error messages", item["source_snippet"])
+        self.assertIn("Improved `/doctor` layout", item["source_snippet"])
+        self.assertIn("Improved `WebFetch`", item["source_snippet"])
+        self.assertIn("queued messages", item["source_snippet"])
+
+    def test_build_selected_items_dense_openclaw_release_source_snippet_includes_changes_and_fixes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="openclaw-watch",
+                signal_text_by_name={
+                    "release.md": """---
+type: release
+lane: openclaw-watch
+source: github
+entity_type: repo
+entity_id: openclaw/openclaw
+title: openclaw 2026.4.14
+url: https://github.com/openclaw/openclaw/releases/tag/v2026.4.14
+fetched_at: 2026-04-14T15:38:55+0000
+created_at: '2026-04-14T13:03:29Z'
+---
+
+## Release Notes
+
+OpenClaw `2026.4.14` is another broad quality release focused on model provider with explicit turn improvements for GPT-5 family and channel provider issues. Additionally we improved overal performance with refactors to our underlying core codebase.
+
+## Changes
+
+- OpenAI Codex/models: add forward-compat support for `gpt-5.4-pro`, including Codex pricing/limits and list/status visibility before the upstream catalog catches up. (#66453)
+- Telegram/forum topics: surface human topic names in agent context, prompt metadata, and plugin hook metadata by learning names from Telegram forum service messages. (#65973)
+- Agents/Ollama: forward the configured embedded-run timeout into the global undici stream timeout tuning so slow local Ollama runs no longer inherit the default stream cutoff instead of the operator-set run timeout. (#63175)
+
+## Fixes
+
+- Models/Codex: include `apiKey` in the codex provider catalog output so the Pi ModelRegistry validator no longer rejects the entry and silently drops all custom models from every provider in `models.json`. (#66180)
+- Tools/image+pdf: normalize configured provider/model refs before media-tool registry lookup so image and PDF tool runs stop rejecting valid Ollama vision models as unknown just because the tool path skipped the usual model-ref normalization step. (#59943)
+- Slack/interactions: apply the configured global `allowFrom` owner allowlist to channel block-action and modal interactive events, require an expected sender id for cross-verification, and reject ambiguous channel types so interactive triggers can no longer bypass the documented allowlist intent. (#66028)
+- Heartbeat/security: force owner downgrade for untrusted `hook:wake` system events [AI-assisted]. (#66031)
+- Browser/security: enforce SSRF policy on snapshot, screenshot, and tab routes [AI]. (#66040)
+- Microsoft Teams/security: enforce sender allowlist checks on SSO signin invokes [AI]. (#66033)
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["openclaw-watch"],
+                per_lane_limit=1,
+            )
+
+        item = selected_items["selected_items"][0]
+        self.assertIn("gpt-5.4-pro", item["source_snippet"])
+        self.assertIn("Telegram/forum topics", item["source_snippet"])
+        self.assertIn("`apiKey`", item["source_snippet"])
+        self.assertTrue(
+            "hook:wake" in item["source_snippet"]
+            or "SSRF" in item["source_snippet"]
+            or "sender allowlist" in item["source_snippet"]
+        )
+
     def test_build_selected_items_preserves_folded_front_matter_titles(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             signals_root = Path(temp_dir)
@@ -291,6 +457,416 @@ After trying several setups, I settled on a simple architect-builder-reviewer lo
             selected_items["selected_items"][0]["title"],
             "I replaced chaotic solo Claude coding with a simple 3-agent team (Architect + Builder + Reviewer) and markdown handoff",
         )
+
+    def test_build_selected_items_reddit_previous_day_selections_are_skipped_and_fill_with_remaining_candidates(
+        self,
+    ) -> None:
+        previous_report_date = "2026-04-11"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="reddit-watch",
+                signal_text_by_name={
+                    f"r__ClaudeAI__aaa111__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="aaa111",
+                        slug="yesterday-url",
+                        score=900,
+                        comments=150,
+                        title="Yesterday URL duplicate",
+                        post_text="Claude Code architect builder reviewer markdown handoff workflow.",
+                    ),
+                    f"r__ClaudeAI__bbb222__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="bbb222",
+                        slug="yesterday-id",
+                        score=880,
+                        comments=140,
+                        title="Yesterday ID duplicate",
+                        post_text="Codex OpenAI agent matrix harness testing BDD E2E.",
+                    ),
+                    f"r__ClaudeAI__ccc333__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ccc333",
+                        slug="fresh-third",
+                        score=860,
+                        comments=130,
+                        title="Fresh third candidate",
+                        post_text="Anthropic MCP design context workflow for shared memory.",
+                    ),
+                    f"r__ClaudeAI__ddd444__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ddd444",
+                        slug="fresh-fourth",
+                        score=840,
+                        comments=120,
+                        title="Fresh fourth candidate",
+                        post_text="Gemini Plan -> Build -> Review loop with testing and coding AI notes.",
+                    ),
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=previous_report_date,
+                items=[
+                    {
+                        "lane": "reddit-watch",
+                        "title": "Yesterday URL duplicate",
+                        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/aaa111/yesterday-url/",
+                        "signal_path": f"reddit-watch/{previous_report_date}/signals/yesterday-url.md",
+                        "fetched_at": f"{previous_report_date}T10:58:49+0000",
+                        "excerpt": "Already selected yesterday.",
+                    },
+                    {
+                        "lane": "reddit-watch",
+                        "title": "Yesterday ID duplicate",
+                        "source_url": "",
+                        "signal_path": (
+                            f"reddit-watch/{previous_report_date}/signals/"
+                            f"r__ClaudeAI__bbb222__reddit_thread__{previous_report_date}.md"
+                        ),
+                        "fetched_at": f"{previous_report_date}T10:58:49+0000",
+                        "excerpt": "Already selected yesterday.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["reddit-watch"],
+                per_lane_limit=2,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 2)
+        self.assertCountEqual(
+            [item["source_url"] for item in selected_items["selected_items"]],
+            [
+                "https://www.reddit.com/r/ClaudeAI/comments/ccc333/fresh-third/",
+                "https://www.reddit.com/r/ClaudeAI/comments/ddd444/fresh-fourth/",
+            ],
+        )
+
+    def test_build_selected_items_reddit_missing_previous_day_artifact_falls_back_without_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="reddit-watch",
+                signal_text_by_name={
+                    f"r__ClaudeAI__aaa111__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="aaa111",
+                        slug="top-first",
+                        score=900,
+                        comments=150,
+                        title="Top first candidate",
+                        post_text="Claude Code architect builder reviewer markdown handoff workflow.",
+                    ),
+                    f"r__ClaudeAI__bbb222__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="bbb222",
+                        slug="top-second",
+                        score=880,
+                        comments=140,
+                        title="Top second candidate",
+                        post_text="Anthropic MCP design context workflow for shared memory.",
+                    ),
+                    f"r__ClaudeAI__ccc333__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ccc333",
+                        slug="top-third",
+                        score=860,
+                        comments=130,
+                        title="Top third candidate",
+                        post_text="Gemini Plan -> Build -> Review loop with testing and coding AI notes.",
+                    ),
+                },
+            )
+
+            baseline_selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["reddit-watch"],
+                per_lane_limit=2,
+                previous_selected_items_path=temp_root / "baseline-missing" / "selected-items.json",
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["reddit-watch"],
+                per_lane_limit=2,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 2)
+        self.assertEqual(
+            [item["source_url"] for item in selected_items["selected_items"]],
+            [item["source_url"] for item in baseline_selected_items["selected_items"]],
+        )
+
+    def test_build_selected_items_reddit_unaffected_non_reddit_lanes_keep_current_behavior(self) -> None:
+        previous_report_date = "2026-04-11"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="product-hunt-watch",
+                signal_text_by_name={
+                    "nicelydone.md": """---
+type: producthunt_topic_hit
+lane: product-hunt-watch
+source: producthunt
+entity_type: product
+entity_id: nicelydone-mcp
+title: Nicelydone MCP — Design context for AI agents
+url: https://www.producthunt.com/products/nicely-done
+fetched_at: 2026-04-12T10:58:49+0000
+created_at: '2026-04-12T10:58:00Z'
+---
+
+## Preview
+
+Design context for AI agents
+
+## Snapshot
+
+- **Votes**: 316
+- **Comments**: 4
+- **Topic**: Artificial Intelligence
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=previous_report_date,
+                items=[
+                    {
+                        "lane": "product-hunt-watch",
+                        "title": "Nicelydone MCP — Design context for AI agents",
+                        "source_url": "https://www.producthunt.com/products/nicely-done",
+                        "signal_path": f"product-hunt-watch/{previous_report_date}/signals/nicelydone.md",
+                        "fetched_at": f"{previous_report_date}T10:58:49+0000",
+                        "excerpt": "Already selected yesterday.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["product-hunt-watch"],
+                per_lane_limit=1,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(
+            [item["source_url"] for item in selected_items["selected_items"]],
+            ["https://www.producthunt.com/products/nicely-done"],
+        )
+
+    def test_build_selected_items_reddit_dual_pool_mixes_heat_and_voice_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="reddit-watch",
+                signal_text_by_name={
+                    f"r__ClaudeAI__aaa111__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="aaa111",
+                        slug="thinking-depth",
+                        score=1910,
+                        comments=283,
+                        title="Anthropic stayed quiet until someone showed Claude's thinking depth dropped",
+                        post_text=(
+                            "Claude Code benchmark discussion about Anthropic, release notes, "
+                            "agent workflow reliability, and Claude reasoning depth."
+                        ),
+                    ),
+                    f"r__ClaudeAI__bbb222__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="bbb222",
+                        slug="ultraplan",
+                        score=609,
+                        comments=197,
+                        title="Claude Code v2.1.92 introduces Ultraplan — draft plans in the cloud",
+                        post_text=(
+                            "Claude Code ultraplan release discussion covering cloud review, hooks, "
+                            "workflow changes, and launch reactions."
+                        ),
+                    ),
+                    f"r__ClaudeAI__ccc333__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ccc333",
+                        slug="large-repo-question",
+                        score=516,
+                        comments=90,
+                        title="How do you actually use Claude Code on a large repo without losing context?",
+                        post_text=(
+                            "I keep hitting context loss on a large repo. What's your Claude Code setup, "
+                            "workflow, handoff pattern, and practical review loop?"
+                        ),
+                    ),
+                    f"r__ClaudeAI__ddd444__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ddd444",
+                        slug="switch-mcps-to-clis",
+                        score=648,
+                        comments=80,
+                        title="I switched from MCPs to CLIs for Claude Code and honestly never going back",
+                        post_text=(
+                            "I changed my Claude Code setup to use CLI wrappers instead of MCPs. "
+                            "The workflow is simpler and easier to debug."
+                        ),
+                    ),
+                    f"r__ClaudeAI__eee555__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="eee555",
+                        slug="workflows",
+                        score=449,
+                        comments=45,
+                        title="Most used Claude Code development workflows",
+                        post_text=(
+                            "A roundup of Claude Code workflow patterns, repo setup choices, and "
+                            "agent coordination tips."
+                        ),
+                    ),
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["reddit-watch"],
+                per_lane_limit=4,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 4)
+        buckets = {item.get("selection_bucket") for item in selected_items["selected_items"]}
+        self.assertIn("heat", buckets)
+        self.assertIn("voice", buckets)
+        titles = [item["title"] for item in selected_items["selected_items"]]
+        self.assertIn("Anthropic stayed quiet until someone showed Claude's thinking depth dropped", titles)
+        self.assertTrue(
+            any(
+                title in titles
+                for title in [
+                    "How do you actually use Claude Code on a large repo without losing context?",
+                    "I switched from MCPs to CLIs for Claude Code and honestly never going back",
+                ]
+            )
+        )
+
+    def test_build_selected_items_reddit_dual_pool_fills_when_voice_pool_is_empty(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="reddit-watch",
+                signal_text_by_name={
+                    f"r__ClaudeAI__aaa111__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="aaa111",
+                        slug="release-notes",
+                        score=900,
+                        comments=150,
+                        title="Claude Code release notes: ultraplan, hooks, and cloud review",
+                        post_text=(
+                            "Claude Code release coverage with ultraplan, hooks, cloud review, "
+                            "and workflow changes."
+                        ),
+                    ),
+                    f"r__ClaudeAI__bbb222__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="bbb222",
+                        slug="app-store",
+                        score=870,
+                        comments=140,
+                        title="Claude Code can now submit your app to App Store Connect",
+                        post_text=(
+                            "Claude Code launch coverage about App Store Connect integration, "
+                            "release flow, and workflow automation."
+                        ),
+                    ),
+                    f"r__ClaudeAI__ccc333__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ccc333",
+                        slug="hooks-guide",
+                        score=840,
+                        comments=130,
+                        title="Claude Code Hooks - all 23 explained and implemented",
+                        post_text=(
+                            "Claude Code hooks guide with workflow examples, repo setup notes, "
+                            "and implementation details."
+                        ),
+                    ),
+                    f"r__ClaudeAI__ddd444__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ddd444",
+                        slug="repos",
+                        score=810,
+                        comments=120,
+                        title="These 10 GitHub repos completely changed how I use Claude Code",
+                        post_text=(
+                            "Claude Code repo roundup focused on workflow changes, tooling, "
+                            "and practical usage patterns."
+                        ),
+                    ),
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["reddit-watch"],
+                per_lane_limit=3,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 3)
+        self.assertEqual(
+            {item.get("selection_bucket") for item in selected_items["selected_items"]},
+            {"heat"},
+        )
+
+    def test_build_selected_items_non_reddit_lane_selection_stays_unchanged(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="product-hunt-watch",
+                signal_text_by_name={
+                    "nicelydone.md": """---
+type: producthunt_topic_hit
+lane: product-hunt-watch
+source: producthunt
+entity_type: product
+entity_id: nicelydone-mcp
+title: Nicelydone MCP — Design context for AI agents
+url: https://www.producthunt.com/products/nicely-done
+fetched_at: 2026-04-12T10:58:49+0000
+created_at: '2026-04-12T10:58:00Z'
+---
+
+## Preview
+
+Design context for AI agents
+
+## Snapshot
+
+- **Votes**: 316
+- **Comments**: 4
+- **Topic**: Artificial Intelligence
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["product-hunt-watch"],
+                per_lane_limit=1,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
+        self.assertEqual(
+            selected_items["selected_items"][0]["title"],
+            "Nicelydone MCP — Design context for AI agents",
+        )
+        self.assertNotIn("selection_bucket", selected_items["selected_items"][0])
 
     def test_default_lane_item_limits_are_uniformly_ten(self) -> None:
         self.assertTrue(DEFAULT_LANE_ITEM_LIMITS)
@@ -810,6 +1386,168 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
         self.assertNotIn("这次改动更清楚了", body_markdown)
         self.assertNotIn("更像工作流了", body_markdown)
 
+    def test_build_report_artifact_live_like_reddit_items_render_three_concrete_sentences(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "reddit-watch", "status": "ok", "useful_item_count": 10},
+            ],
+            "summary": {"useful_item_count": 10, "partial_lane_count": 0},
+        }
+        cases = [
+            {
+                "title": "Maestro v1.6.1 — multi-agent orchestration now runs on Claude Code, Gemini CLI, AND OpenAI Codex !",
+                "selection_bucket": "heat",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1shmul3/maestro_v161_multiagent_orchestration_now_runs_on/",
+                "source_snippet": (
+                    "Maestro is an open-source multi-agent orchestration platform that coordinates 22 specialized AI "
+                    "subagents through structured workflows — design dialogue, implementation planning, parallel "
+                    "subagents, and quality gates. It started as a Gemini CLI extension. v1.6.1 adds OpenAI Codex as "
+                    "a third native runtime and rebuilds the architecture so all three share a single canonical source tree."
+                ),
+                "expected_keywords": ["22", "OpenAI Codex", "canonical source tree"],
+            },
+            {
+                "title": "Built a tool that makes Claude Code, Codex, and Gemini deliberate on engineering questions: agent-council",
+                "selection_bucket": "heat",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1s8n620/built_a_tool_that_makes_claude_code_codex_and/",
+                "source_snippet": (
+                    "Install: npx cliagent-council. I built this because API-based LLM councils answer in a vacuum, "
+                    "while CLI agents can grep your code, read your migrations, and git log your history. It uses your "
+                    "existing Claude Code, Codex, and Gemini CLI subscriptions, so each session is zero marginal cost."
+                ),
+                "expected_keywords": ["agent-council", "grep", "git", "零边际"],
+            },
+            {
+                "title": "Claude version of Openclaw coming soon?",
+                "selection_bucket": "heat",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1sivk1k/claude_version_of_openclaw_coming_soon/",
+                "source_snippet": (
+                    "Anthropic's roadmap usually leads with Claude Code, then features trickle down to desktop and "
+                    "mobile. The author points to Cowork, MCP, and skills as examples. Claude Code now has /monitor, "
+                    "which lets it sit on your computer, listen for a trigger, and ping Claude with a message."
+                ),
+                "expected_keywords": ["/monitor", "Cowork", "MCP"],
+            },
+            {
+                "title": "Anthropic just shipped messaging integration for Claude Code. Direct OpenClaw competitor, no dedicated hardware needed.",
+                "selection_bucket": "heat",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1ryrjdg/anthropic_just_shipped_messaging_integration_for/",
+                "source_snippet": (
+                    "Claude Code Channels launched today. You can now DM your Claude Code session from Telegram or "
+                    "Discord and it processes requests with full tool access, including file edits, test runs, and git "
+                    "ops. Compared with OpenClaw, this path is just a --channels flag and a bot token instead of a Mac "
+                    "Mini, Docker, and a much heavier stack."
+                ),
+                "expected_keywords": ["Telegram", "Discord", "--channels", "bot token"],
+            },
+            {
+                "title": "I read 17 papers on agentic AI workflows. Most Claude Code advice is measurably wrong",
+                "selection_bucket": "voice",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1s8mbqm/i_read_17_papers_on_agentic_ai_workflows_most/",
+                "source_snippet": (
+                    "I lead a small engineering team doing a greenfield SaaS rewrite. I spent months building agent "
+                    "pipelines that worked great in demos and fell apart in production. When I read the research, I "
+                    "found out why: telling Claude you are the world's best programmer degrades output quality."
+                ),
+                "expected_keywords": ["17 篇", "greenfield SaaS", "production", "输出质量"],
+            },
+            {
+                "title": "Non-technical founder: Is OpenClaw a must if Claude Code is currently looking like its working for my SaaS?",
+                "selection_bucket": "voice",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1scfv01/nontechnical_founder_is_openclaw_a_must_if_claude/",
+                "source_snippet": (
+                    "I have no formal computer science background, but Claude has handled the heavy lifting so far. "
+                    "My vibecoded landing page is already live, Claude Code is building the n8n workflows, and the MVP "
+                    "feels like it is coming together. The real question is whether OpenClaw is necessary now or if the "
+                    "current Claude Code stack is already enough."
+                ),
+                "expected_keywords": ["landing page", "n8n", "MVP", "OpenClaw"],
+            },
+            {
+                "title": "Built a WhatsApp AI assistant with Claude Code as an OpenClaw alternative",
+                "selection_bucket": "voice",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1scj0lb/built_a_whatsapp_ai_assistant_with_claude_code_as/",
+                "source_snippet": (
+                    "The promise of OpenClaw is enticing, but I could not get past the security model. I wanted "
+                    "something that combines WhatsApp for messaging with Claude Code as the agentic brain. I am already "
+                    "paying for Claude Max, and I trust Anthropic's runtime more."
+                ),
+                "expected_keywords": ["WhatsApp", "安全模型", "Claude Max", "Anthropic"],
+            },
+            {
+                "title": "Is there a user-wide agent context file that works across Codex, Claude Code, Cursor, etc.?",
+                "selection_bucket": "voice",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1s32xx9/is_there_a_userwide_agent_context_file_that_works/",
+                "source_snippet": (
+                    "I am looking for one global set of instructions and context for AI coding agents across all my "
+                    "repos, instead of repeating project-level files like AGENTS.md in each repo. Ideally the same "
+                    "user-wide file could work with Codex, Claude Code, Cursor, and similar environments. If there is "
+                    "no common standard, I want to know whether the practical path is to keep one canonical file and "
+                    "sync it into each tool's own format."
+                ),
+                "expected_keywords": ["Codex", "Claude Code", "Cursor", "canonical file"],
+            },
+            {
+                "title": "Best approach to use AI agents (Claude Code, Codex) for large codebases and big refactors? Looking for workflows",
+                "selection_bucket": "voice",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1rwok87/best_approach_to_use_ai_agents_claude_code_codex/",
+                "source_snippet": (
+                    "I can already use agents to pick up GitHub issues by giving them the issue link, plan and execute "
+                    "tasks in a back-and-forth way, and handle small to medium changes. That workflow is working fine. "
+                    "What breaks down is using the same agents on large applications and major refactors."
+                ),
+                "expected_keywords": ["GitHub issue", "大仓库", "大改版"],
+            },
+            {
+                "title": "Claude Code can now submit your app to App Store Connect and help you pass review",
+                "selection_bucket": "voice",
+                "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1sdot1s/claude_code_can_now_submit_your_app_to_app_store/",
+                "source_snippet": (
+                    "I built a native macOS app called Blitz that gives Claude Code full control over App Store "
+                    "Connect. Metadata, screenshots, builds, localization, and review notes no longer require leaving "
+                    "the terminal. MCP servers let Claude Code handle the whole submission flow."
+                ),
+                "expected_keywords": ["Blitz", "App Store Connect", "screenshots", "MCP"],
+            },
+        ]
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "reddit-watch",
+                    "title": case["title"],
+                    "source_url": case["source_url"],
+                    "signal_path": f"reddit-watch/{REPORT_DATE}/signals/{index}.md",
+                    "fetched_at": f"{REPORT_DATE}T1{index}:00:00+0000",
+                    "source_snippet": case["source_snippet"],
+                    "excerpt": case["source_snippet"],
+                    "selection_bucket": case["selection_bucket"],
+                }
+                for index, case in enumerate(cases, start=1)
+            ],
+            "summary": {
+                "selected_item_count": len(cases),
+                "lane_counts": [{"lane": "reddit-watch", "selected_item_count": len(cases)}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_lines = [
+            line for line in artifact["body_markdown"].splitlines() if line.strip().startswith("- **")
+        ]
+
+        self.assertEqual(len(body_lines), len(cases))
+        for case in cases:
+            with self.subTest(title=case["title"]):
+                body_line = next(line for line in body_lines if case["source_url"] in line)
+                self.assertNotIn("原文围绕 Claude Code 展开，具体变化见来源", body_line)
+                self.assertGreaterEqual(body_line.count("。"), 3)
+                for keyword in case["expected_keywords"]:
+                    self.assertIn(keyword, body_line)
+
     def test_build_report_artifact_expands_target_lanes_with_multiple_concrete_facts(self) -> None:
         collect_result = {
             "report_date": REPORT_DATE,
@@ -1216,6 +1954,1168 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
         self.assertIn("DevTools MCP", body_markdown)
         self.assertIn("质量检查", body_markdown)
         self.assertNotIn("Want to give your agent quality checks?", body_markdown)
+
+    def test_build_report_artifact_live_like_x_english_snippet_uses_specific_facts_instead_of_generic_placeholder(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@theo #75",
+                    "source_url": "https://x.com/theo/status/2043611205856837680",
+                    "signal_path": "x-feed/2026-04-14/signals/theo.md",
+                    "fetched_at": "2026-04-14T05:06:43+0000",
+                    "source_snippet": (
+                        "Agent harnesses aren't the black magic many of y'all seem to think they are. "
+                        "To prove it, I built one."
+                    ),
+                    "excerpt": (
+                        "Agent harnesses aren't the black magic many of y'all seem to think they are. "
+                        "To prove it, I built one."
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 1}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**@theo #75**" in line)
+
+        self.assertIn("agent harness", body_line)
+        self.assertIn("没大家想得那么玄", body_line)
+        self.assertIn("自己做了一个", body_line)
+        self.assertNotIn("原文围绕 harness 展开，具体变化见来源", body_line)
+
+    def test_build_report_artifact_live_like_x_multi_fact_snippet_keeps_multiple_specific_units(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-following", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-following",
+                    "title": "@heygurisingh",
+                    "source_url": "https://x.com/heygurisingh/status/2043907795972698218",
+                    "signal_path": "x-following/2026-04-14/signals/heygurisingh.md",
+                    "fetched_at": "2026-04-14T05:06:52+0000",
+                    "source_snippet": (
+                        "Holy shit... someone built a TUI that shows where your Claude Code tokens actually go. "
+                        "Turns out 56% of my $200/day spe"
+                    ),
+                    "excerpt": (
+                        "Holy shit... someone built a TUI that shows where your Claude Code tokens actually go. "
+                        "Turns out 56% of my $200/day spe"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-following", "selected_item_count": 1}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**@heygurisingh**" in line)
+
+        self.assertIn("TUI", body_line)
+        self.assertIn("Claude Code", body_line)
+        self.assertIn("56%", body_line)
+        self.assertIn("200", body_line)
+        self.assertNotIn("原文围绕 Claude Code 展开，具体变化见来源", body_line)
+        self.assertNotIn("$200/day spe", body_line)
+
+    def test_build_report_artifact_live_like_release_pr_and_market_items_keep_key_structured_facts(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "claude-code-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "codex-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "openclaw-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "polymarket-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 4, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "claude-code-watch",
+                    "title": "v2.1.105",
+                    "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.105",
+                    "signal_path": "claude-code-watch/2026-04-14/signals/v2.1.105.md",
+                    "fetched_at": "2026-04-14T05:07:39+0000",
+                    "source_snippet": (
+                        "Added `path` parameter to the `EnterWorktree` tool to switch into an existing worktree of the current repository "
+                        "Added PreCompact hook support: hooks can now block compaction by exiting with code 2 or returning "
+                        '`{"decision":"block"}` '
+                        "Added background monitor support for plugins via a top-level `monitors` manifest key that auto-arms at session start or on skill invoke "
+                        "`/proactive` is now an alias for `/loop` "
+                        "Improved stalled API stream handling: streams now abort after 5 minutes of no data and retry non-streaming instead of hanging indefinitely"
+                    ),
+                    "excerpt": (
+                        "Added `path` parameter to the `EnterWorktree` tool to switch into an existing worktree of the current repository "
+                        "Added PreCompact hook support: hooks can now block compaction by exiting with code 2 or returning "
+                        '`{"decision":"block"}` '
+                        "Added background monitor support for plugins via a top-level `monitors` manifest key that auto-arms at session start or on skill invoke "
+                        "`/proactive` is now an alias for `/loop` "
+                        "Improved stalled API stream handling: streams now abort after 5 minutes of no data and retry non-streaming instead of hanging indefinitely"
+                    ),
+                },
+                {
+                    "lane": "codex-watch",
+                    "title": "guardian timeout fix pr 3 - ux touch for timeouts",
+                    "source_url": "https://github.com/openai/codex/pull/17557",
+                    "signal_path": "codex-watch/2026-04-14/signals/17557.md",
+                    "fetched_at": "2026-04-14T05:08:51+0000",
+                    "source_snippet": (
+                        "**Title:** guardian timeout fix pr 3 - ux touch for timeouts "
+                        "**Author:** @won-openai **Merged at:** 2026-04-14T00:43:20Z **Merge commit:** `495ed22` "
+                        "This PR teaches the TUI to render guardian review timeouts as explicit terminal history entries instead of dropping them from the live timeline. "
+                        "It adds timeout-specific history cells for command, patch, MCP tool, and network approval reviews. "
+                        "It also adds snapshot tests covering both the direct guardian event path and the app-server notification path."
+                    ),
+                    "excerpt": (
+                        "**Title:** guardian timeout fix pr 3 - ux touch for timeouts "
+                        "**Author:** @won-openai **Merged at:** 2026-04-14T00:43:20Z **Merge commit:** `495ed22` "
+                        "This PR teaches the TUI to render guardian review timeouts as explicit terminal history entries instead of dropping them from the live timeline. "
+                        "It adds timeout-specific history cells for command, patch, MCP tool, and network approval reviews. "
+                        "It also adds snapshot tests covering both the direct guardian event path and the app-server notification path."
+                    ),
+                },
+                {
+                    "lane": "openclaw-watch",
+                    "title": "openclaw 2026.4.14-beta.1",
+                    "source_url": "https://github.com/openclaw/openclaw/releases/tag/v2026.4.14-beta.1",
+                    "signal_path": "openclaw-watch/2026-04-14/signals/v2026.4.14-beta.1.md",
+                    "fetched_at": "2026-04-14T05:08:56+0000",
+                    "source_snippet": (
+                        "OpenClaw `2026.4.14-beta.1` is another broad quality release focused on model provider with explicit turn improvements for GPT-5 family and channel provider issues. "
+                        "Additionally we improved overal performance with refactors to our underlying core codebase. "
+                        "OpenAI Codex/models: add forward-compat support for `gpt-5.4-pro`, including Codex pricing/limits and list/status visibility before the upstream catalog catches up. "
+                        "Telegram/forum topics: surface human topic names in agent context, prompt metadata, and plugin hook metadata "
+                        "by learning names from Telegram forum service messages. (#65973) "
+                        "Models/Codex: include `apiKey` in the codex provider catalog output so the Pi ModelRegistry validator no longer rejects the entry and silently drops all custom models from every provider in `models.json`. "
+                        "UI/chat: replace marked.js with markdown-it so maliciously crafted markdown can no longer freeze the Control UI via ReDoS. (#46707) "
+                        'Auto-reply/send policy: keep `sendPolicy: "deny"` from blocking inbound message processing, so the agent still runs its turn '
+                        "while all outbound delivery is suppressed for observer-style setups. "
+                        "Slack/interactions: apply the configured global `allowFrom` owner allowlist to channel block-action and modal interactive events. "
+                        "Agents/gateway-tool: reject `config.patch` and `config.apply` calls from the model-facing gateway tool when they would newly enable security-audit flags. "
+                        "Heartbeat/security: force owner downgrade for untrusted `hook:wake` system events. "
+                        "Microsoft Teams/security: enforce sender allowlist checks on SSO signin invokes."
+                    ),
+                    "excerpt": (
+                        "OpenClaw `2026.4.14-beta.1` is another broad quality release focused on model provider with explicit turn improvements for GPT-5 family and channel provider issues. "
+                        "Additionally we improved overal performance with refactors to our underlying core codebase. "
+                        "OpenAI Codex/models: add forward-compat support for `gpt-5.4-pro`, including Codex pricing/limits and list/status visibility before the upstream catalog catches up. "
+                        "Telegram/forum topics: surface human topic names in agent context, prompt metadata, and plugin hook metadata "
+                        "by learning names from Telegram forum service messages. (#65973) "
+                        "Models/Codex: include `apiKey` in the codex provider catalog output so the Pi ModelRegistry validator no longer rejects the entry and silently drops all custom models from every provider in `models.json`. "
+                        "UI/chat: replace marked.js with markdown-it so maliciously crafted markdown can no longer freeze the Control UI via ReDoS. (#46707) "
+                        'Auto-reply/send policy: keep `sendPolicy: "deny"` from blocking inbound message processing, so the agent still runs its turn '
+                        "while all outbound delivery is suppressed for observer-style setups. "
+                        "Slack/interactions: apply the configured global `allowFrom` owner allowlist to channel block-action and modal interactive events. "
+                        "Agents/gateway-tool: reject `config.patch` and `config.apply` calls from the model-facing gateway tool when they would newly enable security-audit flags. "
+                        "Heartbeat/security: force owner downgrade for untrusted `hook:wake` system events. "
+                        "Microsoft Teams/security: enforce sender allowlist checks on SSO signin invokes."
+                    ),
+                },
+                {
+                    "lane": "polymarket-watch",
+                    "title": "Will Anthropic have the second-best Coding AI model at the end of April 2026?",
+                    "source_url": "https://polymarket.com/event/which-company-has-the-second-best-coding-ai-model-end-of-april",
+                    "signal_path": "polymarket-watch/2026-04-14/signals/anthropic.md",
+                    "fetched_at": "2026-04-14T05:09:39+0000",
+                    "source_snippet": (
+                        "Market: Which company has the second best Coding AI model end of April? "
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%) "
+                        "Anthropic: 90.0% OpenAI: 3.3% xAI: 3.0% "
+                        "24h volume: 369.0 30d volume: 7,419.1 Liquidity: 42,649.1 Price movement: up 1.0% this week"
+                    ),
+                    "excerpt": (
+                        "Market: Which company has the second best Coding AI model end of April? "
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%) "
+                        "Anthropic: 90.0% OpenAI: 3.3% xAI: 3.0% "
+                        "24h volume: 369.0 30d volume: 7,419.1 Liquidity: 42,649.1 Price movement: up 1.0% this week"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 4,
+                "lane_counts": [
+                    {"lane": "claude-code-watch", "selected_item_count": 1},
+                    {"lane": "codex-watch", "selected_item_count": 1},
+                    {"lane": "openclaw-watch", "selected_item_count": 1},
+                    {"lane": "polymarket-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        claude_line = next(line for line in body_markdown.splitlines() if "**v2.1.105**" in line)
+        self.assertIn("EnterWorktree", claude_line)
+        self.assertIn("`path`", claude_line)
+        self.assertIn("PreCompact", claude_line)
+        self.assertIn("`monitors`", claude_line)
+        self.assertNotIn("原文围绕 v2.1.105 展开，具体变化见来源", claude_line)
+
+        codex_line = next(
+            line for line in body_markdown.splitlines() if "**guardian timeout fix pr 3 - ux touch for timeouts**" in line
+        )
+        self.assertIn("PR #17557", codex_line)
+        self.assertIn("@won-openai", codex_line)
+        self.assertIn("2026-04-14", codex_line)
+        self.assertIn("guardian review timeout", codex_line)
+        self.assertIn("495ed22", codex_line)
+        self.assertIn("command", codex_line)
+        self.assertIn("MCP tool", codex_line)
+        self.assertIn("app-server notification path", codex_line)
+
+        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14-beta.1**" in line)
+        self.assertIn("Telegram", openclaw_line)
+        self.assertIn("markdown-it", openclaw_line)
+        self.assertIn("ReDoS", openclaw_line)
+        self.assertIn('sendPolicy: "deny"', openclaw_line)
+        self.assertTrue("hook:wake" in openclaw_line or "SSRF" in openclaw_line or "sender allowlist" in openclaw_line)
+        self.assertNotIn("原文围绕 openclaw 2026.4.14-beta.1 展开，具体变化见来源", openclaw_line)
+
+        market_line = next(
+            line
+            for line in body_markdown.splitlines()
+            if "**Will Anthropic have the second-best Coding AI model at the end of April 2026?**" in line
+        )
+        self.assertIn("Anthropic", market_line)
+        self.assertIn("90.0%", market_line)
+        self.assertIn("OpenAI", market_line)
+        self.assertIn("369.0", market_line)
+        self.assertIn("42,649.1", market_line)
+
+    def test_build_report_artifact_live_like_truncated_english_tail_is_rewritten_not_dumped_verbatim(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@addyosmani #89",
+                    "source_url": "https://x.com/addyosmani/status/2043447970507686248",
+                    "signal_path": "x-feed/2026-04-14/signals/addyosmani.md",
+                    "fetched_at": "2026-04-14T05:06:43+0000",
+                    "source_snippet": (
+                        "Memory makes your agent smarter over time. "
+                        "The agent harness is key to the memory layer. "
+                        "You can't bolt one onto"
+                    ),
+                    "excerpt": (
+                        "Memory makes your agent smarter over time. "
+                        "The agent harness is key to the memory layer. "
+                        "You can't bolt one onto"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 1}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**@addyosmani #89**" in line)
+
+        self.assertIn("memory", body_line.lower())
+        self.assertIn("harness", body_line)
+        self.assertIn("不能事后", body_line)
+        self.assertNotIn("You can't bolt one onto", body_line)
+        self.assertNotIn("原文围绕 harness 展开，具体变化见来源", body_line)
+
+    def test_build_report_artifact_real_x_following_english_snippets_use_facts_not_generic_placeholders(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-following", "status": "ok", "useful_item_count": 2},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-following",
+                    "title": "@robertwiblin",
+                    "source_url": "https://x.com/robertwiblin/status/2044017526992994466",
+                    "signal_path": "x-following/2026-04-14/signals/robertwiblin__post__2044017526992994466.md",
+                    "fetched_at": "2026-04-14T14:24:00+0000",
+                    "source_snippet": (
+                        "RT @StefanFSchubert: Anthropic overtakes OpenAI on Ventuals, "
+                        "a (small) market for private company valuations https://t.c"
+                    ),
+                    "excerpt": (
+                        "RT @StefanFSchubert: Anthropic overtakes OpenAI on Ventuals, "
+                        "a (small) market for private company valuations https://t.c"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@Dimillian",
+                    "source_url": "https://x.com/Dimillian/status/2043963889532940473",
+                    "signal_path": "x-following/2026-04-14/signals/Dimillian__post__2043963889532940473.md",
+                    "fetched_at": "2026-04-14T14:24:00+0000",
+                    "source_snippet": (
+                        "I’m diligently working on enhancing all the features of the Codex app "
+                        "to make it even better for you. If you have any su"
+                    ),
+                    "excerpt": (
+                        "I’m diligently working on enhancing all the features of the Codex app "
+                        "to make it even better for you. If you have any su"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [{"lane": "x-following", "selected_item_count": 2}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        robert_line = next(line for line in artifact["body_markdown"].splitlines() if "**@robertwiblin**" in line)
+        dimillian_line = next(line for line in artifact["body_markdown"].splitlines() if "**@Dimillian**" in line)
+
+        self.assertIn("Anthropic", robert_line)
+        self.assertIn("OpenAI", robert_line)
+        self.assertTrue("Ventuals" in robert_line or "估值" in robert_line)
+        self.assertNotIn("原文围绕 Anthropic 展开，具体变化见来源", robert_line)
+
+        self.assertIn("Codex app", dimillian_line)
+        self.assertTrue("增强" in dimillian_line or "功能" in dimillian_line)
+        self.assertNotIn("原文围绕 Codex 展开，具体变化见来源", dimillian_line)
+
+    def test_build_report_artifact_generic_english_repo_and_product_snippets_turn_into_chinese_facts(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1},
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "github-trending-weekly",
+                    "title": "seomachine",
+                    "source_url": "https://github.com/TheCraigHewitt/seomachine",
+                    "signal_path": "github-trending-weekly/2026-04-14/signals/TheCraigHewitt__seomachine.md",
+                    "fetched_at": "2026-04-14T05:09:28+0000",
+                    "source_snippet": (
+                        "A specialized Claude Code workspace for creating long-form, SEO-optimized blog content for any business. "
+                        "This system helps you research, write, analyze, and optimize content that ranks well and serves "
+                        "**Author:** @TheCraigHewitt/seomachine"
+                    ),
+                    "excerpt": (
+                        "A specialized Claude Code workspace for creating long-form, SEO-optimized blog content for any business. "
+                        "This system helps you research, write, analyze, and optimize content that ranks well and serves "
+                        "**Author:** @TheCraigHewitt/seomachine"
+                    ),
+                },
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "SuperHQ — Run AI coding agents in real microVM sandboxes",
+                    "source_url": (
+                        "https://www.producthunt.com/products/superhq?"
+                        "utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=test"
+                    ),
+                    "signal_path": "product-hunt-watch/2026-04-14/signals/superhq.md",
+                    "fetched_at": "2026-04-14T05:09:35+0000",
+                    "source_snippet": "Run AI coding agents in real microVM sandboxes **Author:** @SuperHQ",
+                    "excerpt": "Run AI coding agents in real microVM sandboxes **Author:** @SuperHQ",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [
+                    {"lane": "github-trending-weekly", "selected_item_count": 1},
+                    {"lane": "product-hunt-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        seomachine_line = next(line for line in artifact["body_markdown"].splitlines() if "**seomachine**" in line)
+        superhq_line = next(
+            line
+            for line in artifact["body_markdown"].splitlines()
+            if "**SuperHQ — Run AI coding agents in real microVM sandboxes**" in line
+        )
+
+        self.assertIn("SEO", seomachine_line)
+        self.assertTrue("博客" in seomachine_line or "内容" in seomachine_line)
+        self.assertNotIn("A specialized Claude Code workspace for creating long-form", seomachine_line)
+        self.assertNotIn("原文围绕 Claude Code 展开，具体变化见来源", seomachine_line)
+
+        self.assertIn("microVM", superhq_line)
+        self.assertTrue("沙箱" in superhq_line or "跑在" in superhq_line)
+        self.assertNotIn("Run AI coding agents in real microVM sandboxes。", superhq_line)
+
+    def test_build_report_artifact_sparse_release_without_notes_uses_non_placeholder_summary(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "claude-code-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "claude-code-watch",
+                    "title": "v2.1.104",
+                    "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.104",
+                    "signal_path": "claude-code-watch/2026-04-14/signals/anthropics__claude-code__release__v2.1.104.md",
+                    "fetched_at": "2026-04-14T14:25:24+0000",
+                    "source_snippet": "",
+                    "excerpt": "",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "claude-code-watch", "selected_item_count": 1}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**v2.1.104**" in line)
+
+        self.assertIn("Claude Code", body_line)
+        self.assertIn("v2.1.104", body_line)
+        self.assertTrue("release" in body_line.lower() or "版本更新" in body_line)
+        self.assertNotIn("原文围绕 v2.1.104 展开，具体变化见来源", body_line)
+
+    def test_build_report_artifact_sparse_live_items_use_minimal_fact_sentences_instead_of_editor_placeholders(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 2},
+                {"name": "claude-code-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "openclaw-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 4, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@ClaudeCodeLog #23",
+                    "source_url": "https://x.com/ClaudeCodeLog/status/2043835961755189345",
+                    "signal_path": "x-feed/2026-04-14/signals/ClaudeCodeLog__feed__2043835961755189345.md",
+                    "fetched_at": "2026-04-14T14:51:14+0000",
+                    "source_snippet": (
+                        "Claude Code 2.1.105 has been released. "
+                        "2 flag changes, 37 CLI changes, 4 system prompt changes "
+                        "Highlights: • claude-ap"
+                    ),
+                    "excerpt": (
+                        "Claude Code 2.1.105 has been released. "
+                        "2 flag changes, 37 CLI changes, 4 system prompt changes "
+                        "Highlights: • claude-ap"
+                    ),
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@AndrewYNg #51",
+                    "source_url": "https://x.com/AndrewYNg/status/2043742105852621052",
+                    "signal_path": "x-feed/2026-04-14/signals/AndrewYNg__feed__2043742105852621052.md",
+                    "fetched_at": "2026-04-14T14:51:14+0000",
+                    "source_snippet": (
+                        "As AI agents accelerate coding, what is the future of software engineering? "
+                        "Some trends are clear, such as the Product M"
+                    ),
+                    "excerpt": (
+                        "As AI agents accelerate coding, what is the future of software engineering? "
+                        "Some trends are clear, such as the Product M"
+                    ),
+                },
+                {
+                    "lane": "claude-code-watch",
+                    "title": "v2.1.107",
+                    "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.107",
+                    "signal_path": "claude-code-watch/2026-04-14/signals/anthropics__claude-code__release__v2.1.107.md",
+                    "fetched_at": "2026-04-14T14:52:33+0000",
+                    "source_snippet": "Show thinking hints sooner during long operations",
+                    "excerpt": "Show thinking hints sooner during long operations",
+                },
+                {
+                    "lane": "openclaw-watch",
+                    "title": "openclaw 2026.4.14",
+                    "source_url": "https://github.com/openclaw/openclaw/releases/tag/v2026.4.14",
+                    "signal_path": "openclaw-watch/2026-04-14/signals/openclaw__openclaw__release__v2026.4.14.md",
+                    "fetched_at": "2026-04-14T14:54:06+0000",
+                    "source_snippet": (
+                        "OpenClaw `2026.4.14` is another broad quality release focused on model provider "
+                        "with explicit turn improvements for GPT-5 family and channel provider issues. "
+                        "Additionally we improved overal performance with refactors to our underlying core codebase."
+                    ),
+                    "excerpt": (
+                        "OpenClaw `2026.4.14` is another broad quality release focused on model provider "
+                        "with explicit turn improvements for GPT-5 family and channel provider issues. "
+                        "Additionally we improved overal performance with refactors to our underlying core codebase."
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 4,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 2},
+                    {"lane": "claude-code-watch", "selected_item_count": 1},
+                    {"lane": "openclaw-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        claudecodelog_line = next(
+            line for line in body_markdown.splitlines() if "**@ClaudeCodeLog #23" in line
+        )
+        self.assertIn("Claude Code 2.1.105", claudecodelog_line)
+        self.assertTrue("37 CLI changes" in claudecodelog_line or "2 flag changes" in claudecodelog_line)
+        self.assertNotIn("原文围绕 Claude Code 展开，具体变化见来源", claudecodelog_line)
+        self.assertNotIn("claude-ap", claudecodelog_line)
+
+        andrew_line = next(line for line in body_markdown.splitlines() if "**@AndrewYNg #51" in line)
+        self.assertIn("AI agents", andrew_line)
+        self.assertIn("software engineering", andrew_line)
+        self.assertNotIn("原文围绕 X 推荐流 展开，具体变化见来源", andrew_line)
+        self.assertNotIn("Product M", andrew_line)
+
+        claude_release_line = next(line for line in body_markdown.splitlines() if "**v2.1.107**" in line)
+        self.assertIn("Claude Code", claude_release_line)
+        self.assertIn("v2.1.107", claude_release_line)
+        self.assertTrue("thinking hints" in claude_release_line or "release" in claude_release_line.lower())
+        self.assertNotIn("原文围绕 v2.1.107 展开，具体变化见来源", claude_release_line)
+
+        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14**" in line)
+        self.assertIn("OpenClaw", openclaw_line)
+        self.assertIn("2026.4.14", openclaw_line)
+        self.assertTrue("GPT-5" in openclaw_line or "model provider" in openclaw_line or "release" in openclaw_line.lower())
+        self.assertNotIn("原文围绕 openclaw 2026.4.14 展开，具体变化见来源", openclaw_line)
+
+    def test_build_report_artifact_dense_live_like_claude_and_openclaw_entries_keep_more_groups(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "claude-code-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "openclaw-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "claude-code-watch",
+                    "title": "v2.1.105",
+                    "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.105",
+                    "signal_path": "claude-code-watch/2026-04-14/signals/v2.1.105.md",
+                    "fetched_at": "2026-04-14T05:07:39+0000",
+                    "source_snippet": (
+                        "Added `path` parameter to the `EnterWorktree` tool to switch into an existing worktree of the current repository "
+                        "Added PreCompact hook support: hooks can now block compaction by exiting with code 2 or returning "
+                        '`{"decision":"block"}` '
+                        "Added background monitor support for plugins via a top-level `monitors` manifest key that auto-arms at session start or on skill invoke "
+                        "`/proactive` is now an alias for `/loop` "
+                        "Improved stalled API stream handling: streams now abort after 5 minutes of no data and retry non-streaming instead of hanging indefinitely "
+                        "Improved network error messages: connection errors now show a retry message immediately instead of a silent spinner "
+                        "Improved `/doctor` layout with status icons; press `f` to have Claude fix reported issues "
+                        "Improved `WebFetch` to strip `<style>` and `<script>` contents from fetched pages so CSS-heavy pages no longer exhaust the content budget before reaching actual text "
+                        "Improved MCP large-output truncation prompt to give format-specific recipes (e.g. `jq` for JSON, computed Read chunk sizes for text) "
+                        "Fixed queued user prompts disappearing from focus mode "
+                        "Fixed images attached to queued messages (sent while Claude is working) being dropped"
+                    ),
+                    "excerpt": "v2.1.105 dense summary",
+                },
+                {
+                    "lane": "openclaw-watch",
+                    "title": "openclaw 2026.4.14",
+                    "source_url": "https://github.com/openclaw/openclaw/releases/tag/v2026.4.14",
+                    "signal_path": "openclaw-watch/2026-04-14/signals/v2026.4.14.md",
+                    "fetched_at": "2026-04-14T05:08:56+0000",
+                    "source_snippet": (
+                        "OpenClaw `2026.4.14` is another broad quality release focused on model provider with explicit turn improvements for GPT-5 family and channel provider issues. "
+                        "OpenAI Codex/models: add forward-compat support for `gpt-5.4-pro`, including Codex pricing/limits and list/status visibility before the upstream catalog catches up. "
+                        "Telegram/forum topics: surface human topic names in agent context, prompt metadata, and plugin hook metadata by learning names from Telegram forum service messages. "
+                        "Models/Codex: include `apiKey` in the codex provider catalog output so the Pi ModelRegistry validator no longer rejects the entry and silently drops all custom models from every provider in `models.json`. "
+                        "Slack/interactions: apply the configured global `allowFrom` owner allowlist to channel block-action and modal interactive events. "
+                        "Agents/gateway-tool: reject `config.patch` and `config.apply` calls from the model-facing gateway tool when they would newly enable security-audit flags."
+                    ),
+                    "excerpt": "openclaw 2026.4.14 dense summary",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [
+                    {"lane": "claude-code-watch", "selected_item_count": 1},
+                    {"lane": "openclaw-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        claude_line = next(line for line in body_markdown.splitlines() if "**v2.1.105**" in line)
+        self.assertIn("network error", claude_line)
+        self.assertIn("/doctor", claude_line)
+        self.assertIn("WebFetch", claude_line)
+        self.assertIn("queued messages", claude_line)
+        self.assertGreaterEqual(len(claude_line), 260)
+
+        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14**" in line)
+        self.assertIn("gpt-5.4-pro", openclaw_line)
+        self.assertIn("Telegram/forum topics", openclaw_line)
+        self.assertIn("apiKey", openclaw_line)
+        self.assertTrue("allowFrom" in openclaw_line or "config.patch" in openclaw_line)
+        self.assertGreaterEqual(len(openclaw_line), 240)
+
+    def test_build_report_artifact_live_report_remaining_x_placeholders_turn_into_minimal_fact_sentences(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 4},
+                {"name": "x-following", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 5, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@realBigBrainAI #42",
+                    "source_url": "https://x.com/realBigBrainAI/status/2043668202061017177",
+                    "signal_path": "x-feed/2026-04-14/signals/realBigBrainAI__feed__2043668202061017177.md",
+                    "fetched_at": "2026-04-14T15:20:08+0000",
+                    "source_snippet": (
+                        'Peter Steinberger, creator of OpenClaw, on why AI agents still produce "slop" '
+                        'without human taste in the loop: "You can'
+                    ),
+                    "excerpt": (
+                        'Peter Steinberger, creator of OpenClaw, on why AI agents still produce "slop" '
+                        'without human taste in the loop: "You can'
+                    ),
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@npm_i_shaders #70",
+                    "source_url": "https://x.com/npm_i_shaders/status/2044041810440319391",
+                    "signal_path": "x-feed/2026-04-14/signals/npm_i_shaders__feed__2044041810440319391.md",
+                    "fetched_at": "2026-04-14T15:20:08+0000",
+                    "source_snippet": (
+                        "Introducing Shaders MCP. "
+                        "The way you build shaders just changed. "
+                        "Your agent now finds, tweaks, and ships the perfect"
+                    ),
+                    "excerpt": (
+                        "Introducing Shaders MCP. "
+                        "The way you build shaders just changed. "
+                        "Your agent now finds, tweaks, and ships the perfect"
+                    ),
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@heygurisingh #60",
+                    "source_url": "https://x.com/heygurisingh/status/2043530834356134323",
+                    "signal_path": "x-feed/2026-04-14/signals/heygurisingh__feed__2043530834356134323.md",
+                    "fetched_at": "2026-04-14T15:20:08+0000",
+                    "source_snippet": (
+                        "Someone built the most complete Claude Code setup Boris Cherny uses at Anthropic "
+                        "on GitHub and it's 100%"
+                    ),
+                    "excerpt": (
+                        "Someone built the most complete Claude Code setup Boris Cherny uses at Anthropic "
+                        "on GitHub and it's 100%"
+                    ),
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@exploraX_ #32",
+                    "source_url": "https://x.com/exploraX_/status/2043578742778277962",
+                    "signal_path": "x-feed/2026-04-14/signals/exploraX___feed__2043578742778277962.md",
+                    "fetched_at": "2026-04-14T15:20:08+0000",
+                    "source_snippet": (
+                        "the creators of agent skills at Anthropic explained why they stopped building agents. "
+                        "and started building skills inste"
+                    ),
+                    "excerpt": (
+                        "the creators of agent skills at Anthropic explained why they stopped building agents. "
+                        "and started building skills inste"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@heygurisingh",
+                    "source_url": "https://x.com/heygurisingh/status/2044071026162819561",
+                    "signal_path": "x-following/2026-04-14/signals/heygurisingh__post__2044071026162819561.md",
+                    "fetched_at": "2026-04-14T15:20:27+0000",
+                    "source_snippet": (
+                        "RT @heygurisingh: Mark this tweet "
+                        "Catdoes v4 is the first ai builder where the agent has its own computer in the cloud."
+                    ),
+                    "excerpt": (
+                        "RT @heygurisingh: Mark this tweet "
+                        "Catdoes v4 is the first ai builder where the agent has its own computer in the cloud."
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 5,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 4},
+                    {"lane": "x-following", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertNotIn("原文围绕", body_markdown)
+
+        realbigbrain_line = next(line for line in body_markdown.splitlines() if "**@realBigBrainAI #42**" in line)
+        self.assertIn("OpenClaw", realbigbrain_line)
+        self.assertTrue("slop" in realbigbrain_line or "human taste" in realbigbrain_line or "Peter Steinberger" in realbigbrain_line)
+
+        shaders_line = next(line for line in body_markdown.splitlines() if "**@npm_i_shaders #70**" in line)
+        self.assertTrue("Shaders MCP" in shaders_line or "shader" in shaders_line.lower())
+        self.assertIn("agent", shaders_line.lower())
+
+        setup_line = next(line for line in body_markdown.splitlines() if "**@heygurisingh #60**" in line)
+        self.assertIn("Claude Code", setup_line)
+        self.assertTrue("Anthropic" in setup_line or "GitHub" in setup_line or "setup" in setup_line.lower())
+
+        skills_line = next(line for line in body_markdown.splitlines() if "**@exploraX_ #32**" in line)
+        self.assertIn("Anthropic", skills_line)
+        self.assertIn("skills", skills_line.lower())
+        self.assertIn("agents", skills_line.lower())
+
+        catdoes_line = next(
+            line
+            for line in body_markdown.splitlines()
+            if "**@heygurisingh**" in line and "Catdoes" in line
+        )
+        self.assertIn("Catdoes v4", catdoes_line)
+        self.assertTrue("云端" in catdoes_line or "cloud" in catdoes_line.lower() or "电脑" in catdoes_line)
+
+    def test_build_report_artifact_live_report_current_x_placeholders_turn_into_minimal_fact_sentences(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 2},
+                {"name": "x-following", "status": "ok", "useful_item_count": 3},
+            ],
+            "summary": {"useful_item_count": 5, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@steipete #94",
+                    "source_url": "https://x.com/steipete/status/2043726001750900770",
+                    "signal_path": "x-feed/2026-04-14/signals/steipete__feed__2043726001750900770.md",
+                    "fetched_at": "2026-04-14T16:20:58+0000",
+                    "source_snippet": (
+                        "RT @cherry_mx_reds: A few more OpenClaw 2026.4.12 changes that didn’t make the first tweet 🦞 "
+                        "Better local models with"
+                    ),
+                    "excerpt": (
+                        "RT @cherry_mx_reds: A few more OpenClaw 2026.4.12 changes that didn’t make the first tweet 🦞 "
+                        "Better local models with"
+                    ),
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@lmstudio #9",
+                    "source_url": "https://x.com/lmstudio/status/2043741629492666659",
+                    "signal_path": "x-feed/2026-04-14/signals/lmstudio__feed__2043741629492666659.md",
+                    "fetched_at": "2026-04-14T16:20:58+0000",
+                    "source_snippet": (
+                        "LM Studio is now an official @openclaw provider! "
+                        "Run: openclaw onboard --auth-choice lmstudio "
+                        "Use your local model"
+                    ),
+                    "excerpt": (
+                        "LM Studio is now an official @openclaw provider! "
+                        "Run: openclaw onboard --auth-choice lmstudio "
+                        "Use your local model"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@danshipper",
+                    "source_url": "https://x.com/danshipper/status/2044027331556077928",
+                    "signal_path": "x-following/2026-04-14/signals/danshipper__post__2044027331556077928.md",
+                    "fetched_at": "2026-04-14T16:21:06+0000",
+                    "source_snippet": (
+                        "Re: the report that older models can find the same exploits as Mythos: "
+                        "This doesn’t mean much about its power relative"
+                    ),
+                    "excerpt": (
+                        "Re: the report that older models can find the same exploits as Mythos: "
+                        "This doesn’t mean much about its power relative"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@cyrilXBT",
+                    "source_url": "https://x.com/cyrilXBT/status/2044087415841673518",
+                    "signal_path": "x-following/2026-04-14/signals/cyrilXBT__post__2044087415841673518.md",
+                    "fetched_at": "2026-04-14T16:21:06+0000",
+                    "source_snippet": (
+                        "A Google engineer with 11 years of experience automated 80% of his job with Claude Code. "
+                        "He now works 2-3 hours a day i"
+                    ),
+                    "excerpt": (
+                        "A Google engineer with 11 years of experience automated 80% of his job with Claude Code. "
+                        "He now works 2-3 hours a day i"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@carlvellotti",
+                    "source_url": "https://x.com/carlvellotti/status/2044087745254138081",
+                    "signal_path": "x-following/2026-04-14/signals/carlvellotti__post__2044087745254138081.md",
+                    "fetched_at": "2026-04-14T16:21:06+0000",
+                    "source_snippet": (
+                        "I literally sell a course teaching PMs to build with Claude Code. "
+                        "I'll tell you straight: raw Claude is not an enterpri"
+                    ),
+                    "excerpt": (
+                        "I literally sell a course teaching PMs to build with Claude Code. "
+                        "I'll tell you straight: raw Claude is not an enterpri"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 5,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 2},
+                    {"lane": "x-following", "selected_item_count": 3},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertNotIn("原文围绕", body_markdown)
+
+        steipete_line = next(line for line in body_markdown.splitlines() if "**@steipete #94**" in line)
+        self.assertIn("OpenClaw 2026.4.12", steipete_line)
+        self.assertTrue("first tweet" in steipete_line or "首条" in steipete_line)
+        self.assertTrue("local model" in steipete_line.lower() or "本地模型" in steipete_line)
+
+        lmstudio_line = next(line for line in body_markdown.splitlines() if "**@lmstudio #9**" in line)
+        self.assertIn("LM Studio", lmstudio_line)
+        self.assertIn("OpenClaw", lmstudio_line)
+        self.assertTrue("provider" in lmstudio_line.lower() or "接入" in lmstudio_line or "接进" in lmstudio_line)
+        self.assertTrue("local model" in lmstudio_line.lower() or "本地模型" in lmstudio_line)
+
+        danshipper_line = next(line for line in body_markdown.splitlines() if "**@danshipper**" in line)
+        self.assertIn("Mythos", danshipper_line)
+        self.assertTrue("exploit" in danshipper_line.lower() or "漏洞" in danshipper_line)
+        self.assertTrue("power" in danshipper_line.lower() or "能力" in danshipper_line)
+
+        cyril_line = next(line for line in body_markdown.splitlines() if "**@cyrilXBT**" in line)
+        self.assertIn("Claude Code", cyril_line)
+        self.assertIn("80%", cyril_line)
+        self.assertTrue("2-3" in cyril_line or "2 到 3" in cyril_line or "2 至 3" in cyril_line)
+
+        carlvellotti_line = next(line for line in body_markdown.splitlines() if "**@carlvellotti**" in line)
+        self.assertIn("PM", carlvellotti_line)
+        self.assertIn("Claude Code", carlvellotti_line)
+        self.assertTrue("enterprise" in carlvellotti_line.lower() or "企业" in carlvellotti_line)
+
+    def test_build_report_artifact_live_like_2026_04_15_x_bad_cases_render_three_concrete_sentences(self) -> None:
+        cases = [
+            {
+                "lane": "x-feed",
+                "title": "@trq212 #40",
+                "source_url": "https://x.com/trq212/status/2044100766445805823",
+                "signal_path": "x-feed/2026-04-15/signals/trq212__feed__2044100766445805823.md",
+                "source_snippet": (
+                    "RT @noahzweben: Claude Code Routines are here! "
+                    "In addition to a schedule, you can now trigger templated agents via GitHu"
+                ),
+                "expected_keywords": ["Claude Code", "Routines", "schedule", "GitHub"],
+            },
+            {
+                "lane": "x-feed",
+                "title": "@icanvardar #73",
+                "source_url": "https://x.com/icanvardar/status/2043652025339023845",
+                "signal_path": "x-feed/2026-04-15/signals/icanvardar__feed__2043652025339023845.md",
+                "source_snippet": (
+                    "wait… claude code literally punishes you for turning off telemetry?? "
+                    "if you disable it, anthropic drops your cache"
+                ),
+                "expected_keywords": ["Claude Code", "telemetry", "Anthropic", "cache"],
+            },
+            {
+                "lane": "x-following",
+                "title": "@trq212",
+                "source_url": "https://x.com/trq212/status/2044100766445805823",
+                "signal_path": "x-following/2026-04-15/signals/trq212__post__2044100766445805823.md",
+                "source_snippet": (
+                    "RT @noahzweben: Claude Code Routines are here! "
+                    "In addition to a schedule, you can now trigger templated agents via GitHu"
+                ),
+                "expected_keywords": ["Claude Code", "Routines", "schedule", "GitHub"],
+            },
+            {
+                "lane": "x-following",
+                "title": "@aiedge_",
+                "source_url": "https://x.com/aiedge_/status/2044151244416299381",
+                "signal_path": "x-following/2026-04-15/signals/aiedge___post__2044151244416299381.md",
+                "source_snippet": (
+                    "Anyone using Claude Code NEEDS to save this resource. "
+                    "A fully curated website with the top Claude Code Skills, MCPs"
+                ),
+                "expected_keywords": ["Claude Code", "Skills", "MCP", "网站"],
+            },
+        ]
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 2},
+                {"name": "x-following", "status": "ok", "useful_item_count": 2},
+            ],
+            "summary": {"useful_item_count": len(cases), "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": case["lane"],
+                    "title": case["title"],
+                    "source_url": case["source_url"],
+                    "signal_path": case["signal_path"],
+                    "fetched_at": "2026-04-15T00:00:00+0000",
+                    "source_snippet": case["source_snippet"],
+                    "excerpt": case["source_snippet"],
+                }
+                for case in cases
+            ],
+            "summary": {
+                "selected_item_count": len(cases),
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 2},
+                    {"lane": "x-following", "selected_item_count": 2},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_lines = [
+            line for line in artifact["body_markdown"].splitlines() if line.strip().startswith("- **")
+        ]
+
+        self.assertEqual(len(body_lines), len(cases))
+        for case in cases:
+            with self.subTest(title=case["title"]):
+                body_line = next(line for line in body_lines if case["source_url"] in line)
+                self.assertNotIn("原文围绕", body_line)
+                self.assertGreaterEqual(body_line.count("。"), 3)
+                for keyword in case["expected_keywords"]:
+                    self.assertIn(keyword, body_line)
+
+    def test_build_report_artifact_live_like_2026_04_15_generic_x_fallback_still_renders_three_clauses(self) -> None:
+        cases = [
+            {
+                "lane": "x-feed",
+                "title": "@ashpreetbedi #81",
+                "source_url": "https://x.com/ashpreetbedi/status/2044098660586111022",
+                "signal_path": "x-feed/2026-04-15/signals/ashpreetbedi__feed__2044098660586111022.md",
+                "source_snippet": (
+                    "New post: Systems Engineering "
+                    "Coding agents have lowered the barrier to writing code, but they haven't lowered the requ"
+                ),
+                "expected_keywords": ["Systems Engineering", "coding agents", "写代码"],
+            },
+            {
+                "lane": "x-following",
+                "title": "@felixrieseberg",
+                "source_url": "https://x.com/felixrieseberg/status/2044128194647994585",
+                "signal_path": "x-following/2026-04-15/signals/felixrieseberg__post__2044128194647994585.md",
+                "source_snippet": (
+                    "Today is a big day! We're launching a ~ new ~ version of Claude Code in the desktop app. "
+                    "It's been redesigned"
+                ),
+                "expected_keywords": ["Claude Code", "desktop", "重新设计"],
+            },
+        ]
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 1},
+                {"name": "x-following", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": len(cases), "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": case["lane"],
+                    "title": case["title"],
+                    "source_url": case["source_url"],
+                    "signal_path": case["signal_path"],
+                    "fetched_at": "2026-04-15T00:00:00+0000",
+                    "source_snippet": case["source_snippet"],
+                    "excerpt": case["source_snippet"],
+                }
+                for case in cases
+            ],
+            "summary": {
+                "selected_item_count": len(cases),
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 1},
+                    {"lane": "x-following", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_lines = [
+            line for line in artifact["body_markdown"].splitlines() if line.strip().startswith("- **")
+        ]
+
+        self.assertEqual(len(body_lines), len(cases))
+        for case in cases:
+            with self.subTest(title=case["title"]):
+                body_line = next(line for line in body_lines if case["source_url"] in line)
+                self.assertNotIn("原文围绕", body_line)
+                self.assertGreaterEqual(body_line.count("。"), 3)
+                for keyword in case["expected_keywords"]:
+                    self.assertIn(keyword, body_line)
+
+    def test_build_report_artifact_release_single_english_sentences_get_minimal_chinese_rewrites(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "claude-code-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "openclaw-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "claude-code-watch",
+                    "title": "v2.1.107",
+                    "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.107",
+                    "signal_path": "claude-code-watch/2026-04-14/signals/anthropics__claude-code__release__v2.1.107.md",
+                    "fetched_at": "2026-04-14T14:52:33+0000",
+                    "source_snippet": "Show thinking hints sooner during long operations",
+                    "excerpt": "Show thinking hints sooner during long operations",
+                },
+                {
+                    "lane": "openclaw-watch",
+                    "title": "openclaw 2026.4.14",
+                    "source_url": "https://github.com/openclaw/openclaw/releases/tag/v2026.4.14",
+                    "signal_path": "openclaw-watch/2026-04-14/signals/openclaw__openclaw__release__v2026.4.14.md",
+                    "fetched_at": "2026-04-14T14:54:06+0000",
+                    "source_snippet": (
+                        "OpenClaw `2026.4.14` is another broad quality release focused on model provider "
+                        "with explicit turn improvements for GPT-5 family and channel provider issues. "
+                        "Additionally we improved overal performance with refactors to our underlying core codebase."
+                    ),
+                    "excerpt": (
+                        "OpenClaw `2026.4.14` is another broad quality release focused on model provider "
+                        "with explicit turn improvements for GPT-5 family and channel provider issues. "
+                        "Additionally we improved overal performance with refactors to our underlying core codebase."
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [
+                    {"lane": "claude-code-watch", "selected_item_count": 1},
+                    {"lane": "openclaw-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        claude_line = next(line for line in body_markdown.splitlines() if "**v2.1.107**" in line)
+        self.assertIn("Claude Code", claude_line)
+        self.assertTrue("thinking hints" in claude_line or "长操作" in claude_line or "提前" in claude_line)
+        self.assertNotIn("Show thinking hints sooner during long operations", claude_line)
+        self.assertNotIn("原文围绕 v2.1.107 展开，具体变化见来源", claude_line)
+
+        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14**" in line)
+        self.assertIn("OpenClaw", openclaw_line)
+        self.assertTrue("GPT-5" in openclaw_line or "model provider" in openclaw_line or "质量" in openclaw_line)
+        self.assertTrue("性能" in openclaw_line or "provider" in openclaw_line or "channel" in openclaw_line)
+        self.assertNotIn("is another broad quality release focused on model provider", openclaw_line)
+        self.assertNotIn("原文围绕 openclaw 2026.4.14 展开，具体变化见来源", openclaw_line)
 
     def test_build_report_artifact_deduplicates_same_url_within_section(self) -> None:
         collect_result = {
