@@ -290,6 +290,7 @@ def _to_spoken_sentence(text: str) -> str:
     cleaned = _clean_readout_fragment(text)
     if not cleaned:
         return ""
+    cleaned = re.sub(r"^@[A-Za-z0-9_]+(?:\s+#\d+)?\s*", "", cleaned)
     cleaned = re.sub(r"\b([A-Za-z0-9_.+-]+(?:\s+[A-Za-z0-9_.+-]+){0,3})\s+\1\b", r"\1", cleaned)
     cleaned = re.sub(r"[。！？；：,.!?;:，、 ]+$", "", cleaned).strip()
     if not cleaned:

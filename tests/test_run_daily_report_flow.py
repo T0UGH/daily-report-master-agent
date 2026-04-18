@@ -40,7 +40,7 @@ def test_build_readout_text_builds_listener_friendly_spoken_script() -> None:
     report_markdown = (
         "# AI Agent 日报（2026-04-16）\n\n"
         "## X 推荐流\n"
-        "- **OpenAI** 发布了 [新模型](https://example.com/model)，[原帖](https://example.com/post)\n"
+        "- **@alpha_01 #7** OpenAI 发布了 [新模型](https://example.com/model)，[原帖](https://example.com/post)\n"
         "- 第二条跟进了多代理协作的落地效果。\n"
         "- 第三条不应该被保留。\n\n"
         "## Claude Code\n"
@@ -64,6 +64,7 @@ def test_build_readout_text_builds_listener_friendly_spoken_script() -> None:
     assert "下面是 Reddit 社区。" in text
     assert "OpenAI 发布了 新模型。" in text
     assert "第二条跟进了多代理协作的落地效果。" in text
+    assert "@alpha_01" not in text
     assert "第三条不应该被保留" not in text
     assert "增加了 review gate，并补充了错误上下文。" in text
     assert "CLI 现在会展示更明确的失败原因。" in text
