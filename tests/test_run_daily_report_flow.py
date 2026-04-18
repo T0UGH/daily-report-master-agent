@@ -36,24 +36,67 @@ def _write_report(tmp_path: Path) -> Path:
     return report_path
 
 
-def test_build_readout_text_strips_markdown_controls() -> None:
+def test_build_readout_text_builds_listener_friendly_spoken_script() -> None:
     report_markdown = (
         "# AI Agent 日报（2026-04-16）\n\n"
-        "- **OpenAI** 发布了 [新模型](https://example.com/model)\n"
-        "1. `Claude Code` 增强了 review 流程\n\n"
+        "## X 推荐流\n"
+        "- **OpenAI** 发布了 [新模型](https://example.com/model)，[原帖](https://example.com/post)\n"
+        "- 第二条跟进了多代理协作的落地效果。\n"
+        "- 第三条不应该被保留。\n\n"
+        "## Claude Code\n"
+        "- [Release](https://example.com/release) 增加了 review gate，并补充了错误上下文。\n"
+        "- CLI 现在会展示更明确的失败原因，另见 [GitHub](https://example.com/repo)\n"
+        "- 这条更新也不应该被保留。\n\n"
+        "## Reddit 社区\n"
+        "- 原文围绕作者经历展开\n"
+        "- 社区在讨论长上下文 agent 的成本和收益，具体可参考 https://example.com/thread\n"
+        "- 值得关注后续演进\n\n"
         "## 来源\n"
         "- https://example.com/source\n"
     )
 
     text = flow.build_readout_text(report_markdown)
 
-    assert "OpenAI 发布了 新模型" in text
-    assert "Claude Code 增强了 review 流程" in text
-    assert "#" not in text
-    assert "**" not in text
-    assert "`" not in text
+    assert text.startswith("以下是今天的 AI Agent 日报语音简报。")
+    assert text.endswith("以上就是今天的重点内容，感谢收听。")
+    assert "先来看 X 推荐流。" in text
+    assert "接着是 Claude Code。" in text
+    assert "下面是 Reddit 社区。" in text
+    assert "OpenAI 发布了 新模型。" in text
+    assert "第二条跟进了多代理协作的落地效果。" in text
+    assert "第三条不应该被保留" not in text
+    assert "增加了 review gate，并补充了错误上下文。" in text
+    assert "CLI 现在会展示更明确的失败原因。" in text
+    assert "这条更新也不应该被保留" not in text
+    assert "社区在讨论长上下文 agent 的成本和收益。" in text
+    assert "原文围绕" not in text
+    assert "值得关注" not in text
+    assert "原帖" not in text
+    assert "Release" not in text
+    assert "GitHub" not in text
     assert "https://example.com" not in text
+    assert "[" not in text
+    assert "`" not in text
     assert "## 来源" not in text
+
+
+def test_build_readout_text_drops_sources_tail_entirely() -> None:
+    report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "## X 关注流\n"
+        "- 第一条更新\n\n"
+        "## 来源\n"
+        "- https://example.com/source\n\n"
+        "## Codex\n"
+        "- 这段不应出现在播报里\n"
+    )
+
+    text = flow.build_readout_text(report_markdown)
+
+    assert "再来看 X 关注流。" in text
+    assert "第一条更新。" in text
+    assert "Codex" not in text
+    assert "这段不应出现在播报里" not in text
 
 
 def test_generate_audio_bundle_creates_missing_run_dir_before_writing_outputs(monkeypatch, tmp_path: Path) -> None:

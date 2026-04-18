@@ -48,6 +48,19 @@ FEISHU_OPEN_API_BASE = "https://open.feishu.cn/open-apis"
 FEISHU_AUDIO_SKILL_DIR = Path.home() / ".hermes" / "skills" / "productivity" / "feishu-playable-daily-audio"
 MINIMAX_TTS_SCRIPT = FEISHU_AUDIO_SKILL_DIR / "scripts" / "generate_minimax_tts.py"
 FEISHU_OPUS_SCRIPT = FEISHU_AUDIO_SKILL_DIR / "scripts" / "convert_to_feishu_opus.py"
+READOUT_INTRO = "以下是今天的 AI Agent 日报语音简报。"
+READOUT_OUTRO = "以上就是今天的重点内容，感谢收听。"
+READOUT_PLACEHOLDER_SNIPPETS = ("原文围绕", "具体变化见来源", "值得关注")
+READOUT_DROP_LINK_LABELS = {"原帖", "release", "github", "product hunt", "polymarket"}
+READOUT_SECTION_TRANSITIONS = {
+    "Reddit 社区": "下面是 Reddit 社区。",
+    "Claude Code": "接着是 Claude Code。",
+    "Codex": "接着是 Codex。",
+    "OpenClaw": "接着是 OpenClaw。",
+    "GitHub 趋势项目": "接着看 GitHub 趋势项目。",
+    "Product Hunt 新品": "再来看 Product Hunt 新品。",
+    "Polymarket 市场": "再来看 Polymarket 市场。",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -239,29 +252,159 @@ def build_audio_artifact_paths(*, report_date: str, run_dir: Path, intermediate_
     }
 
 
-def build_readout_text(report_markdown: str) -> str:
-    text = report_markdown.replace("\r\n", "\n").strip()
+def _truncate_sources_tail(text: str) -> str:
     sources_match = re.search(r"^##\s*来源\s*$", text, flags=re.M)
     if sources_match:
-        text = text[: sources_match.start()].rstrip()
-    text = re.sub(r"```.*?```", "\n", text, flags=re.S)
+        return text[: sources_match.start()].rstrip()
+    return text
+
+
+def _replace_readout_link(match: re.Match[str]) -> str:
+    label = match.group(1).strip()
+    normalized = re.sub(r"\s+", " ", label).strip().lower()
+    if normalized in READOUT_DROP_LINK_LABELS:
+        return ""
+    return label
+
+
+def _clean_readout_fragment(text: str) -> str:
     text = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", text)
-    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", _replace_readout_link, text)
+    text = re.sub(r"https?://\S+", "", text)
     text = re.sub(r"`([^`]+)`", r"\1", text)
-    text = re.sub(r"^\s*#{1,6}\s*", "", text, flags=re.M)
-    text = re.sub(r"^\s*[-*+]\s+", "", text, flags=re.M)
-    text = re.sub(r"^\s*\d+\.\s+", "", text, flags=re.M)
-    text = re.sub(r"^\s*>\s?", "", text, flags=re.M)
     text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
     text = re.sub(r"__([^_]+)__", r"\1", text)
     text = re.sub(r"\*([^*\n]+)\*", r"\1", text)
     text = re.sub(r"_([^_\n]+)_", r"\1", text)
-    text = re.sub(r"https?://\S+", "", text)
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    lines = [line.strip() for line in text.splitlines()]
-    compact = "\n".join(line for line in lines if line)
-    return compact.strip()
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"[，,、 ]*(?:另见|详见|参见|可参考|具体可参考|更多见)\s*$", "", text)
+    text = re.sub(r"[（(]\s*[)）]", "", text)
+    text = re.sub(r"\s+([，。！？；：,.!?;:])", r"\1", text)
+    text = re.sub(r"[，,、；;：: ]+$", "", text)
+    text = re.sub(r"^[：:，,、\- ]+", "", text)
+    return text.strip()
+
+
+def _to_spoken_sentence(text: str) -> str:
+    cleaned = _clean_readout_fragment(text)
+    if not cleaned:
+        return ""
+    cleaned = re.sub(r"\b([A-Za-z0-9_.+-]+(?:\s+[A-Za-z0-9_.+-]+){0,3})\s+\1\b", r"\1", cleaned)
+    cleaned = re.sub(r"[。！？；：,.!?;:，、 ]+$", "", cleaned).strip()
+    if not cleaned:
+        return ""
+    return f"{cleaned}。"
+
+
+def _build_section_transition(heading: str) -> str:
+    cleaned = _clean_readout_fragment(heading)
+    if not cleaned:
+        return ""
+    if cleaned.endswith("推荐流"):
+        return f"先来看 {cleaned}。"
+    if cleaned.endswith("关注流"):
+        return f"再来看 {cleaned}。"
+    return READOUT_SECTION_TRANSITIONS.get(cleaned, f"接着看 {cleaned}。")
+
+
+def _select_readout_items(items: list[str], *, limit: int = 2) -> list[str]:
+    selected: list[str] = []
+    for raw_item in items:
+        if any(snippet in raw_item for snippet in READOUT_PLACEHOLDER_SNIPPETS):
+            continue
+        sentence = _to_spoken_sentence(raw_item)
+        if not sentence:
+            continue
+        if any(snippet in sentence for snippet in READOUT_PLACEHOLDER_SNIPPETS):
+            continue
+        selected.append(sentence)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
+def build_readout_text(report_markdown: str) -> str:
+    text = report_markdown.replace("\r\n", "\n").strip()
+    text = _truncate_sources_tail(text)
+    text = re.sub(r"```.*?```", "\n", text, flags=re.S)
+    default_items: list[str] = []
+    sections: list[tuple[str, list[str]]] = []
+    current_heading: str | None = None
+    current_items: list[str] = []
+    current_item_lines: list[str] | None = None
+
+    def flush_item() -> None:
+        nonlocal current_item_lines
+        if current_item_lines is None:
+            return
+        item_text = " ".join(line for line in current_item_lines if line).strip()
+        current_item_lines = None
+        if not item_text:
+            return
+        if current_heading is None:
+            default_items.append(item_text)
+        else:
+            current_items.append(item_text)
+
+    def flush_section() -> None:
+        nonlocal current_heading, current_items
+        if current_heading is None:
+            return
+        sections.append((current_heading, current_items[:]))
+        current_heading = None
+        current_items = []
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            flush_item()
+            continue
+
+        heading_match = re.match(r"^(#{1,6})\s*(.+?)\s*$", line)
+        if heading_match:
+            flush_item()
+            flush_section()
+            heading_level = len(heading_match.group(1))
+            heading_text = heading_match.group(2).strip()
+            if heading_level == 1 and "日报" in heading_text:
+                continue
+            current_heading = heading_text
+            current_items = []
+            continue
+
+        bullet_match = re.match(r"^(?:[-*+]|\d+\.)\s+(.*)$", line)
+        if bullet_match:
+            flush_item()
+            current_item_lines = [bullet_match.group(1).strip()]
+            continue
+
+        if current_item_lines is not None:
+            current_item_lines.append(line)
+            continue
+
+        if current_heading is None:
+            default_items.append(line)
+        else:
+            current_items.append(line)
+
+    flush_item()
+    flush_section()
+
+    spoken_lines: list[str] = []
+    spoken_lines.extend(_select_readout_items(default_items))
+    for heading, items in sections:
+        spoken_items = _select_readout_items(items)
+        if not spoken_items:
+            continue
+        transition = _build_section_transition(heading)
+        if transition:
+            spoken_lines.append(transition)
+        spoken_lines.extend(spoken_items)
+
+    if not spoken_lines:
+        return ""
+    return "\n".join([READOUT_INTRO, *spoken_lines, READOUT_OUTRO]).strip()
 
 
 def generate_audio_bundle(*, report_markdown: str, report_date: str, run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
