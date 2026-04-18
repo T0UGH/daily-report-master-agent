@@ -335,7 +335,8 @@ def generate_audio_bundle(*, report_markdown: str, report_date: str, run_dir: Pa
             tts_log_path,
             env=build_minimax_tts_env(),
         )
-        if tts_result.exit_code != 0:
+        tts_failure_summary = detect_minimax_tts_failure(tts_result)
+        if tts_result.exit_code != 0 or tts_failure_summary:
             return {
                 "status": "failed",
                 "readout_path": str(paths["readout_path"]),
@@ -344,7 +345,7 @@ def generate_audio_bundle(*, report_markdown: str, report_date: str, run_dir: Pa
                 "opus_path": str(paths["opus_path"]),
                 "tts_log": tts_result.output_path,
                 "convert_log": str(convert_log_path),
-                "error_summary": "MiniMax TTS generation failed",
+                "error_summary": tts_failure_summary or "MiniMax TTS generation failed",
             }
 
         convert_result = run_and_capture(
@@ -388,6 +389,40 @@ def generate_audio_bundle(*, report_markdown: str, report_date: str, run_dir: Pa
             "convert_log": str(convert_log_path),
             "error_summary": f"Audio bundle generation failed: {exc}",
         }
+
+
+def detect_minimax_tts_failure(result: CommandResult) -> str | None:
+    payloads = [
+        extract_json_payload(text)
+        for text in (result.stdout, result.stderr)
+        if isinstance(text, str) and text.strip()
+    ]
+    status_markers: list[str] = []
+    notes: list[str] = []
+    for payload in payloads:
+        if payload is None:
+            continue
+        status_value = find_nested_value(payload, {"status", "audio_generation_status"})
+        if status_value:
+            status_markers.append(status_value.lower())
+        note = find_nested_value(payload, {"recovery_note", "error_summary", "status_msg", "message", "msg"})
+        if note:
+            notes.append(note.lower())
+
+    combined = "\n".join(part for part in (result.stdout, result.stderr, "\n".join(notes)) if part).lower()
+    used_local_fallback = any("fallback" in marker for marker in status_markers) or any(
+        marker in combined
+        for marker in ("local fallback", "succeeded-via-local-fallback", "macos say", "macos-say", "fell back to")
+    )
+    quota_exceeded = ("2056" in combined and "usage limit exceeded" in combined) or "quota exceeded" in combined
+
+    if quota_exceeded and used_local_fallback:
+        return "MiniMax quota exceeded (2056 usage limit exceeded); local fallback via macOS say is not treated as a successful audio build"
+    if quota_exceeded:
+        return "MiniMax quota exceeded (2056 usage limit exceeded)"
+    if used_local_fallback:
+        return "MiniMax TTS did not complete on MiniMax; local fallback via macOS say is not treated as a successful audio build"
+    return None
 
 
 def extract_json_payload(text: str) -> Any | None:

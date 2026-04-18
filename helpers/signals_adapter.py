@@ -112,6 +112,14 @@ TOPIC_TOKEN_STOPWORDS = {
     "watch",
 }
 NOISY_X_LANES = {"x-feed", "x-following"}
+RESIDUAL_NOISY_X_CLAUSE_PATTERNS = (
+    r"^the model performs best if\b",
+    r"^reality:",
+    r"^tldr:",
+    r"^seems less accurate\b",
+    r"^gives you everything\b",
+)
+CROSS_DAY_SOURCE_URL_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset()
 CONTENT_SECTION_PREFERENCES = {
     "x-feed": ("post",),
     "x-following": ("post",),
@@ -422,6 +430,7 @@ def build_selected_items(
     selected_items: list[dict[str, Any]] = []
     lane_counts: list[dict[str, Any]] = []
     previous_reddit_identity_keys: set[str] | None = None
+    previous_selected_source_urls: set[str] | None = None
     resolved_previous_selected_items_path = previous_selected_items_path
     if resolved_previous_selected_items_path is None:
         resolved_previous_selected_items_path = resolve_previous_selected_items_path(
@@ -435,6 +444,17 @@ def build_selected_items(
             build_signal_candidate_from_signal(signal_path=signal_path, signals_root=signals_root, fallback_lane=lane_name)
             for signal_path in lane_snapshot.signal_paths
         ]
+        if lane_name not in CROSS_DAY_SOURCE_URL_DEDUPE_EXEMPT_LANES:
+            if previous_selected_source_urls is None:
+                previous_selected_source_urls = load_previous_selected_source_urls(
+                    previous_selected_items_path=resolved_previous_selected_items_path
+                )
+            if previous_selected_source_urls:
+                lane_candidates = [
+                    candidate
+                    for candidate in lane_candidates
+                    if normalize_whitespace(str(candidate.get("source_url", ""))) not in previous_selected_source_urls
+                ]
         if lane_name == "reddit-watch":
             if previous_reddit_identity_keys is None:
                 previous_reddit_identity_keys = load_previous_reddit_identity_keys(
@@ -484,25 +504,35 @@ def resolve_previous_selected_items_path(*, runtime_root: Path, report_date: str
     return runtime_root / previous_report_date.isoformat() / "selected-items.json"
 
 
-def load_previous_reddit_identity_keys(*, previous_selected_items_path: Path | None) -> set[str]:
+def load_previous_selected_items_list(*, previous_selected_items_path: Path | None) -> list[dict[str, Any]]:
     if previous_selected_items_path is None:
-        return set()
+        return []
 
     try:
         payload = json.loads(previous_selected_items_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return set()
+        return []
 
     if not isinstance(payload, dict):
-        return set()
+        return []
     raw_selected_items = payload.get("selected_items")
     if not isinstance(raw_selected_items, list):
-        return set()
+        return []
+    return [item for item in raw_selected_items if isinstance(item, dict)]
 
+
+def load_previous_selected_source_urls(*, previous_selected_items_path: Path | None) -> set[str]:
+    source_urls: set[str] = set()
+    for item in load_previous_selected_items_list(previous_selected_items_path=previous_selected_items_path):
+        source_url = normalize_whitespace(str(item.get("source_url", "")))
+        if source_url:
+            source_urls.add(source_url)
+    return source_urls
+
+
+def load_previous_reddit_identity_keys(*, previous_selected_items_path: Path | None) -> set[str]:
     identity_keys: set[str] = set()
-    for item in raw_selected_items:
-        if not isinstance(item, dict):
-            continue
+    for item in load_previous_selected_items_list(previous_selected_items_path=previous_selected_items_path):
         if item.get("lane") != "reddit-watch":
             continue
         identity_keys.update(extract_reddit_identity_keys(item))
@@ -1011,8 +1041,16 @@ def curate_lane_candidates(
                 for candidate in scored_candidates
                 if not is_retweet_candidate(candidate) and has_meaningful_excerpt(candidate.get("excerpt", ""))
             ]
-        if kept_candidates:
+        if lane_name == "x-following" and kept_candidates:
+            kept_candidates = [
+                candidate for candidate in kept_candidates if noisy_x_candidate_has_specific_summary(candidate)
+            ]
             scored_candidates = kept_candidates
+        elif kept_candidates:
+            scored_candidates = kept_candidates
+        scored_candidates = [
+            candidate for candidate in scored_candidates if noisy_x_candidate_has_specific_summary(candidate)
+        ]
 
     scored_candidates.sort(key=lambda candidate: candidate.get("_sort_key", ("", "")), reverse=True)
     if lane_limit is not None:
@@ -1532,7 +1570,10 @@ def has_meaningful_excerpt(value: str) -> bool:
 
 
 def is_retweet_candidate(candidate: dict[str, Any]) -> bool:
-    text = normalize_whitespace(f"{candidate.get('title', '')} {candidate.get('excerpt', '')}")
+    excerpt = normalize_whitespace(str(candidate.get("excerpt", "")))
+    if excerpt.lower().startswith("rt @"):
+        return True
+    text = normalize_whitespace(f"{candidate.get('title', '')} {excerpt}")
     return text.lower().startswith("rt @")
 
 
@@ -1768,6 +1809,8 @@ def build_generic_detail(
     if focus_label and focus_label != subject:
         return f"这条信号真正有用的地方在于把焦点压到了 {focus_label}，不是只给出一个空泛概念。"
 
+    if lane_name in NOISY_X_LANES:
+        return ""
     return f"原文围绕 {subject} 展开，具体变化见来源。"
 
 
@@ -2061,18 +2104,21 @@ def build_render_items_by_lane(
             lane_name = item["lane"]
             if lane_name not in items_by_lane:
                 continue
-            items_by_lane[lane_name].append(
-                normalize_render_item(
-                    item=item,
-                    useful_item_count=lane_counts[lane_name],
-                    report_date=collect_result["report_date"],
-                )
+            render_item = normalize_render_item(
+                item=item,
+                useful_item_count=lane_counts[lane_name],
+                report_date=collect_result["report_date"],
             )
+            if lane_name in NOISY_X_LANES and not noisy_x_excerpt_is_publishable(render_item.excerpt):
+                continue
+            items_by_lane[lane_name].append(render_item)
 
     for lane_name in renderable_lanes:
         lane_items = items_by_lane[lane_name]
         if lane_items:
             lane_items.sort(key=lambda item: item.sort_key, reverse=True)
+            continue
+        if selected_items is not None and lane_name in NOISY_X_LANES:
             continue
 
         items_by_lane[lane_name] = [
@@ -2167,6 +2213,7 @@ def build_reader_excerpt(
         if count_cjk_characters(cleaned_source) >= 8 and not looks_like_english_text(cleaned_source):
             return ensure_chinese_sentence(cleaned_source)
 
+        cleaned_fallback = normalize_whitespace(fallback_excerpt)
         detailed_excerpt = build_lane_fact_summary(
             lane_name=lane_name,
             title=raw_title,
@@ -2174,6 +2221,13 @@ def build_reader_excerpt(
             source_url=source_url,
         )
         if detailed_excerpt:
+            if (
+                lane_name in NOISY_X_LANES
+                and cleaned_fallback
+                and noisy_x_excerpt_is_publishable(cleaned_fallback)
+                and not noisy_x_excerpt_is_publishable(detailed_excerpt)
+            ):
+                return ensure_chinese_sentence(cleaned_fallback)
             return ensure_chinese_sentence(detailed_excerpt)
 
         descriptor, faithful_excerpt = build_known_signal_copy(
@@ -2185,7 +2239,9 @@ def build_reader_excerpt(
             return ensure_chinese_sentence(faithful_excerpt)
 
         if looks_like_english_text(cleaned_source):
-            return ensure_chinese_sentence(fallback_excerpt or f"该栏目收录 {useful_item_count} 条有用内容。")
+            if cleaned_fallback and not looks_like_english_text(cleaned_fallback) and not is_generic_placeholder_copy(cleaned_fallback):
+                return ensure_chinese_sentence(cleaned_fallback)
+            return ensure_chinese_sentence(f"该栏目收录 {useful_item_count} 条有用内容。")
 
         return ensure_chinese_sentence(cleaned_source)
 
@@ -2194,6 +2250,43 @@ def build_reader_excerpt(
         return ensure_chinese_sentence(sparse_summary)
 
     return ensure_chinese_sentence(fallback_excerpt or f"该栏目收录 {useful_item_count} 条有用内容。")
+
+
+def build_candidate_reader_excerpt(*, candidate: dict[str, Any], useful_item_count: int) -> str:
+    lane_name = normalize_whitespace(str(candidate.get("lane", "")))
+    raw_title = normalize_whitespace(str(candidate.get("title", ""))) or f"{FIXED_SECTION_TITLES[lane_name]} 条目"
+    source_text = normalize_whitespace(str(candidate.get("source_snippet") or candidate.get("excerpt", "")))
+    fallback_excerpt = normalize_whitespace(str(candidate.get("editor_summary", "")))
+    if not fallback_excerpt:
+        _, fallback_excerpt = build_editor_copy(
+            lane_name=lane_name,
+            title=raw_title,
+            excerpt=source_text,
+            front_matter={},
+        )
+    return build_reader_excerpt(
+        lane_name=lane_name,
+        raw_title=raw_title,
+        source_text=source_text,
+        source_url=normalize_whitespace(str(candidate.get("source_url", ""))),
+        fallback_excerpt=fallback_excerpt,
+        useful_item_count=useful_item_count,
+    )
+
+
+def noisy_x_excerpt_is_publishable(value: str) -> bool:
+    cleaned = normalize_whitespace(value)
+    if not cleaned:
+        return False
+    if re.fullmatch(r"(?:该栏目|本栏)收录 \d+ 条有用内容。?", cleaned):
+        return False
+    if "这条帖子围绕" in cleaned or "摘要里给出的直接变化是：" in cleaned:
+        return False
+    if is_generic_placeholder_copy(cleaned):
+        return False
+    if looks_like_english_text(cleaned):
+        return False
+    return True
 
 
 def build_lane_fact_summary(*, lane_name: str, title: str, source_text: str, source_url: str) -> str:
@@ -2218,6 +2311,53 @@ def build_lane_fact_summary(*, lane_name: str, title: str, source_text: str, sou
     if lane_name == "reddit-watch":
         return build_reddit_detail(title=title, source_text=cleaned_source)
     return ""
+
+
+def is_generic_placeholder_copy(value: str) -> bool:
+    cleaned = normalize_whitespace(value).strip("。")
+    if not cleaned:
+        return False
+    return bool(
+        re.fullmatch(r"原文围绕 .+ 展开，具体变化见来源", cleaned)
+        or re.fullmatch(r"帖子在讨论 [`“\"]?.+[`”\"]? 相关内容", cleaned)
+        or re.fullmatch(r"帖子在讨论 .+ 相关内容", cleaned)
+        or re.fullmatch(r"这条帖子围绕 [`“\"]?.+[`”\"]? 展开.*", cleaned)
+    )
+
+
+def noisy_x_candidate_has_specific_summary(candidate: dict[str, Any]) -> bool:
+    lane_name = normalize_whitespace(str(candidate.get("lane", "")))
+    if lane_name not in NOISY_X_LANES:
+        return True
+
+    source_text = normalize_whitespace(str(candidate.get("source_snippet") or candidate.get("excerpt", "")))
+    if not source_text:
+        return False
+    editor_summary = normalize_whitespace(str(candidate.get("editor_summary", "")))
+    if editor_summary and noisy_x_excerpt_is_publishable(editor_summary):
+        return True
+    if not noisy_x_excerpt_is_publishable(build_candidate_reader_excerpt(candidate=candidate, useful_item_count=1)):
+        return False
+    if not looks_like_english_text(source_text):
+        return True
+
+    title = normalize_whitespace(str(candidate.get("title", "")))
+    source_url = normalize_whitespace(str(candidate.get("source_url", "")))
+    detailed_excerpt = build_lane_fact_summary(
+        lane_name=lane_name,
+        title=title,
+        source_text=source_text,
+        source_url=source_url,
+    )
+    if detailed_excerpt and not is_generic_placeholder_copy(detailed_excerpt):
+        return True
+
+    _, faithful_excerpt = build_known_signal_copy(
+        lane_name=lane_name,
+        title=title,
+        source_text=source_text,
+    )
+    return bool(faithful_excerpt and not is_generic_placeholder_copy(faithful_excerpt))
 
 
 def normalize_fact_source_text(value: str) -> str:
@@ -2445,6 +2585,32 @@ def x_source_has_concrete_material(source_text: str) -> bool:
     return len(simple_sentences(cleaned)) >= 2 or word_count >= 12
 
 
+def x_clause_supports_fact_rewrite(value: str) -> bool:
+    cleaned = normalize_whitespace(strip_x_leading_markers(value)).strip(" .")
+    if not cleaned:
+        return False
+
+    lowered = cleaned.lower()
+    if any(re.match(pattern, lowered) for pattern in RESIDUAL_NOISY_X_CLAUSE_PATTERNS):
+        return False
+
+    word_count = len(re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?", cleaned))
+    if word_count < 5:
+        return False
+
+    return bool(
+        re.search(
+            r"\b(add(?:ed|s)?|allow(?:ed|s)?|automate(?:d|s)?|build(?:ing|s)?|disable(?:d|s)?|drop(?:ped|s)?|"
+            r"introduc(?:e|ed|ing)|launch(?:ed|es|ing)?|redesign(?:ed|s)?|release(?:d|s)?|run(?:ning|s)?|"
+            r"ship(?:ped|s|ping)?|support(?:ed|s)?|teach(?:es|ing)?|trigger(?:ed|s)?|use(?:d|s)?|work(?:ed|s)?|"
+            r"write(?:s|n)?|lets?)\b",
+            lowered,
+        )
+        or any(marker in cleaned for marker in ("Claude Code", "Codex", "OpenClaw", "GitHub", "MCP", "SDK", "/"))
+        or bool(re.search(r"\b\d", cleaned))
+    )
+
+
 def build_concrete_x_fallback_detail(*, lane_name: str, title: str, source_text: str, subject: str) -> str:
     cleaned_source = strip_x_leading_markers(source_text)
     if not cleaned_source or not looks_like_english_text(cleaned_source) or not x_source_has_concrete_material(cleaned_source):
@@ -2531,18 +2697,32 @@ def build_concrete_x_fallback_detail(*, lane_name: str, title: str, source_text:
         )
 
     raw_sentences = simple_sentences(cleaned_source)
-    if len(sentences) < 3 and subject:
-        add_x_fact_sentence(
-            sentences,
-            f"这条帖子围绕 `{subject}` 展开，而且摘要里已经落到了具体动作或主张",
-        )
-    if len(sentences) < 3 and len(raw_sentences) >= 2:
+    raw_clause_fact = ""
+    has_concrete_raw_clause = False
+    if len(raw_sentences) >= 2:
         raw_clause = normalize_whitespace(trim_fragmentary_tail(raw_sentences[1])).strip(" .")
         raw_clause = re.sub(r"\bGitHu\b", "GitHub", raw_clause)
         raw_clause = re.sub(r"\bMCPs,\s*Pl\b", "MCPs", raw_clause)
         if raw_clause:
-            add_x_fact_sentence(sentences, f"摘要里给出的直接变化是：{raw_clause}")
-    if len(sentences) < 3:
+            lowered_clause = raw_clause.lower()
+            if any(re.match(pat, lowered_clause) for pat in RESIDUAL_NOISY_X_CLAUSE_PATTERNS):
+                raw_clause = ""
+            elif x_clause_supports_fact_rewrite(raw_clause):
+                raw_clause_fact = f"摘要里给出的直接变化是：{raw_clause}"
+                has_concrete_raw_clause = True
+
+    if len(sentences) < 3 and subject and (sentences or raw_clause_fact):
+        add_x_fact_sentence(
+            sentences,
+            f"这条帖子围绕 `{subject}` 展开，而且摘要里已经落到了具体动作或主张",
+        )
+    if len(sentences) < 3 and raw_clause_fact:
+        add_x_fact_sentence(sentences, raw_clause_fact)
+
+    if not sentences and not has_concrete_raw_clause:
+        return ""
+
+    if len(sentences) < 3 and (sentences or raw_clause_fact):
         if subject:
             add_x_fact_sentence(
                 sentences,
@@ -2737,7 +2917,7 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
             return f"帖子把焦点放在 `{subject}`，继续讨论 agents 和 skills 的取舍"
         if "cloud" in lowered and "computer" in lowered:
             return f"帖子把焦点放在 `{subject}`，说 agent 开始拿到更完整的云端运行环境"
-        return f"帖子在讨论 `{subject}` 相关内容"
+        return ""
 
     fallback_object = ""
     if "agent skills" in lowered:
@@ -2747,7 +2927,7 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
     elif "ai builder" in lowered:
         fallback_object = "AI builder"
     if fallback_object:
-        return f"帖子在讨论 {fallback_object} 相关内容"
+        return ""
     return ""
 
 
@@ -2861,6 +3041,38 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
         facts.append("帖子把问题直接抛到团队层面：`Claude Code` 到底该怎么在团队里用起来")
     if "memoria permanente" in lowered and "48 horas" in lowered and "95%" in cleaned_source:
         facts.append("有人给 `Claude Code` 做了持久记忆，这个项目 48 小时拿到约 4.6 万星，并声称 token 消耗可下降约 95%")
+
+    if "opencclaw 2026.4.15" in lowered or ("openclaw" in lowered and "2026.4.15" in cleaned_source):
+        openclaw_facts: list[str] = []
+        if "anthropic opus 4.7" in lowered or "opus 4.7" in lowered:
+            openclaw_facts.append("已接入 `Anthropic Opus 4.7`")
+        if "gemini tts" in lowered:
+            openclaw_facts.append("捆绑了 `Gemini TTS`")
+        if "slimmer context" in lowered or "bounded memory" in lowered:
+            openclaw_facts.append("上下文更精简，memory reads 有上限")
+        if openclaw_facts:
+            facts.append("`OpenClaw 2026.4.15` 发布，主要更新：" + "、".join(openclaw_facts))
+
+    if ("opus 4.7" in lowered or "opus4.7" in lowered) and "claude code" in lowered:
+        facts.append("`Opus 4.7` 已登陆 `Claude Code`，帖子建议把模型当成可委派的工程师来使用")
+    elif "treat it like an engineer" in lowered and "delegating" in lowered:
+        facts.append("帖子建议把 AI 模型当成可委派的工程师来使用，而不是工具")
+
+    if "claude design" in lowered and ("prototype" in lowered or "prototypes" in lowered) and ("slide" in lowered or "slides" in lowered):
+        facts.append("Anthropic 正在把 `Claude Design` 往真正的设计工作流上推，而不只是展示型功能")
+        facts.append("帖子点名它可以通过对话生成 prototype、slides 和 one-pagers")
+        if "talking to claude" in lowered:
+            facts.append("重点不是一次性出图，而是把持续修改也收进和 Claude 对话的流程里")
+
+    if "tradingview" in lowered and "prompt" in lowered and ("command" in lowered or "list" in lowered):
+        facts.append("有人在整理 `Claude Code` 搭配 `TradingView` 的 prompt 命令清单")
+    if "tldr" in lowered and "turn" in lowered and "claude code" in lowered:
+        facts.append("帖子在讨论如何把 `Claude Code` 变成可被调用的工具")
+
+    if ("codex computer use" in lowered or "computer use" in lowered) and ("iphone" in lowered or "ios" in lowered or "phone" in lowered):
+        facts.append("`Codex computer use` 配合 iPhone Mirror app 已可操作手机上的任意 App")
+    if "gpt can use any app on your phone" in lowered:
+        facts.append("`Codex computer use` 已实现用 AI 操作手机 App")
 
     if facts:
         return compose_fact_sentences(intro="这条帖子的核心信息是：", facts=facts, group_sizes=(2, 1))
@@ -3108,8 +3320,20 @@ def build_github_trending_detail(*, title: str, source_text: str) -> str:
             "目的就是直接改善 Claude Code 的行为。"
         )
 
+    preview_facts: list[str] = []
+    if "claude code" in lowered and "plugin" in lowered:
+        preview_facts.append(f"`{title}` 是个围绕 `Claude Code` 的插件型项目")
+    if "captures everything claude does" in lowered or ("capture" in lowered and "coding sessions" in lowered):
+        preview_facts.append("它会自动记录 Claude 在 coding session 里的操作")
+    if "compresses it with ai" in lowered or ("compress" in lowered and "future sessions" in lowered):
+        preview_facts.append("还会压缩记忆，并把相关上下文回注到后续 session")
+    if preview_facts:
+        return compose_fact_sentences(intro=f"`{title}` 这周能进趋势榜，至少因为：", facts=preview_facts, group_sizes=(1, 1, 1))
+
     sentences = [sentence for sentence in simple_sentences(source_text) if not sentence.lower().startswith("author:")]
     if sentences:
+        if looks_like_english_text(" ".join(sentences[:2])):
+            return f"`{title}` 这周能进趋势榜，至少因为：项目说明主要在讲它的定位、工作流和使用场景。"
         facts = [f"预览里把它写成 {sentences[0]}"]
         if len(sentences) > 1:
             facts.append(sentences[1])
@@ -3120,14 +3344,66 @@ def build_github_trending_detail(*, title: str, source_text: str) -> str:
 def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     name, tagline = split_title_tagline(title)
     lowered = source_text.lower()
+    lowered_title = title.lower()
     facts: list[str] = []
 
     if "microvm" in lowered and "sandbox" in lowered:
         facts.append(f"`{name}` 主打让 AI coding agents 跑在真实 `microVM` 沙箱里，强调真实隔离环境")
-    elif tagline:
+    elif tagline and not looks_like_english_text(tagline):
         facts.append(f"`{name}` 的定位很直接，就是 {tagline}")
     elif "design context" in lowered:
         facts.append(f"`{name}` 主打给 AI agents 提供 `Design context`")
+
+    if "validate every pr" in lowered or ("visual pr testing" in lowered_title and "runs tests for you" in lowered):
+        facts.extend([
+            f"`{name}` 切得很窄，专门做 PR 的视觉测试，而且是让 AI 帮你跑",
+            "它对应的不是通用聊天场景，而是代码评审前的一个具体质量节点",
+        ])
+    elif "agent-native software dev" in lowered or ("desktop app" in lowered_title and "alongside you" in lowered):
+        facts.extend([
+            f"`{name}` 卖的是 agent-native 的软件开发桌面应用，关键词不是聊天，而是并肩工作",
+            "这说明新一轮工具竞争已经在争夺本地开发入口，而不是只争模型能力",
+        ])
+    elif "runs your entire startup" in lowered or ("startup" in lowered and "agent" in lowered):
+        facts.extend([
+            f"`{name}` 的口号很大，直接想把完整 startup 的运营和执行都交给 AI agent",
+            "这类产品通常要打的是流程串联和执行闭环，不只是单点生成能力",
+        ])
+    elif "spend money in real time" in lowered or "agents buying" in lowered:
+        facts.extend([
+            f"`{name}` 的点子很直白：实时看 agent 在花钱买什么",
+            "它抓住的是一个新问题——当 agent 拥有采购和支付权限后，支出本身会变成新的观察面板",
+        ])
+    elif "ai to ai influence" in lowered or "moves the models" in lowered:
+        facts.extend([
+            f"`{name}` 想做的是 AI 之间的影响力评分，而不只是给人看的内容榜单",
+            "方向上更像是在补 agent 生态里的舆情层：谁在影响谁、哪些信号正在带动模型和工作流选择",
+        ])
+    elif "participate live in meetings" in lowered or ("meetings" in lowered and "agents" in lowered):
+        facts.extend([
+            f"`{name}` 切的是会议协作场景，强调让 AI agent 直接参与 live meetings",
+            "问题不在能不能转写，而在 agent 能不能在会议现场承担记录、提醒和后续跟进这些角色",
+        ])
+    elif "form backend for ai agents" in lowered or ("form backend" in lowered and "ai agents" in lowered):
+        facts.extend([
+            f"`{name}` 把表单后端直接做成同时给人和 AI agents 用的基础设施",
+            "如果 agent 真要替人提交、登记、收集信息，这类后端迟早会从“给人用”改成“也给 agent 用”",
+        ])
+    elif "claude code for product teams" in lowered or ("product teams" in lowered and "claude code" in lowered):
+        facts.extend([
+            f"`{name}` 直接把自己定位成“给产品团队用的 Claude Code”",
+            "这说明 coding agent 的协作方式已经开始外溢到产品团队，而不是只停留在工程师侧",
+        ])
+
+    if not facts and looks_like_english_text(source_text):
+        if "workflow" in lowered:
+            facts.append(f"`{name}` 主打盯住团队 workflow")
+        if "builds your agents" in lowered or ("build" in lowered and "agent" in lowered):
+            facts.append("把 agent 搭建环节直接做成产品")
+        if "automate" in lowered or "busywork" in lowered:
+            facts.append("目标是把重复杂活自动化")
+        if not facts and "agent" in lowered:
+            facts.append(f"`{name}` 围绕 agent 工作流切了一个更具体的产品入口")
 
     votes_match = re.search(r"Votes:\s*(\d+)", source_text, re.IGNORECASE)
     comments_match = re.search(r"Comments:\s*(\d+)", source_text, re.IGNORECASE)
@@ -3168,7 +3444,42 @@ def build_polymarket_detail(*, title: str, source_text: str) -> str:
 
     facts: list[str] = []
     if question_match:
-        facts.append(f"这份合约在问：{normalize_whitespace(question_match.group(1))}")
+        question = normalize_whitespace(question_match.group(1))
+        rewritten_question = question
+        month_map = {
+            "january": "1",
+            "february": "2",
+            "march": "3",
+            "april": "4",
+            "may": "5",
+            "june": "6",
+            "july": "7",
+            "august": "8",
+            "september": "9",
+            "october": "10",
+            "november": "11",
+            "december": "12",
+        }
+        second_best_match = re.match(
+            r"Will\s+(.+?)\s+have the second-best Coding AI model at the end of ([A-Za-z]+)\s+(\d{4})\??",
+            question,
+            re.IGNORECASE,
+        )
+        best_match = re.match(
+            r"Will\s+(.+?)\s+have the best Coding AI model at the end of ([A-Za-z]+)\s+(\d{4})\??",
+            question,
+            re.IGNORECASE,
+        )
+        if second_best_match or best_match:
+            matched = second_best_match or best_match
+            subject = normalize_whitespace(matched.group(1))
+            month_name = matched.group(2).strip().lower()
+            year = matched.group(3)
+            month = month_map.get(month_name)
+            if month:
+                rank_text = "第二强" if second_best_match else "最强"
+                rewritten_question = f"{subject} 到 {year} 年 {month} 月底时会不会拥有{rank_text}的 Coding AI 模型"
+        facts.append(f"这份合约在问：{rewritten_question}")
     else:
         facts.append(f"这份合约围绕 `{title}` 交易")
 
@@ -3190,11 +3501,14 @@ def build_polymarket_detail(*, title: str, source_text: str) -> str:
 
     market_strength: list[str] = []
     if volume_match:
-        market_strength.append(f"24h volume {volume_match.group(1)}")
+        market_strength.append(f"24 小时成交量 {volume_match.group(1)}")
     if liquidity_match:
-        market_strength.append(f"liquidity {liquidity_match.group(1)}")
+        market_strength.append(f"流动性 {liquidity_match.group(1)}")
     if movement_match:
-        market_strength.append(f"价格 {normalize_whitespace(movement_match.group(1))}")
+        movement = normalize_whitespace(movement_match.group(1))
+        movement = re.sub(r"\bdown\s+([0-9.]+%?)\s+this week\b", r"本周下跌 \1", movement, flags=re.IGNORECASE)
+        movement = re.sub(r"\bup\s+([0-9.]+%?)\s+this week\b", r"本周上涨 \1", movement, flags=re.IGNORECASE)
+        market_strength.append(f"价格 {movement}")
     if market_strength:
         facts.append("市场强度也写得很明白，" + "，".join(market_strength))
 

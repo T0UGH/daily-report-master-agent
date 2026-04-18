@@ -9,9 +9,12 @@ from helpers.signals_adapter import (
     DEFAULT_LANE_ITEM_LIMITS,
     build_editor_copy,
     build_collect_result,
+    build_polymarket_detail,
+    build_product_hunt_detail,
     build_report_artifact,
     build_selected_items,
     build_validation_bundle,
+    build_x_post_detail,
     validate_selected_items_object,
 )
 from helpers.validate_report_output_contract import FIXED_SECTION_TITLES, validate_report_markdown
@@ -147,25 +150,16 @@ post_id: {post_id}
 
         self.assertEqual(selected_items["report_date"], REPORT_DATE)
         self.assertEqual(selected_items["source"], "signals-engine")
-        self.assertEqual(selected_items["summary"]["selected_item_count"], 2)
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
         self.assertEqual(
             selected_items["summary"]["lane_counts"],
             [
-                {"lane": "x-feed", "selected_item_count": 1},
+                {"lane": "x-feed", "selected_item_count": 0},
                 {"lane": "product-hunt-watch", "selected_item_count": 1},
             ],
         )
 
-        feed_item = selected_items["selected_items"][0]
-        self.assertEqual(feed_item["lane"], "x-feed")
-        self.assertEqual(feed_item["title"], "@alpha #1")
-        self.assertEqual(feed_item["source_url"], "https://x.com/alpha/status/1")
-        self.assertEqual(feed_item["signal_path"], "x-feed/2026-04-12/signals/alpha.md")
-        self.assertEqual(feed_item["fetched_at"], "2026-04-12T10:00:00+0000")
-        self.assertEqual(feed_item["source_snippet"], "Alpha signal overview for testing.")
-        self.assertIn("Alpha signal overview", feed_item["excerpt"])
-
-        product_item = selected_items["selected_items"][1]
+        product_item = selected_items["selected_items"][0]
         self.assertEqual(product_item["lane"], "product-hunt-watch")
         self.assertEqual(product_item["title"], "Nicelydone MCP — Design context for AI agents")
         self.assertEqual(
@@ -605,7 +599,7 @@ After trying several setups, I settled on a simple architect-builder-reviewer lo
             [item["source_url"] for item in baseline_selected_items["selected_items"]],
         )
 
-    def test_build_selected_items_reddit_unaffected_non_reddit_lanes_keep_current_behavior(self) -> None:
+    def test_build_selected_items_dedupes_non_reddit_lanes_by_previous_day_source_url(self) -> None:
         previous_report_date = "2026-04-11"
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_root = Path(temp_dir)
@@ -662,10 +656,239 @@ Design context for AI agents
                 previous_selected_items_runtime_root=runtime_root,
             )
 
-        self.assertEqual(
-            [item["source_url"] for item in selected_items["selected_items"]],
-            ["https://www.producthunt.com/products/nicely-done"],
-        )
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 0)
+        self.assertEqual(selected_items["selected_items"], [])
+
+    def test_build_selected_items_drops_noisy_x_candidates_when_only_generic_placeholder_is_available(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir) / "signals"
+            self.write_signal_bundle(
+                signals_root,
+                lane="x-following",
+                signal_text_by_name={
+                    "generic.md": """---
+type: post
+lane: x-following
+source: x
+entity_type: author
+entity_id: simonw
+title: '@simonw'
+url: https://x.com/simonw/status/1
+fetched_at: 2026-04-12T10:57:59+0000
+created_at: '2026-04-12T10:31:55Z'
+group: uncategorized
+---
+
+## Post
+
+People keep bringing up Gemini in coding discussions this week without sharing a concrete change.
+
+## Engagement
+
+- Likes: 8
+- Retweets: 1
+- Replies: 1
+- Views: 482
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["x-following"],
+                per_lane_limit=5,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 0)
+        self.assertEqual(selected_items["selected_items"], [])
+
+    def test_build_selected_items_keeps_openclaw_with_release_facts(self) -> None:
+        """OpenClaw 2026.4.15 release info now generates proper Chinese facts - should be kept."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir) / "signals"
+            self.write_signal_bundle(
+                signals_root,
+                lane="x-feed",
+                signal_text_by_name={
+                    "openclaw.md": """---
+type: feed-exposure
+lane: x-feed
+source: x
+entity_type: author
+entity_id: openclaw
+title: '@openclaw #39'
+url: https://x.com/openclaw/status/2044919054402752638
+fetched_at: 2026-04-17T01:11:42+0000
+created_at: '2026-04-16T23:21:09Z'
+position: 39
+---
+
+## Post
+
+OpenClaw 2026.4.15 🦞
+
+🤖 Anthropic Opus 4.7 support
+🗣️ Gemini TTS in bundled
+🧠 Slimmer context + bounded memory reads
+🔧 C
+
+## Engagement
+
+- Likes: 633
+- Retweets: 52
+- Replies: 51
+- Views: 32197
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["x-feed"],
+                per_lane_limit=5,
+            )
+
+        # openclaw now generates Chinese facts - should be kept
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
+        self.assertEqual(len(selected_items["selected_items"]), 1)
+        self.assertIn("openclaw/status/2044919054402752638", selected_items["selected_items"][0]["source_url"])
+
+    def test_build_selected_items_drops_real_bad_noisy_x_entries_when_only_hollow_template_or_english_fragment_remain(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir) / "signals"
+            self.write_signal_bundle(
+                signals_root,
+                lane="x-feed",
+                signal_text_by_name={
+                    "bad-fragment.md": """---
+type: feed-exposure
+lane: x-feed
+source: x
+entity_type: author
+entity_id: _catwu
+title: '@_catwu #64'
+url: https://x.com/_catwu/status/2044808533905178822
+fetched_at: 2026-04-17T01:11:42+0000
+created_at: '2026-04-16T16:01:59Z'
+position: 64
+---
+
+## Post
+
+Opus 4.7 is live in Claude Code today!
+
+The model performs best if you treat it like an engineer you're delegating to,
+
+## Engagement
+
+- Likes: 810
+- Retweets: 63
+- Replies: 37
+- Views: 54447
+""",
+                    "good.md": """---
+type: feed-exposure
+lane: x-feed
+source: x
+entity_type: author
+entity_id: theo
+title: '@theo #75'
+url: https://x.com/theo/status/2043611205856837680
+fetched_at: 2026-04-17T01:11:42+0000
+created_at: '2026-04-16T05:06:43Z'
+position: 75
+---
+
+## Post
+
+Agent harnesses aren't the black magic many of y'all seem to think they are.
+To prove it, I built one.
+
+## Engagement
+
+- Likes: 900
+- Retweets: 60
+- Replies: 40
+- Views: 50000
+""",
+                },
+            )
+            self.write_signal_bundle(
+                signals_root,
+                lane="x-following",
+                signal_text_by_name={
+                    "bad-clicks.md": """---
+type: post
+lane: x-following
+source: x
+entity_type: author
+entity_id: NickADobos
+title: '@NickADobos'
+url: https://x.com/NickADobos/status/2044885440092877028
+fetched_at: 2026-04-17T01:11:47+0000
+created_at: '2026-04-16T21:07:35Z'
+position: 64
+group: uncategorized
+---
+
+## Post
+
+With codex computer use + mac's iPhone Mirror app, GPT can use any app on your phone!!!
+
+Seems less accurate with clicks
+
+## Engagement
+
+- Likes: 305
+- Retweets: 18
+- Replies: 17
+- Views: 33020
+""",
+                    "good-quality-checks.md": """---
+type: post
+lane: x-following
+source: x
+entity_type: author
+entity_id: addyosmani
+title: '@addyosmani'
+url: https://x.com/addyosmani/status/2043728421160101881
+fetched_at: 2026-04-17T01:11:47+0000
+created_at: '2026-04-16T06:00:00Z'
+position: 12
+group: uncategorized
+---
+
+## Post
+
+Want to give your agent quality checks? Chrome's DevTools MCP now includes: Performance checks via Lighthouse.
+
+## Engagement
+
+- Likes: 210
+- Retweets: 30
+- Replies: 8
+- Views: 41000
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["x-feed", "x-following"],
+                per_lane_limit=5,
+            )
+
+        selected_urls = {item["source_url"] for item in selected_items["selected_items"]}
+        # _catwu and NickADobos now generate proper Chinese facts - should be kept
+        self.assertIn("https://x.com/_catwu/status/2044808533905178822", selected_urls)
+        self.assertIn("https://x.com/NickADobos/status/2044885440092877028", selected_urls)
+        self.assertIn("https://x.com/theo/status/2043611205856837680", selected_urls)
+        self.assertIn("https://x.com/addyosmani/status/2043728421160101881", selected_urls)
 
     def test_build_selected_items_reddit_dual_pool_mixes_heat_and_voice_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1026,11 +1249,11 @@ Experiencing the same App Store Connect analytics drop for my apps. Does anyone 
                 lane_names=["x-feed", "x-following"],
             )
 
-        self.assertEqual(selected_items["summary"]["selected_item_count"], 3)
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 2)
         self.assertEqual(
             selected_items["summary"]["lane_counts"],
             [
-                {"lane": "x-feed", "selected_item_count": 2},
+                {"lane": "x-feed", "selected_item_count": 1},
                 {"lane": "x-following", "selected_item_count": 1},
             ],
         )
@@ -1038,7 +1261,6 @@ Experiencing the same App Store Connect analytics drop for my apps. Does anyone 
             [item["source_url"] for item in selected_items["selected_items"]],
             [
                 "https://x.com/trq212/status/2042671370186973589",
-                "https://x.com/yyyole/status/2042891440179884479",
                 "https://x.com/turingou/status/2043276169613844889",
             ],
         )
@@ -1127,7 +1349,7 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
 
         self.assertEqual(bundle["report_date"], REPORT_DATE)
         self.assertEqual(bundle["summary"]["collect_useful_item_count"], 3)
-        self.assertEqual(bundle["summary"]["selected_item_count"], 2)
+        self.assertEqual(bundle["summary"]["selected_item_count"], 1)
         self.assertTrue(bundle["summary"]["is_subset"])
 
     def test_validate_selected_items_accepts_zero_count_lane_counts(self) -> None:
@@ -1220,7 +1442,7 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
         artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
 
         self.assertEqual(artifact["title"], "AI Agent 日报（2026-04-12）")
-        self.assertEqual(artifact["source_lanes"], ["x-feed", "product-hunt-watch"])
+        self.assertEqual(artifact["source_lanes"], ["product-hunt-watch"])
 
     def test_build_report_artifact_renders_reader_facing_sections_and_sources(self) -> None:
         collect_result = {
@@ -1998,6 +2220,106 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
         self.assertIn("自己做了一个", body_line)
         self.assertNotIn("原文围绕 harness 展开，具体变化见来源", body_line)
 
+    def test_build_report_artifact_skips_noisy_x_items_when_reader_excerpt_still_degrades_to_placeholder_or_fragment(
+        self,
+    ) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 2},
+                {"name": "x-following", "status": "ok", "useful_item_count": 2},
+            ],
+            "summary": {"useful_item_count": 4, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@theo #75",
+                    "source_url": "https://x.com/theo/status/2043611205856837680",
+                    "signal_path": "x-feed/2026-04-17/signals/theo.md",
+                    "fetched_at": "2026-04-17T05:06:43+0000",
+                    "source_snippet": (
+                        "Agent harnesses aren't the black magic many of y'all seem to think they are. "
+                        "To prove it, I built one."
+                    ),
+                    "excerpt": (
+                        "Agent harnesses aren't the black magic many of y'all seem to think they are. "
+                        "To prove it, I built one."
+                    ),
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@_catwu #64",
+                    "source_url": "https://x.com/_catwu/status/2044808533905178822",
+                    "signal_path": "x-feed/2026-04-17/signals/_catwu.md",
+                    "fetched_at": "2026-04-17T01:11:42+0000",
+                    "source_snippet": (
+                        "Opus 4.7 is live in Claude Code today! "
+                        "The model performs best if you treat it like an engineer you're delegating to,"
+                    ),
+                    "excerpt": (
+                        "Opus 4.7 is live in Claude Code today! "
+                        "The model performs best if you treat it like an engineer you're delegating to,"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@addyosmani",
+                    "source_url": "https://x.com/addyosmani/status/2043728421160101881",
+                    "signal_path": "x-following/2026-04-17/signals/addyosmani.md",
+                    "fetched_at": "2026-04-17T06:00:00+0000",
+                    "source_snippet": (
+                        "Want to give your agent quality checks? Chrome's DevTools MCP now includes: "
+                        "Performance checks via Lighthouse"
+                    ),
+                    "excerpt": (
+                        "Want to give your agent quality checks? Chrome's DevTools MCP now includes: "
+                        "Performance checks via Lighthouse"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@NickADobos",
+                    "source_url": "https://x.com/NickADobos/status/2044885440092877028",
+                    "signal_path": "x-following/2026-04-17/signals/NickADobos.md",
+                    "fetched_at": "2026-04-17T01:11:47+0000",
+                    "source_snippet": (
+                        "With codex computer use + mac's iPhone Mirror app, GPT can use any app on your phone!!! "
+                        "Seems less accurate with clicks"
+                    ),
+                    "excerpt": (
+                        "With codex computer use + mac's iPhone Mirror app, GPT can use any app on your phone!!! "
+                        "Seems less accurate with clicks"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 4,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 2},
+                    {"lane": "x-following", "selected_item_count": 2},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("https://x.com/theo/status/2043611205856837680", body_markdown)
+        self.assertIn("https://x.com/addyosmani/status/2043728421160101881", body_markdown)
+        # _catwu and NickADobos now generate proper Chinese facts - should be kept
+        self.assertIn("https://x.com/_catwu/status/2044808533905178822", body_markdown)
+        self.assertIn("https://x.com/NickADobos/status/2044885440092877028", body_markdown)
+        # Bad patterns should not appear
+        self.assertNotIn("该栏目收录", body_markdown)
+        self.assertNotIn("这条帖子围绕", body_markdown)
+        self.assertNotIn("The model performs best if you treat it like an engineer you're delegating", body_markdown)
+        self.assertNotIn("Seems less accurate with clicks", body_markdown)
+
     def test_build_report_artifact_live_like_x_multi_fact_snippet_keeps_multiple_specific_units(self) -> None:
         collect_result = {
             "report_date": REPORT_DATE,
@@ -2392,6 +2714,93 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
         self.assertIn("microVM", superhq_line)
         self.assertTrue("沙箱" in superhq_line or "跑在" in superhq_line)
         self.assertNotIn("Run AI coding agents in real microVM sandboxes。", superhq_line)
+
+    def test_build_report_artifact_rewrites_obvious_english_listing_and_market_copy_before_reader_output(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1},
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "polymarket-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 3, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "github-trending-weekly",
+                    "title": "claude-mem",
+                    "source_url": "https://github.com/thedotmack/claude-mem",
+                    "signal_path": "github-trending-weekly/2026-04-16/signals/claude-mem.md",
+                    "fetched_at": "2026-04-16T00:00:00+0000",
+                    "source_snippet": (
+                        "A Claude Code plugin that automatically captures everything Claude does during your coding sessions, "
+                        "compresses it with AI, and injects relevant context back into future sessions. "
+                        "Author: @thedotmack/claude-mem"
+                    ),
+                    "excerpt": (
+                        "A Claude Code plugin that automatically captures everything Claude does during your coding sessions, "
+                        "compresses it with AI, and injects relevant context back into future sessions. "
+                        "Author: @thedotmack/claude-mem"
+                    ),
+                },
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "Hapax",
+                    "source_url": "https://www.producthunt.com/products/hapax",
+                    "signal_path": "product-hunt-watch/2026-04-16/signals/hapax.md",
+                    "fetched_at": "2026-04-16T00:00:00+0000",
+                    "source_snippet": (
+                        "Watches your workflows. Builds your Agents. Automates the busywork. Topic: Artificial Intelligence"
+                    ),
+                    "excerpt": (
+                        "Watches your workflows. Builds your Agents. Automates the busywork. Topic: Artificial Intelligence"
+                    ),
+                },
+                {
+                    "lane": "polymarket-watch",
+                    "title": "Anthropic 排名市场",
+                    "source_url": "https://polymarket.com/event/which-company-has-the-second-best-coding-ai-model-end-of-april",
+                    "signal_path": "polymarket-watch/2026-04-16/signals/anthropic.md",
+                    "fetched_at": "2026-04-16T00:00:00+0000",
+                    "source_snippet": (
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%) OpenAI: 3.5% 24h volume: 137.1 Liquidity: 29,891.4"
+                    ),
+                    "excerpt": (
+                        "Question: Will Anthropic have the second-best Coding AI model at the end of April 2026? "
+                        "Current leader: Anthropic (90.0%) OpenAI: 3.5% 24h volume: 137.1 Liquidity: 29,891.4"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 3,
+                "lane_counts": [
+                    {"lane": "github-trending-weekly", "selected_item_count": 1},
+                    {"lane": "product-hunt-watch", "selected_item_count": 1},
+                    {"lane": "polymarket-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        claude_mem_line = next(line for line in artifact["body_markdown"].splitlines() if "**claude-mem**" in line)
+        hapax_line = next(line for line in artifact["body_markdown"].splitlines() if "**Hapax**" in line)
+        market_line = next(line for line in artifact["body_markdown"].splitlines() if "**Anthropic 排名市场**" in line)
+
+        self.assertIn("Claude Code", claude_mem_line)
+        self.assertTrue("插件" in claude_mem_line or "上下文" in claude_mem_line)
+        self.assertNotIn("A Claude Code plugin that automatically captures everything Claude does", claude_mem_line)
+
+        self.assertTrue("工作流" in hapax_line or "自动化" in hapax_line)
+        self.assertNotIn("Watches your workflows. Builds your Agents. Automates the busywork.", hapax_line)
+
+        self.assertIn("Anthropic", market_line)
+        self.assertTrue("第二强" in market_line or "排名" in market_line)
+        self.assertNotIn("Will Anthropic have the second-best Coding AI model at the end of April 2026?", market_line)
 
     def test_build_report_artifact_sparse_release_without_notes_uses_non_placeholder_summary(self) -> None:
         collect_result = {
@@ -3425,6 +3834,135 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
                 self.assertNotIn("这里只保留对读者有用的中文结论", detail)
                 self.assertNotIn("不直接转贴整段原文", detail)
 
+    def test_build_editor_copy_returns_empty_detail_for_real_residual_noisy_x_fragments(self) -> None:
+        # These cases only have truncated English fragments with no reliable Chinese facts
+        cases = [
+            (
+                "x-feed",
+                "@eng_khairallah1 #73",
+                "This 25-minute Claude Code workshop by Anthropic's own applied AI team will teach you more about Claude Code best pract",
+            ),
+            (
+                "x-following",
+                "@steipete",
+                "they: OpenClaw is so insecure look at all these GHSAs! reality: we are just an indicator of the coming storm",
+            ),
+            (
+                "x-following",
+                "@Dimillian",
+                "RT @Baconbrix: A pleasure working with the OpenAI team on the official @Expo plugin for Codex! Gives you everything",
+            ),
+        ]
+
+        for lane_name, title, excerpt in cases:
+            with self.subTest(title=title):
+                headline, detail = build_editor_copy(
+                    lane_name=lane_name,
+                    title=title,
+                    excerpt=excerpt,
+                    front_matter={},
+                )
+
+                self.assertTrue(headline)
+                self.assertEqual(detail, "")
+
+    def test_build_report_artifact_skips_real_residual_noisy_x_bad_cases(self) -> None:
+        # Only steipete returns empty detail - should be skipped
+        # _catwu and NickADobos now generate proper Chinese facts - should be kept
+        bad_cases = [
+            {
+                "lane": "x-following",
+                "title": "@steipete",
+                "source_url": "https://x.com/steipete/status/2044888081141223442",
+                "signal_path": "x-following/2026-04-17/signals/steipete__post__2044888081141223442.md",
+                "source_snippet": (
+                    "they: OpenClaw is so insecure look at all these GHSAs! "
+                    "reality: we are just an indicator of the coming storm"
+                ),
+            },
+        ]
+        good_cases = [
+            {
+                "lane": "x-feed",
+                "title": "@_catwu #63",
+                "source_url": "https://x.com/_catwu/status/2044808533905178822",
+                "signal_path": "x-feed/2026-04-17/signals/_catwu__feed__2044808533905178822.md",
+                "source_snippet": (
+                    "Opus 4.7 is live in Claude Code today! "
+                    "The model performs best if you treat it like an engineer you're delegating"
+                ),
+            },
+            {
+                "lane": "x-feed",
+                "title": "@NickADobos #82",
+                "source_url": "https://x.com/NickADobos/status/2044885440092877028",
+                "signal_path": "x-feed/2026-04-17/signals/NickADobos__feed__2044885440092877028.md",
+                "source_snippet": (
+                    "With codex computer use + mac's iPhone Mirror app, GPT can use any app on your phone!!! "
+                    "Seems less accurate with clicks"
+                ),
+            },
+        ]
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": case["lane"],
+                    "title": case["title"],
+                    "source_url": case["source_url"],
+                    "signal_path": case["signal_path"],
+                    "fetched_at": "2026-04-17T01:23:53+0000",
+                    "source_snippet": case["source_snippet"],
+                    "excerpt": case["source_snippet"],
+                }
+                for case in bad_cases + good_cases
+            ]
+            + [
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "Nicelydone MCP — Design context for AI agents",
+                    "source_url": "https://www.producthunt.com/products/nicely-done",
+                    "signal_path": "product-hunt-watch/2026-04-17/signals/nicelydone.md",
+                    "fetched_at": "2026-04-17T01:23:53+0000",
+                    "source_snippet": "Design context for AI agents",
+                    "excerpt": "Design context for AI agents",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 4,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 2},
+                    {"lane": "x-following", "selected_item_count": 1},
+                    {"lane": "product-hunt-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 2},
+                {"name": "x-following", "status": "ok", "useful_item_count": 1},
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 4, "partial_lane_count": 0},
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("Nicelydone MCP", body_markdown)
+        # steipete should be skipped
+        self.assertNotIn("@steipete", body_markdown)
+        self.assertNotIn("reality: we are just an indicator of the coming storm", body_markdown)
+        # _catwu and NickADobos should be kept (they generate proper Chinese facts)
+        self.assertIn("@_catwu #63", body_markdown)
+        self.assertIn("@NickADobos #82", body_markdown)
+        self.assertNotIn("这条帖子围绕", body_markdown)
+        self.assertNotIn("The model performs best if you treat it like an engineer you're delegating", body_markdown)
+        self.assertNotIn("Seems less accurate with clicks", body_markdown)
+
     def test_build_report_artifact_falls_back_to_collect_result_when_selected_items_missing(self) -> None:
         collect_result = {
             "report_date": REPORT_DATE,
@@ -3501,6 +4039,262 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
 
             bundle = json.loads(bundle_output.read_text(encoding="utf-8"))
             self.assertEqual(bundle["summary"]["collect_useful_item_count"], 3)
+
+    def test_build_report_artifact_discards_noisy_x_with_truncated_english_fragments(self) -> None:
+        """Items with only truncated English fragments that can't form Chinese facts should be discarded."""
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 5},
+                {"name": "x-following", "status": "ok", "useful_item_count": 5},
+            ],
+            "summary": {"useful_item_count": 10, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@openclaw #74",
+                    "source_url": "https://x.com/openclaw/status/2044919054402752638",
+                    "signal_path": "x-feed/2026-04-17/signals/openclaw.md",
+                    "fetched_at": "2026-04-17T01:23:48+0000",
+                    "source_snippet": (
+                        "OpenClaw 2026.4.15 🦞\n\n🤖 Anthropic Opus 4.7 support\n"
+                        "🗣️ Gemini TTS in bundled\n🧠 Slimmer context + bounded memory reads\n🔧 C"
+                    ),
+                    "excerpt": (
+                        "OpenClaw 2026.4.15 🦞\n\n🤖 Anthropic Opus 4.7 support\n"
+                        "🗣️ Gemini TTS in bundled\n🧠 Slimmer context + bounded memory reads\n🔧 C"
+                    ),
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@eng_khairallah1 #73",
+                    "source_url": "https://x.com/eng_khairallah1/status/2044787496681390571",
+                    "signal_path": "x-feed/2026-04-17/signals/eng_khairallah1.md",
+                    "fetched_at": "2026-04-17T01:23:48+0000",
+                    "source_snippet": (
+                        "This 25-minute Claude Code workshop by Anthropic's own applied AI team will teach "
+                        "you more about Claude Code best pract"
+                    ),
+                    "excerpt": (
+                        "This 25-minute Claude Code workshop by Anthropic's own applied AI team will teach "
+                        "you more about Claude Code best pract"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@steipete",
+                    "source_url": "https://x.com/steipete/status/2044888081141223442",
+                    "signal_path": "x-following/2026-04-17/signals/steipete.md",
+                    "fetched_at": "2026-04-17T01:23:53+0000",
+                    "source_snippet": (
+                        "they: OpenClaw is so insecure look at all these GHSAs!\n"
+                        "reality: we are just an indicator of the coming storm"
+                    ),
+                    "excerpt": (
+                        "they: OpenClaw is so insecure look at all these GHSAs!\n"
+                        "reality: we are just an indicator of the coming storm"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@Dimillian",
+                    "source_url": "https://x.com/Dimillian/status/2044875379001766315",
+                    "signal_path": "x-following/2026-04-17/signals/Dimillian.md",
+                    "fetched_at": "2026-04-17T01:23:53+0000",
+                    "source_snippet": (
+                        "RT @Baconbrix: A pleasure working with the OpenAI team on the official @Expo plugin for Codex!\n\n"
+                        "Gives you everything fr"
+                    ),
+                    "excerpt": (
+                        "RT @Baconbrix: A pleasure working with the OpenAI team on the official @Expo plugin for Codex!\n\n"
+                        "Gives you everything fr"
+                    ),
+                },
+                {
+                    "lane": "x-following",
+                    "title": "@NickADobos",
+                    "source_url": "https://x.com/NickADobos/status/2044885440092877028",
+                    "signal_path": "x-following/2026-04-17/signals/NickADobos.md",
+                    "fetched_at": "2026-04-17T01:23:53+0000",
+                    "source_snippet": (
+                        "With codex computer use + mac's iPhone Mirror app, GPT can use any app on your phone!!!\n\n"
+                        "Seems less accurate with clicks"
+                    ),
+                    "excerpt": (
+                        "With codex computer use + mac's iPhone Mirror app, GPT can use any app on your phone!!!\n\n"
+                        "Seems less accurate with clicks"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 5,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 2},
+                    {"lane": "x-following", "selected_item_count": 3},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        # openclaw and NickADobos generate proper Chinese facts and should be kept
+        self.assertIn("openclaw/status/2044919054402752638", body_markdown)
+        self.assertIn("NickADobos/status/2044885440092877028", body_markdown)
+        # eng_khairallah1, steipete, Dimillian only generate placeholders/empty and should be discarded
+        self.assertNotIn("eng_khairallah1/status/2044787496681390571", body_markdown)
+        self.assertNotIn("steipete/status/2044888081141223442", body_markdown)
+        self.assertNotIn("Dimillian/status/2044875379001766315", body_markdown)
+        # Bad patterns should not appear
+        self.assertNotIn("该栏目收录", body_markdown)
+        self.assertNotIn("这条帖子围绕", body_markdown)
+        self.assertNotIn("reality: we are just an indicator of the coming storm", body_markdown)
+        self.assertNotIn("Gives you everything", body_markdown)
+        self.assertNotIn("Seems less accurate with clicks", body_markdown)
+        self.assertNotIn("The model performs best if you treat it like an engineer you're delegating", body_markdown)
+
+    def test_build_report_artifact_x_items_with_concrete_chinese_facts_are_kept(self) -> None:
+        """Items that can generate concrete Chinese factual sentences should be kept."""
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 2},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@punk2898 #60",
+                    "source_url": "https://x.com/punk2898/status/2044612209746264350",
+                    "signal_path": "x-feed/2026-04-17/signals/punk2898.md",
+                    "fetched_at": "2026-04-17T01:23:48+0000",
+                    "source_snippet": "没有 Vibe Coding 的人是不懂的这种爽感的，这可比什么 OpenClaw 爽太多太多了",
+                    "excerpt": "没有 Vibe Coding 的人是不懂的这种爽感的，这可比什么 OpenClaw 爽太多太多了",
+                },
+                {
+                    "lane": "x-feed",
+                    "title": "@dotey #66",
+                    "source_url": "https://x.com/dotey/status/2044830688587706710",
+                    "signal_path": "x-feed/2026-04-17/signals/dotey.md",
+                    "fetched_at": "2026-04-17T01:23:48+0000",
+                    "source_snippet": "Codex 大更新：从写代码工具变成能操作你电脑的助手",
+                    "excerpt": "Codex 大更新：从写代码工具变成能操作你电脑的助手",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 2},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("punk2898/status/2044612209746264350", body_markdown)
+        self.assertIn("dotey/status/2044830688587706710", body_markdown)
+        self.assertNotIn("该栏目收录", body_markdown)
+        self.assertNotIn("这条帖子围绕", body_markdown)
+
+    def test_build_report_artifact_opencclaw_release_generates_chinese_facts(self) -> None:
+        """OpenClaw 2026.4.15 release info should generate Chinese factual sentences."""
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "x-feed", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "x-feed",
+                    "title": "@openclaw #74",
+                    "source_url": "https://x.com/openclaw/status/2044919054402752638",
+                    "signal_path": "x-feed/2026-04-17/signals/openclaw.md",
+                    "fetched_at": "2026-04-17T01:23:48+0000",
+                    "source_snippet": (
+                        "OpenClaw 2026.4.15 🦞\n\n🤖 Anthropic Opus 4.7 support\n"
+                        "🗣️ Gemini TTS in bundled\n🧠 Slimmer context + bounded memory reads\n🔧 C"
+                    ),
+                    "excerpt": (
+                        "OpenClaw 2026.4.15 🦞\n\n🤖 Anthropic Opus 4.7 support\n"
+                        "🗣️ Gemini TTS in bundled\n🧠 Slimmer context + bounded memory reads\n🔧 C"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "x-feed", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("openclaw/status/2044919054402752638", body_markdown)
+        self.assertNotIn("该栏目收录", body_markdown)
+        self.assertNotIn("这条帖子围绕", body_markdown)
+        # Should have Chinese facts about the release
+        self.assertIn("OpenClaw 2026.4.15", body_markdown)
+
+    def test_build_x_post_detail_rewrites_claude_design_launch_into_chinese(self) -> None:
+        detail = build_x_post_detail(
+            lane_name="x-following",
+            title="@claudeai",
+            source_text=(
+                "Introducing Claude Design by Anthropic Labs: make prototypes, slides, and one-pagers "
+                "by talking to Claude. Powered by Claude Opus 4.7."
+            ),
+        )
+
+        self.assertIn("Claude Design", detail)
+        self.assertIn("prototype、slides 和 one-pagers", detail)
+        self.assertNotIn("by talking to Claude", detail)
+
+    def test_build_product_hunt_detail_rewrites_sparse_english_agent_titles(self) -> None:
+        detail = build_product_hunt_detail(
+            title="LIVE: wtf are agents buying? — Watch agents spend money in real time",
+            source_text="Watch agents spend money in real time **Author:** @LIVE: wtf are agents buying?",
+        )
+
+        self.assertIn("实时看 agent 在花钱买什么", detail)
+        self.assertIn("采购和支付权限", detail)
+        self.assertNotIn("主打 agent 相关的自动化能力", detail)
+        self.assertNotIn("Watch agents spend money in real time", detail)
+
+    def test_build_polymarket_detail_rewrites_best_coding_ai_question_into_chinese(self) -> None:
+        detail = build_polymarket_detail(
+            title="Will DeepSeek have the best Coding AI model at the end of April 2026?",
+            source_text=(
+                "Question: Will DeepSeek have the best Coding AI model at the end of April 2026? "
+                "Current leader: Anthropic (92.0%) Anthropic: 92.0% OpenAI: 6.6% DeepSeek: 1.2% "
+                "24h volume: 8,804.4 Liquidity: 107,019.2 Price movement: down 1.6% this week"
+            ),
+        )
+
+        self.assertIn("DeepSeek 到 2026 年 4 月底时会不会拥有最强的 Coding AI 模型", detail)
+        self.assertIn("Anthropic", detail)
+        self.assertIn("24 小时成交量 8,804.4", detail)
+        self.assertIn("流动性 107,019.2", detail)
+        self.assertIn("本周下跌 1.6%", detail)
+        self.assertNotIn("Will DeepSeek have the best Coding AI model", detail)
 
 
 if __name__ == "__main__":

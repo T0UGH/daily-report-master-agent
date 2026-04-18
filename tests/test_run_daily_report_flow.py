@@ -170,6 +170,77 @@ def test_generate_audio_bundle_passes_minimax_env_from_hermes_dotenv(monkeypatch
     assert "IGNORED_KEY" not in tts_envs[0]
 
 
+def test_generate_audio_bundle_marks_minimax_quota_local_fallback_as_failed(monkeypatch, tmp_path: Path) -> None:
+    run_dir = tmp_path / "artifacts" / "2026-04-16"
+    report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "- **OpenAI** 发布了 [新模型](https://example.com/model)\n"
+    )
+    minimax_script = tmp_path / "generate_minimax_tts.py"
+    opus_script = tmp_path / "convert_to_feishu_opus.py"
+    minimax_script.write_text("# mock minimax tts\n", encoding="utf-8")
+    opus_script.write_text("# mock opus converter\n", encoding="utf-8")
+
+    monkeypatch.setattr(flow, "MINIMAX_TTS_SCRIPT", minimax_script)
+    monkeypatch.setattr(flow, "FEISHU_OPUS_SCRIPT", opus_script)
+
+    convert_calls = 0
+
+    def fake_run_and_capture(
+        command: list[str],
+        output_path: Path,
+        *,
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
+    ) -> flow.CommandResult:
+        del cwd, env
+        nonlocal convert_calls
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_path.name == "audio-tts.log":
+            Path(command[command.index("--output") + 1]).write_bytes(b"fallback-mp3")
+            stdout = json.dumps(
+                {
+                    "status": "succeeded-via-local-fallback",
+                    "provider": "macos-say",
+                    "recovery_note": "MiniMax error 2056: usage limit exceeded; fell back to macOS say",
+                },
+                ensure_ascii=False,
+            )
+            output_path.write_text(stdout, encoding="utf-8")
+            return flow.CommandResult(
+                command=command,
+                exit_code=0,
+                output_path=str(output_path),
+                stdout=stdout,
+                stderr="",
+            )
+
+        convert_calls += 1
+        output_path.write_text("unexpected convert\n", encoding="utf-8")
+        return flow.CommandResult(
+            command=command,
+            exit_code=0,
+            output_path=str(output_path),
+            stdout="ok",
+            stderr="",
+        )
+
+    monkeypatch.setattr(flow, "run_and_capture", fake_run_and_capture)
+
+    result = flow.generate_audio_bundle(
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        run_dir=run_dir,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "failed"
+    assert "MiniMax" in result["error_summary"]
+    assert "2056" in result["error_summary"]
+    assert "local fallback" in result["error_summary"]
+    assert convert_calls == 0
+
+
 def test_send_audio_to_feishu_uses_native_api_success(monkeypatch, tmp_path: Path) -> None:
     opus_path = tmp_path / "feishu-native-audio-test.opus"
     opus_path.write_bytes(b"opus-audio-bytes")
