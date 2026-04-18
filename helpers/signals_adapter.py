@@ -36,6 +36,8 @@ FALLBACK_SOURCE_URL_TEMPLATES = {
     "x-feed": "https://x.com/example/status/{date_compact}01",
     "x-following": "https://x.com/example/status/{date_compact}02",
     "reddit-watch": "https://www.reddit.com/r/example/comments/{date_compact}/reddit_watch/",
+    "hacker-news-watch": "https://news.ycombinator.com/item?id={date_compact}03",
+    "hacker-news-search-watch": "https://news.ycombinator.com/item?id={date_compact}04",
     "claude-code-watch": "https://github.com/example/claude-code-watch/{report_date}",
     "codex-watch": "https://github.com/example/codex-watch/{report_date}",
     "openclaw-watch": "https://github.com/example/openclaw-watch/{report_date}",
@@ -47,6 +49,8 @@ LINK_LABELS = {
     "x-feed": "原帖",
     "x-following": "原帖",
     "reddit-watch": "Reddit",
+    "hacker-news-watch": "Hacker News",
+    "hacker-news-search-watch": "Hacker News",
     "claude-code-watch": "Release",
     "codex-watch": "GitHub",
     "openclaw-watch": "Release",
@@ -58,6 +62,8 @@ DEFAULT_LANE_ITEM_LIMITS = {
     "x-feed": 10,
     "x-following": 10,
     "reddit-watch": 10,
+    "hacker-news-watch": 10,
+    "hacker-news-search-watch": 10,
     "claude-code-watch": 10,
     "codex-watch": 10,
     "openclaw-watch": 10,
@@ -124,6 +130,8 @@ CONTENT_SECTION_PREFERENCES = {
     "x-feed": ("post",),
     "x-following": ("post",),
     "reddit-watch": ("post",),
+    "hacker-news-watch": ("post",),
+    "hacker-news-search-watch": ("post",),
     "claude-code-watch": ("summary", "release notes", "post"),
     "codex-watch": ("merged pr", "summary", "post"),
     "openclaw-watch": ("summary", "release notes", "post"),
@@ -783,6 +791,8 @@ def validate_selected_items_object(data: Any) -> None:
                 raise ValueError(f"selected_items.selected_items[*].{key} 必须是字符串")
         if "source_snippet" in item and not isinstance(item.get("source_snippet"), str):
             raise ValueError("selected_items.selected_items[*].source_snippet 必须是字符串")
+        if "matched_query" in item and not isinstance(item.get("matched_query"), str):
+            raise ValueError("selected_items.selected_items[*].matched_query 必须是字符串")
         expected_lane_counts[item["lane"]] += 1
 
     actual_lane_counts: dict[str, int] = {}
@@ -954,6 +964,9 @@ def build_signal_candidate_from_signal(signal_path: Path, signals_root: Path, fa
         "_body": body,
         "_front_matter": front_matter,
     }
+    matched_query = extract_matched_query(front_matter=front_matter, body=body)
+    if matched_query:
+        item["matched_query"] = matched_query
 
     source = as_string(front_matter.get("source"))
     if source:
@@ -1008,6 +1021,18 @@ def parse_front_matter(front_matter_block: str) -> dict[str, str]:
         parsed[key] = strip_wrapping_quotes(value.strip())
         current_key = key
     return parsed
+
+
+def extract_matched_query(*, front_matter: dict[str, Any], body: str) -> str:
+    for key in ("matched_query", "query"):
+        value = normalize_whitespace(as_string(front_matter.get(key)) or "")
+        if value:
+            return value
+
+    match = re.search(r"(?im)^\s*(?:-\s*)?(?:matched query|query):\s*(.+?)\s*$", body)
+    if not match:
+        return ""
+    return normalize_whitespace(match.group(1))
 
 
 def curate_lane_candidates(
@@ -1391,6 +1416,10 @@ def build_candidate_sort_key(
         score = extract_labeled_number(body, "Score")
         comments = extract_labeled_number(body, "Comments")
         return (relevance_score, score, comments, fetched_at, signal_path)
+    if lane_name in {"hacker-news-watch", "hacker-news-search-watch"}:
+        points = extract_labeled_number(body, "Points")
+        comments = extract_labeled_number(body, "Comments")
+        return (relevance_score, points, comments, fetched_at, signal_path)
     if lane_name in {"claude-code-watch", "openclaw-watch"}:
         version_rank = parse_version_rank(title)
         is_stable = 0 if re.search(r"(beta|rc)", title, re.IGNORECASE) else 1
@@ -1690,6 +1719,7 @@ def build_generic_headline(
     front_matter: dict[str, Any],
 ) -> str:
     focus_label = extract_focus_label(lane_name=lane_name, title=title, excerpt=excerpt, front_matter=front_matter)
+    matched_query = normalize_whitespace(str(front_matter.get("matched_query") or front_matter.get("query") or ""))
 
     if lane_name == "x-feed":
         if focus_label:
@@ -1705,6 +1735,18 @@ def build_generic_headline(
         if focus_label:
             return f"这条 Reddit 讨论把重点放在 {focus_label} 上。"
         return f"{subject} 这条社区讨论已经有了更明确的协作落点。"
+    if lane_name == "hacker-news-watch":
+        if focus_label:
+            return f"这条 Hacker News 热榜讨论把重点放在 {focus_label} 上。"
+        return f"{subject} 这条 Hacker News 热榜讨论已经落到更具体的实践细节。"
+    if lane_name == "hacker-news-search-watch":
+        if matched_query and focus_label:
+            return f"Hacker News 搜索词「{matched_query}」命中的讨论把重点放在 {focus_label} 上。"
+        if matched_query:
+            return f"Hacker News 搜索词「{matched_query}」命中了一条更偏实践的讨论。"
+        if focus_label:
+            return f"这条 Hacker News 搜索命中把重点放在 {focus_label} 上。"
+        return f"{subject} 是今天值得保留的一条 Hacker News 搜索命中。"
     if lane_name == "claude-code-watch":
         if focus_label:
             return f"{subject} 这一版继续围绕 {focus_label} 补协作链路。"
@@ -1752,6 +1794,7 @@ def build_generic_detail(
 
     normalized = normalize_whitespace(f"{title} {excerpt}").lower()
     focus_label = extract_focus_label(lane_name=lane_name, title=title, excerpt=excerpt, front_matter=front_matter)
+    matched_query = normalize_whitespace(str(front_matter.get("matched_query") or front_matter.get("query") or ""))
     stack_label = extract_stack_label(normalized)
 
     if lane_name in NOISY_X_LANES and focus_label:
@@ -1769,6 +1812,16 @@ def build_generic_detail(
             return f"帖子把 {stack_label} 放进同一条协作链路，重点已经转向 coordinator 如何分工、追踪改动并给 swarm 补治理。"
         if focus_label:
             return f"讨论没有停在概念层，而是直接围绕 {focus_label} 这种协作骨架展开。"
+    if lane_name == "hacker-news-watch":
+        if focus_label:
+            return f"讨论没有停在概念层，而是直接围绕 {focus_label} 这种实践骨架展开。"
+    if lane_name == "hacker-news-search-watch":
+        if matched_query and focus_label:
+            return f"这条命中来自对「{matched_query}」的搜索，正文把 {focus_label} 这类可复用做法写得更具体。"
+        if matched_query:
+            return f"这条命中来自对「{matched_query}」的搜索，正文不是泛聊，而是给出了一条更具体的实践线索。"
+        if focus_label:
+            return f"这条 Hacker News 搜索结果把重点压到了 {focus_label} 上，不只是泛聊概念。"
 
     if lane_name == "polymarket-watch":
         probability = parse_float(front_matter.get("primary_probability"))
@@ -1841,6 +1894,18 @@ def extract_focus_label(
             (("swarm", "governance"), "多模型 agent 的治理"),
             (("architect", "builder", "reviewer"), "多 agent 角色分工"),
             (("markdown", "handoff"), "markdown handoff"),
+        ],
+        "hacker-news-watch": [
+            (("swarm", "governance"), "多模型 agent 的治理"),
+            (("architect", "builder", "reviewer"), "多 agent 角色分工"),
+            (("review checklist",), "review checklist"),
+            (("handoff",), "agent handoff"),
+        ],
+        "hacker-news-search-watch": [
+            (("tmux", "worktree"), "tmux + git worktree"),
+            (("review checklist",), "review checklist"),
+            (("handoff",), "agent handoff"),
+            (("workflow",), "工作流"),
         ],
         "claude-code-watch": [
             (("team-onboarding",), "团队上手"),
@@ -2135,6 +2200,8 @@ def build_render_items_by_lane(
 def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, report_date: str) -> ReportRenderItem:
     lane_name = item["lane"]
     raw_title = normalize_whitespace(item.get("title", "")) or f"{FIXED_SECTION_TITLES[lane_name]} 条目"
+    matched_query = normalize_whitespace(str(item.get("matched_query", "")))
+    display_title = decorate_lane_display_title(lane_name=lane_name, title=raw_title, matched_query=matched_query)
     raw_source_snippet = normalize_whitespace(item.get("source_snippet", ""))
     raw_excerpt = normalize_whitespace(item.get("excerpt", ""))
     fallback_title, fallback_excerpt = build_editor_copy(
@@ -2146,7 +2213,7 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
     source_text = raw_source_snippet or raw_excerpt
     title = build_reader_title(
         lane_name=lane_name,
-        raw_title=raw_title or normalize_whitespace(item.get("editor_headline", "")) or fallback_title,
+        raw_title=display_title or normalize_whitespace(item.get("editor_headline", "")) or fallback_title,
         source_text=source_text,
     )
     if lane_name == "reddit-watch":
@@ -2172,9 +2239,24 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
         excerpt=ensure_chinese_sentence(excerpt or f"该栏目收录 {useful_item_count} 条有用内容。"),
         source_url=source_url,
         link_label=LINK_LABELS[lane_name],
-        source_title=raw_title,
+        source_title=display_title,
         sort_key=(str(fetched_at), str(signal_path)),
     )
+
+
+def decorate_lane_display_title(*, lane_name: str, title: str, matched_query: str) -> str:
+    cleaned_title = normalize_whitespace(title)
+    if lane_name != "hacker-news-search-watch":
+        return cleaned_title
+
+    cleaned_query = normalize_whitespace(matched_query)
+    if not cleaned_query:
+        return cleaned_title
+    if cleaned_query.lower() in cleaned_title.lower():
+        return cleaned_title
+    if not cleaned_title:
+        return f"搜索词「{cleaned_query}」命中"
+    return f"「{cleaned_query}」：{cleaned_title}"
 
 
 def build_reader_title(*, lane_name: str, raw_title: str, source_text: str) -> str:
@@ -2308,7 +2390,7 @@ def build_lane_fact_summary(*, lane_name: str, title: str, source_text: str, sou
         return build_product_hunt_detail(title=title, source_text=cleaned_source)
     if lane_name == "polymarket-watch":
         return build_polymarket_detail(title=title, source_text=cleaned_source)
-    if lane_name == "reddit-watch":
+    if lane_name in {"reddit-watch", "hacker-news-watch", "hacker-news-search-watch"}:
         return build_reddit_detail(title=title, source_text=cleaned_source)
     return ""
 

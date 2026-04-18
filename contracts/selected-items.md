@@ -34,6 +34,7 @@
 
 - `source`
 - `signal_type`
+- `matched_query`（供 query-discovery lane 保留命中的搜索词，例如 `hacker-news-search-watch`）
 
 ## 最小语义
 

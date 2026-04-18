@@ -1511,6 +1511,168 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
             },
         )
 
+    def test_hacker_news_lanes_round_trip_into_reader_facing_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="hacker-news-watch",
+                signal_text_by_name={
+                    "top-story.md": """---
+type: hacker_news_story
+lane: hacker-news-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000001
+title: AI copilots need better review loops
+url: https://news.ycombinator.com/item?id=44000001
+fetched_at: 2026-04-12T13:00:00+0000
+created_at: '2026-04-12T12:58:00Z'
+---
+
+## Post
+
+作者在 HN 热榜里讨论 reviewer loop 和 agent handoff，重点是把计划、实现、验收拆开。
+
+## Comments
+
+- Points: 120
+- Comments: 44
+""",
+                },
+            )
+            self.write_signal_bundle(
+                signals_root,
+                lane="hacker-news-search-watch",
+                signal_text_by_name={
+                    "search-hit.md": """---
+type: hacker_news_search_hit
+lane: hacker-news-search-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000002
+title: Shipping agents with tmux and git worktrees
+url: https://news.ycombinator.com/item?id=44000002
+fetched_at: 2026-04-12T14:00:00+0000
+created_at: '2026-04-12T13:58:00Z'
+matched_query: Claude Code
+---
+
+## Post
+
+作者把 tmux session、git worktree 和 review checklist 串成一条交接链路。
+""",
+                },
+            )
+
+            collect_result = build_collect_result(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["hacker-news-watch", "hacker-news-search-watch"],
+            )
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["hacker-news-watch", "hacker-news-search-watch"],
+                per_lane_limit=1,
+            )
+            artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+
+        self.assertEqual(
+            collect_result["lanes"],
+            [
+                {"name": "hacker-news-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "hacker-news-search-watch", "status": "ok", "useful_item_count": 1},
+            ],
+        )
+        self.assertEqual(
+            selected_items["summary"]["lane_counts"],
+            [
+                {"lane": "hacker-news-watch", "selected_item_count": 1},
+                {"lane": "hacker-news-search-watch", "selected_item_count": 1},
+            ],
+        )
+        self.assertEqual(
+            artifact["source_lanes"],
+            ["hacker-news-watch", "hacker-news-search-watch"],
+        )
+        self.assertIn("## Hacker News 热榜", artifact["body_markdown"])
+        self.assertIn("## Hacker News 搜索", artifact["body_markdown"])
+        self.assertIn("### Hacker News 热榜", artifact["body_markdown"])
+        self.assertIn("### Hacker News 搜索", artifact["body_markdown"])
+
+        validate_report_markdown(
+            artifact["body_markdown"],
+            report_date=REPORT_DATE,
+            expected_section_titles=[
+                FIXED_SECTION_TITLES["hacker-news-watch"],
+                FIXED_SECTION_TITLES["hacker-news-search-watch"],
+            ],
+            expected_sources={
+                FIXED_SECTION_TITLES["hacker-news-watch"]: [
+                    "https://news.ycombinator.com/item?id=44000001"
+                ],
+                FIXED_SECTION_TITLES["hacker-news-search-watch"]: [
+                    "https://news.ycombinator.com/item?id=44000002"
+                ],
+            },
+        )
+
+    def test_hacker_news_search_watch_preserves_matched_query_in_rendering(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="hacker-news-search-watch",
+                signal_text_by_name={
+                    "query-hit.md": """---
+type: hacker_news_search_hit
+lane: hacker-news-search-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000003
+title: Run agents with tmux + git worktrees
+url: https://news.ycombinator.com/item?id=44000003
+fetched_at: 2026-04-12T15:00:00+0000
+created_at: '2026-04-12T14:58:00Z'
+matched_query: Claude Code
+---
+
+## Post
+
+作者把 tmux、git worktree 和 review checklist 连成一条 agent 交接链路。
+""",
+                },
+            )
+
+            collect_result = build_collect_result(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["hacker-news-search-watch"],
+            )
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["hacker-news-search-watch"],
+                per_lane_limit=1,
+            )
+            artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+
+        self.assertEqual(selected_items["selected_items"][0]["matched_query"], "Claude Code")
+        self.assertIn("Claude Code", artifact["body_markdown"])
+        self.assertIn("Run agents with tmux + git worktrees", artifact["body_markdown"])
+
+        validate_report_markdown(
+            artifact["body_markdown"],
+            report_date=REPORT_DATE,
+            expected_section_titles=[FIXED_SECTION_TITLES["hacker-news-search-watch"]],
+            expected_sources={
+                FIXED_SECTION_TITLES["hacker-news-search-watch"]: [
+                    "https://news.ycombinator.com/item?id=44000003"
+                ]
+            },
+        )
+
     def test_build_report_artifact_prefers_source_snippet_and_raw_title_over_editor_copy(self) -> None:
         collect_result = {
             "report_date": REPORT_DATE,
