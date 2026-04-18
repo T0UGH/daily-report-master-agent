@@ -34,6 +34,7 @@ reader_facing:
       min_paragraphs: 6
       max_paragraphs: 10
   fixed_section_order:
+    - weather-watch
     - x-feed
     - x-following
     - reddit-watch
@@ -45,7 +46,6 @@ reader_facing:
     - github-trending-weekly
     - product-hunt-watch
     - polymarket-watch
-    - weather-watch
 runtime:
   timezone: Asia/Shanghai
   cron_job_name: daily-report-master-0600

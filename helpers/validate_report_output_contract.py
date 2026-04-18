@@ -8,6 +8,7 @@ from typing import Any
 
 
 FIXED_SECTION_ORDER = [
+    "weather-watch",
     "x-feed",
     "x-following",
     "reddit-watch",
@@ -19,7 +20,6 @@ FIXED_SECTION_ORDER = [
     "github-trending-weekly",
     "product-hunt-watch",
     "polymarket-watch",
-    "weather-watch",
 ]
 
 FIXED_SECTION_TITLES = {
