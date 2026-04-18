@@ -2226,6 +2226,7 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
         raw_title=raw_title,
         source_text=source_text,
         source_url=normalize_whitespace(str(item.get("source_url", ""))),
+        matched_query=matched_query,
         fallback_excerpt=normalize_whitespace(item.get("editor_summary", "")) or fallback_excerpt,
         useful_item_count=useful_item_count,
     )
@@ -2288,6 +2289,7 @@ def build_reader_excerpt(
     source_text: str,
     source_url: str,
     fallback_excerpt: str,
+    matched_query: str = "",
     useful_item_count: int,
 ) -> str:
     cleaned_source = trim_fragmentary_tail(normalize_whitespace(source_text))
@@ -2301,6 +2303,7 @@ def build_reader_excerpt(
             title=raw_title,
             source_text=cleaned_source,
             source_url=source_url,
+            matched_query=matched_query,
         )
         if detailed_excerpt:
             if (
@@ -2351,6 +2354,7 @@ def build_candidate_reader_excerpt(*, candidate: dict[str, Any], useful_item_cou
         raw_title=raw_title,
         source_text=source_text,
         source_url=normalize_whitespace(str(candidate.get("source_url", ""))),
+        matched_query=normalize_whitespace(str(candidate.get("matched_query", ""))),
         fallback_excerpt=fallback_excerpt,
         useful_item_count=useful_item_count,
     )
@@ -2371,7 +2375,14 @@ def noisy_x_excerpt_is_publishable(value: str) -> bool:
     return True
 
 
-def build_lane_fact_summary(*, lane_name: str, title: str, source_text: str, source_url: str) -> str:
+def build_lane_fact_summary(
+    *,
+    lane_name: str,
+    title: str,
+    source_text: str,
+    source_url: str,
+    matched_query: str = "",
+) -> str:
     cleaned_source = normalize_fact_source_text(source_text)
     if not cleaned_source:
         return ""
@@ -2390,7 +2401,14 @@ def build_lane_fact_summary(*, lane_name: str, title: str, source_text: str, sou
         return build_product_hunt_detail(title=title, source_text=cleaned_source)
     if lane_name == "polymarket-watch":
         return build_polymarket_detail(title=title, source_text=cleaned_source)
-    if lane_name in {"reddit-watch", "hacker-news-watch", "hacker-news-search-watch"}:
+    if lane_name in {"hacker-news-watch", "hacker-news-search-watch"}:
+        return build_hacker_news_detail(
+            lane_name=lane_name,
+            title=title,
+            source_text=cleaned_source,
+            matched_query=matched_query,
+        )
+    if lane_name == "reddit-watch":
         return build_reddit_detail(title=title, source_text=cleaned_source)
     return ""
 
@@ -3593,6 +3611,121 @@ def build_polymarket_detail(*, title: str, source_text: str) -> str:
         market_strength.append(f"价格 {movement}")
     if market_strength:
         facts.append("市场强度也写得很明白，" + "，".join(market_strength))
+
+    return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+
+def strip_hacker_news_leading_markers(value: str) -> str:
+    cleaned = normalize_fact_source_text(value)
+    if not cleaned:
+        return ""
+
+    cleaned = re.sub(
+        r"^(?:related(?:\s+story)?|see also|search hit|search result|thread|discussion|topic|link)\s*[:\-]\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    return normalize_whitespace(cleaned).strip(" .")
+
+
+def trim_hacker_news_subject_prefix(*, source_text: str, title: str) -> str:
+    cleaned_source = normalize_whitespace(source_text)
+    cleaned_title = normalize_whitespace(title).strip(" \"'`“”‘’")
+    if not cleaned_source or not cleaned_title:
+        return cleaned_source
+
+    patterns = (
+        rf"^{re.escape(cleaned_title)}\s+(?:thread|discussion|post)\s+on\s+",
+        rf"^{re.escape(cleaned_title)}\s+(?:thread|discussion|post)\s+about\s+",
+        rf"^{re.escape(cleaned_title)}\s*[:\-]\s*",
+    )
+    for pattern in patterns:
+        trimmed = re.sub(pattern, "", cleaned_source, count=1, flags=re.IGNORECASE)
+        if trimmed != cleaned_source:
+            return normalize_whitespace(trimmed).strip(" .")
+    return cleaned_source
+
+
+def extract_hacker_news_topics(value: str) -> list[str]:
+    cleaned = normalize_fact_source_text(value)
+    if not cleaned:
+        return []
+
+    topic_rules = (
+        (r"\breview ownership\b", "评审分工"),
+        (r"\breviewer?\s+loops?\b", "review loop"),
+        (r"\btmux(?:\s+sessions?)?\b", "tmux"),
+        (r"\bgit worktrees?\b|\bworktrees?\b", "git worktree"),
+        (r"\breview checklists?\b", "review checklist"),
+        (r"\b(?:agent\s+)?handoff(?:\s+loop)?\b", "agent 交接"),
+        (r"\brepo(?:sitory)? boundaries?\b", "仓库边界"),
+        (r"\bmcp\b", "MCP"),
+    )
+
+    topics: list[str] = []
+    for pattern, label in topic_rules:
+        if re.search(pattern, cleaned, re.IGNORECASE) and label not in topics:
+            topics.append(label)
+    return topics
+
+
+def format_hacker_news_topics(topics: Sequence[str]) -> str:
+    filtered = [topic for topic in topics if normalize_whitespace(topic)]
+    if not filtered:
+        return ""
+    if len(filtered) == 1:
+        return filtered[0]
+    return "、".join(filtered[:-1]) + " 和 " + filtered[-1]
+
+
+def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, matched_query: str = "") -> str:
+    cleaned_title = normalize_whitespace(title).strip(" \"'`“”‘’")
+    stripped_source = strip_hacker_news_leading_markers(source_text)
+    stripped_source = trim_hacker_news_subject_prefix(source_text=stripped_source, title=cleaned_title)
+    lowered = normalize_whitespace(f"{cleaned_title} {stripped_source}").lower()
+    topics = extract_hacker_news_topics(stripped_source or source_text)
+    facts: list[str] = []
+
+    if lane_name == "hacker-news-watch":
+        if all(topic in topics for topic in ("评审分工", "review loop", "仓库边界")):
+            facts.append("这条 HN 热榜讨论在聊评审分工、review loop 和仓库边界")
+            facts.append("它想解决的是 agent 协作里谁来审、怎么交接、边界该怎么收紧")
+            facts.append("这些边界一旦说清，团队在交接、评审和回滚时会更稳")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+        focus = format_hacker_news_topics(topics[:4])
+        if focus:
+            facts.append(f"这条 HN 热榜讨论把焦点放在 {focus}")
+        elif cleaned_title:
+            facts.append("这条 HN 热榜讨论不是泛聊概念，而是在追更具体的工程做法")
+
+        if any(topic in topics for topic in {"评审分工", "review loop", "review checklist", "agent 交接", "仓库边界"}):
+            facts.append("讨论已经落到评审、交接和仓库约束这些可执行条件，不只是情绪化站队")
+        elif "matter" in lowered or "why" in lowered:
+            facts.append("讨论已经开始回答“为什么这件事会影响团队协作”，不只是复读标题")
+
+    if lane_name == "hacker-news-search-watch":
+        cleaned_query = normalize_whitespace(matched_query)
+        if all(topic in topics for topic in ("tmux", "git worktree", "review checklist")):
+            facts.append(
+                f"搜索词「{cleaned_query or '相关关键词'}」命中的这条 HN 讨论把 tmux、git worktree 和 review checklist 串成一条 agent 交接链路"
+            )
+            facts.append("它给的是可复用的团队协作流程，不是占位式搜索命中")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+        focus = format_hacker_news_topics(topics[:4])
+        if cleaned_query and focus:
+            facts.append(f"搜索词「{cleaned_query}」命中的这条 HN 讨论把焦点放在 {focus}")
+        elif cleaned_query:
+            facts.append(f"搜索词「{cleaned_query}」命中的这条 HN 讨论不是泛聊概念，而是在讲更具体的工程做法")
+        elif cleaned_title and focus:
+            facts.append(f"`{cleaned_title}` 这条 HN 搜索命中把焦点放在 {focus}")
+
+        if any(topic in topics for topic in {"tmux", "git worktree", "review checklist", "agent 交接"}):
+            facts.append("它把会话切分、代码隔离和评审交接串成了同一条 workflow")
+        elif cleaned_title:
+            facts.append(f"`{cleaned_title}` 这条命中给出了可复述的工程细节，不只是一个标题")
 
     return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 

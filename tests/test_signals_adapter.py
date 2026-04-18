@@ -1673,6 +1673,107 @@ matched_query: Claude Code
             },
         )
 
+    def test_build_report_artifact_rewrites_hacker_news_watch_related_fragments(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "hacker-news-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "hacker-news-watch",
+                    "title": "Claude Design",
+                    "source_url": "https://news.ycombinator.com/item?id=44000009",
+                    "signal_path": "hacker-news-watch/2026-04-12/signals/top-story.md",
+                    "fetched_at": "2026-04-12T16:00:00+0000",
+                    "source_snippet": (
+                        "Related: Claude Design thread on review ownership, reviewer loops, "
+                        "and why repo boundaries still matter for agents."
+                    ),
+                    "excerpt": (
+                        "Related: Claude Design thread on review ownership, reviewer loops, "
+                        "and why repo boundaries still matter for agents."
+                    ),
+                    "source": "hacker-news",
+                    "signal_type": "hacker_news_story",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "hacker-news-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+
+        body = artifact["body_markdown"]
+        self.assertIn("**Claude Design** 这条 HN 热榜讨论在聊", body)
+        self.assertIn("评审分工", body)
+        self.assertIn("review loop", body)
+        self.assertIn("仓库边界", body)
+        self.assertNotIn("Related:", body)
+        self.assertNotIn("Claude Design Related", body)
+        self.assertNotIn("该栏目收录 1 条有用内容。", body)
+
+    def test_build_report_artifact_keeps_hacker_news_search_query_and_facts(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "hacker-news-search-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "hacker-news-search-watch",
+                    "title": "Shipping agents with tmux and git worktrees",
+                    "source_url": "https://news.ycombinator.com/item?id=44000010",
+                    "signal_path": "hacker-news-search-watch/2026-04-12/signals/search-hit.md",
+                    "fetched_at": "2026-04-12T16:30:00+0000",
+                    "matched_query": "Claude Code",
+                    "source_snippet": (
+                        "Search hit: teams using tmux sessions, git worktrees, and review "
+                        "checklists as a single handoff loop for Claude Code agents."
+                    ),
+                    "excerpt": (
+                        "Search hit: teams using tmux sessions, git worktrees, and review "
+                        "checklists as a single handoff loop for Claude Code agents."
+                    ),
+                    "source": "hacker-news",
+                    "signal_type": "hacker_news_search_hit",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "hacker-news-search-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+
+        body = artifact["body_markdown"]
+        self.assertIn("搜索词「Claude Code」", body)
+        self.assertIn("tmux", body)
+        self.assertIn("git worktree", body)
+        self.assertIn("review checklist", body)
+        self.assertIn("agent 交接", body)
+        self.assertNotIn("该栏目收录 1 条有用内容。", body)
+        self.assertNotIn("原文围绕", body)
+
     def test_build_report_artifact_prefers_source_snippet_and_raw_title_over_editor_copy(self) -> None:
         collect_result = {
             "report_date": REPORT_DATE,
