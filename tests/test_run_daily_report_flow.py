@@ -100,6 +100,40 @@ def test_build_readout_text_drops_sources_tail_entirely() -> None:
     assert "这段不应出现在播报里" not in text
 
 
+def test_to_spoken_sentence_removes_raw_handle_prefix() -> None:
+    text = flow._to_spoken_sentence("@alpha_01 OpenAI 发布了新模型")
+
+    assert "@alpha_01" not in text
+    assert "OpenAI 发布了新模型。" in text
+
+
+def test_to_spoken_sentence_adds_generic_social_source_prefix() -> None:
+    text = flow._to_spoken_sentence("@fkysly Anthropic 每发一个新产品，就会给一批相关竞品带来压力")
+
+    assert text == "有用户提到，Anthropic 每发一个新产品，就会给一批相关竞品带来压力。"
+
+
+def test_to_spoken_sentence_avoids_double_generic_prefix_when_body_already_reads_naturally() -> None:
+    text = flow._to_spoken_sentence("@pengchujin 有人在专门分享低价 GPT Codex 的获取渠道")
+
+    assert text == "有人在专门分享低价 GPT Codex 的获取渠道。"
+
+
+def test_to_spoken_sentence_uses_known_official_identity_for_social_source() -> None:
+    text = flow._to_spoken_sentence("@claudeai Claude Code 新增了 review gate")
+
+    assert text == "Anthropic 官方提到，Claude Code 新增了 review gate。"
+
+
+def test_to_spoken_sentence_preserves_body_content_when_rewriting_social_source() -> None:
+    body = "刚刚发布了 Responses API 的新能力，支持更稳定的工具调用"
+
+    text = flow._to_spoken_sentence(f"@openai {body}")
+
+    assert text == f"OpenAI 这边提到，{body}。"
+    assert body in text
+
+
 def test_generate_audio_bundle_creates_missing_run_dir_before_writing_outputs(monkeypatch, tmp_path: Path) -> None:
     run_dir = tmp_path / "artifacts" / "2026-04-16"
     report_markdown = (

@@ -61,6 +61,12 @@ READOUT_SECTION_TRANSITIONS = {
     "Product Hunt 新品": "再来看 Product Hunt 新品。",
     "Polymarket 市场": "再来看 Polymarket 市场。",
 }
+READOUT_OFFICIAL_SOURCE_PREFIXES = {
+    "anthropic": "Anthropic 官方提到",
+    "anthropicai": "Anthropic 官方提到",
+    "claudeai": "Anthropic 官方提到",
+    "openai": "OpenAI 这边提到",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -286,10 +292,30 @@ def _clean_readout_fragment(text: str) -> str:
     return text.strip()
 
 
+def _rewrite_social_source_identity(text: str) -> str:
+    handle_match = re.match(r"^@([A-Za-z0-9_]+)(?:\s+#\d+)?(?:\s+|$)", text)
+    if handle_match is None:
+        return text
+
+    handle = handle_match.group(1).lower()
+    body = text[handle_match.end() :].strip()
+    if not body:
+        return ""
+
+    official_prefix = READOUT_OFFICIAL_SOURCE_PREFIXES.get(handle)
+    if official_prefix:
+        return f"{official_prefix}，{body}"
+
+    if re.match(r"^(有人|有用户|一条帖子|这条帖子)", body):
+        return body
+    return f"有用户提到，{body}"
+
+
 def _to_spoken_sentence(text: str) -> str:
     cleaned = _clean_readout_fragment(text)
     if not cleaned:
         return ""
+    cleaned = _rewrite_social_source_identity(cleaned)
     cleaned = re.sub(r"^@[A-Za-z0-9_]+(?:\s+#\d+)?\s*", "", cleaned)
     cleaned = re.sub(r"\b([A-Za-z0-9_.+-]+(?:\s+[A-Za-z0-9_.+-]+){0,3})\s+\1\b", r"\1", cleaned)
     cleaned = re.sub(r"[。！？；：,.!?;:，、 ]+$", "", cleaned).strip()
