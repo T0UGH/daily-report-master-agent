@@ -23,6 +23,7 @@ selection:
     github-trending-weekly: 10
     product-hunt-watch: 10
     polymarket-watch: 10
+    weather-watch: 1
 reader_facing:
   title_template: "AI Agent 日报（{report_date}）"
   lane_paragraph_targets:
@@ -44,6 +45,7 @@ reader_facing:
     - github-trending-weekly
     - product-hunt-watch
     - polymarket-watch
+    - weather-watch
 runtime:
   timezone: Asia/Shanghai
   cron_job_name: daily-report-master-0600

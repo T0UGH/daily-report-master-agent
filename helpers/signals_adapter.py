@@ -44,6 +44,7 @@ FALLBACK_SOURCE_URL_TEMPLATES = {
     "github-trending-weekly": "https://github.com/example/github-trending-weekly/{report_date}",
     "product-hunt-watch": "https://www.producthunt.com/posts/product-hunt-watch-{report_date}",
     "polymarket-watch": "https://polymarket.com/event/polymarket-watch-{report_date}",
+    "weather-watch": "https://weather.example.com/beijing-haidian/{report_date}",
 }
 LINK_LABELS = {
     "x-feed": "原帖",
@@ -57,6 +58,7 @@ LINK_LABELS = {
     "github-trending-weekly": "GitHub",
     "product-hunt-watch": "Product Hunt",
     "polymarket-watch": "Polymarket",
+    "weather-watch": "天气",
 }
 DEFAULT_LANE_ITEM_LIMITS = {
     "x-feed": 10,
@@ -70,6 +72,7 @@ DEFAULT_LANE_ITEM_LIMITS = {
     "github-trending-weekly": 10,
     "product-hunt-watch": 10,
     "polymarket-watch": 10,
+    "weather-watch": 1,
 }
 SECONDARY_ITEM_SCORE_FLOORS = {
     "reddit-watch": 10,
@@ -138,6 +141,7 @@ CONTENT_SECTION_PREFERENCES = {
     "github-trending-weekly": ("summary", "readme", "post"),
     "product-hunt-watch": ("preview", "snapshot", "post"),
     "polymarket-watch": ("expectation", "outcome probabilities", "market strength"),
+    "weather-watch": ("weather", "forecast", "summary"),
 }
 DENSE_ENTRY_SOURCE_SECTION_PREFERENCES = {
     "claude-code-watch": ("what's changed", "release notes", "changes", "fixes", "post"),
@@ -2247,6 +2251,8 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
 
 def decorate_lane_display_title(*, lane_name: str, title: str, matched_query: str) -> str:
     cleaned_title = normalize_whitespace(title)
+    if lane_name == "weather-watch":
+        return "今日天气"
     if lane_name != "hacker-news-search-watch":
         return cleaned_title
 
@@ -2262,6 +2268,8 @@ def decorate_lane_display_title(*, lane_name: str, title: str, matched_query: st
 
 def build_reader_title(*, lane_name: str, raw_title: str, source_text: str) -> str:
     cleaned_title = normalize_whitespace(raw_title)
+    if lane_name == "weather-watch":
+        return cleaned_title or "今日天气"
     if lane_name in NOISY_X_LANES and re.fullmatch(r"@[A-Za-z0-9_]+(?:\s+#\d+)?", cleaned_title):
         descriptor, _ = build_known_signal_copy(lane_name=lane_name, title=cleaned_title, source_text=source_text)
         if not descriptor:
@@ -2293,6 +2301,17 @@ def build_reader_excerpt(
     useful_item_count: int,
 ) -> str:
     cleaned_source = trim_fragmentary_tail(normalize_whitespace(source_text))
+    if lane_name == "weather-watch":
+        weather_excerpt = build_lane_fact_summary(
+            lane_name=lane_name,
+            title=raw_title,
+            source_text=cleaned_source,
+            source_url=source_url,
+            matched_query=matched_query,
+        )
+        if weather_excerpt:
+            return ensure_chinese_sentence(weather_excerpt)
+
     if cleaned_source:
         if count_cjk_characters(cleaned_source) >= 8 and not looks_like_english_text(cleaned_source):
             return ensure_chinese_sentence(cleaned_source)
@@ -2387,6 +2406,8 @@ def build_lane_fact_summary(
     if not cleaned_source:
         return ""
 
+    if lane_name == "weather-watch":
+        return build_weather_detail(title=title, source_text=cleaned_source)
     if lane_name in NOISY_X_LANES:
         return build_x_post_detail(lane_name=lane_name, title=title, source_text=cleaned_source)
     if lane_name == "claude-code-watch":
@@ -3439,6 +3460,162 @@ def build_github_trending_detail(*, title: str, source_text: str) -> str:
             facts.append(sentences[1])
         return compose_fact_sentences(intro=f"`{title}` 这周能进趋势榜，至少因为：", facts=facts, group_sizes=(1, 1))
     return ""
+
+
+def build_weather_detail(*, title: str, source_text: str) -> str:
+    del title
+
+    fields = extract_weather_fields(source_text)
+    condition = localize_weather_condition(fields.get("condition", ""))
+    temperature = normalize_weather_temperature(fields.get("temperature", ""))
+    precipitation = normalize_weather_precipitation(fields.get("precipitation", ""))
+    wind = localize_weather_wind(fields.get("wind", ""))
+
+    fragments: list[str] = []
+    if condition:
+        fragments.append(condition)
+    if temperature:
+        fragments.append(f"气温 {temperature}")
+    if precipitation:
+        fragments.append(f"降水 {precipitation}")
+    if wind:
+        fragments.append(wind)
+
+    if not fragments:
+        return ""
+
+    lead = f"今天{fragments[0]}"
+    tail = fragments[1:]
+    if not tail:
+        return lead
+    return lead + "，" + "，".join(tail)
+
+
+def extract_weather_fields(source_text: str) -> dict[str, str]:
+    pattern = re.compile(
+        r"(?P<label>[A-Za-z\u4e00-\u9fff][A-Za-z\u4e00-\u9fff /-]{0,31})\s*[:：]\s*"
+        r"(?P<value>.*?)(?=(?:\s+[A-Za-z\u4e00-\u9fff][A-Za-z\u4e00-\u9fff /-]{0,31}\s*[:：])|$)"
+    )
+    fields: dict[str, str] = {}
+
+    for match in pattern.finditer(source_text):
+        field_key = normalize_weather_field_key(match.group("label"))
+        field_value = normalize_weather_fact_value(match.group("value"))
+        if field_key and field_value and field_key not in fields:
+            fields[field_key] = field_value
+
+    return fields
+
+
+def normalize_weather_field_key(label: str) -> str:
+    cleaned = normalize_whitespace(label).lower()
+    if not cleaned:
+        return ""
+    if any(token in cleaned for token in ("condition", "weather", "天气", "现象")):
+        return "condition"
+    if any(token in cleaned for token in ("temperature", "temp", "气温", "温度")):
+        return "temperature"
+    if any(token in cleaned for token in ("precipitation", "precip", "rain", "降水", "降雨")):
+        return "precipitation"
+    if "wind" in cleaned or "风" in cleaned:
+        return "wind"
+    return ""
+
+
+def normalize_weather_fact_value(value: str) -> str:
+    cleaned = normalize_whitespace(value).strip(" ,;:，；：")
+    if not cleaned:
+        return ""
+    if cleaned.lower() in {"-", "--", "n/a", "na", "unknown"}:
+        return ""
+    return cleaned.replace("℃", "°C")
+
+
+def normalize_weather_temperature(value: str) -> str:
+    cleaned = normalize_weather_fact_value(value)
+    if not cleaned:
+        return ""
+    cleaned = re.sub(r"\bto\b", " - ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*[~～]\s*", " - ", cleaned)
+    cleaned = re.sub(r"\s*-\s*", " - ", cleaned)
+    return normalize_whitespace(cleaned)
+
+
+def normalize_weather_precipitation(value: str) -> str:
+    cleaned = normalize_weather_fact_value(value)
+    if not cleaned:
+        return ""
+
+    lowered = cleaned.lower()
+    if lowered in {"none", "no rain", "no precipitation", "dry"}:
+        return "无明显降水"
+
+    percent_match = re.search(r"(\d+(?:\.\d+)?%)", cleaned)
+    if percent_match:
+        return percent_match.group(1)
+
+    cleaned = re.sub(r"\b(?:chance of rain|precipitation)\b", "", cleaned, flags=re.IGNORECASE)
+    return normalize_whitespace(cleaned)
+
+
+def localize_weather_condition(value: str) -> str:
+    cleaned = normalize_weather_fact_value(value)
+    if not cleaned:
+        return ""
+
+    replacements = [
+        ("cloudy to sunny", "多云转晴"),
+        ("cloudy to clear", "多云转晴"),
+        ("partly cloudy", "多云"),
+        ("mostly cloudy", "多云"),
+        ("light rain", "小雨"),
+        ("moderate rain", "中雨"),
+        ("heavy rain", "大雨"),
+        ("thunderstorm", "雷阵雨"),
+        ("showers", "阵雨"),
+        ("overcast", "阴"),
+        ("cloudy", "多云"),
+        ("sunny", "晴"),
+        ("clear", "晴"),
+        ("snow", "雪"),
+        ("mist", "雾"),
+        ("fog", "雾"),
+        ("haze", "霾"),
+    ]
+
+    localized = cleaned
+    for source_phrase, target_phrase in replacements:
+        localized = re.sub(rf"\b{re.escape(source_phrase)}\b", target_phrase, localized, flags=re.IGNORECASE)
+
+    localized = re.sub(r"\bto\b", "转", localized, flags=re.IGNORECASE)
+    localized = re.sub(r"\band\b", "转", localized, flags=re.IGNORECASE)
+    localized = localized.replace("/", "转")
+    return normalize_whitespace(localized)
+
+
+def localize_weather_wind(value: str) -> str:
+    cleaned = normalize_weather_fact_value(value)
+    if not cleaned:
+        return ""
+
+    replacements = [
+        ("northwest wind", "西北风"),
+        ("northeast wind", "东北风"),
+        ("southwest wind", "西南风"),
+        ("southeast wind", "东南风"),
+        ("north wind", "北风"),
+        ("south wind", "南风"),
+        ("west wind", "西风"),
+        ("east wind", "东风"),
+    ]
+
+    localized = cleaned
+    for source_phrase, target_phrase in replacements:
+        localized = re.sub(rf"\b{re.escape(source_phrase)}\b", target_phrase, localized, flags=re.IGNORECASE)
+
+    localized = re.sub(r"(\d+(?:\s*-\s*\d+)?)\s*(?:level|force)\b", r"\1级", localized, flags=re.IGNORECASE)
+    localized = re.sub(r"\blevel\b", "级", localized, flags=re.IGNORECASE)
+    return normalize_whitespace(localized)
 
 
 def build_product_hunt_detail(*, title: str, source_text: str) -> str:

@@ -1091,9 +1091,21 @@ Design context for AI agents
         )
         self.assertNotIn("selection_bucket", selected_items["selected_items"][0])
 
-    def test_default_lane_item_limits_are_uniformly_ten(self) -> None:
+    def test_default_lane_item_limits_keep_weather_small_without_changing_main_lanes(self) -> None:
         self.assertTrue(DEFAULT_LANE_ITEM_LIMITS)
-        self.assertEqual(set(DEFAULT_LANE_ITEM_LIMITS.values()), {10})
+        self.assertEqual(DEFAULT_LANE_ITEM_LIMITS["weather-watch"], 1)
+        self.assertEqual(
+            {
+                lane_name: limit
+                for lane_name, limit in DEFAULT_LANE_ITEM_LIMITS.items()
+                if lane_name != "weather-watch"
+            },
+            {
+                lane_name: 10
+                for lane_name in DEFAULT_LANE_ITEM_LIMITS
+                if lane_name != "weather-watch"
+            },
+        )
 
     def test_build_selected_items_curates_noisy_x_lanes_into_reader_facing_subset(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1510,6 +1522,117 @@ MCP workspace for AI coding agents. Keeps design context, task history, and revi
                 ],
             },
         )
+
+    def test_weather_watch_round_trips_into_reader_facing_weather_section(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="weather-watch",
+                signal_text_by_name={
+                    "beijing-haidian.md": """---
+type: weather_snapshot
+lane: weather-watch
+source: weather
+entity_type: district
+entity_id: beijing-haidian
+title: Beijing Haidian Weather
+url: https://weather.example.com/beijing-haidian/2026-04-12
+fetched_at: 2026-04-12T05:30:00+0000
+created_at: '2026-04-12T05:00:00Z'
+---
+
+## Weather
+
+- Condition: 多云转晴
+- Temperature: 8°C - 20°C
+- Precipitation: 20%
+- Wind: 西北风 3-4级
+""",
+                },
+            )
+
+            collect_result = build_collect_result(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["weather-watch"],
+            )
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["weather-watch"],
+                per_lane_limit=1,
+            )
+            artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+
+        self.assertEqual(
+            selected_items["summary"]["lane_counts"],
+            [{"lane": "weather-watch", "selected_item_count": 1}],
+        )
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
+        self.assertEqual(artifact["source_lanes"], ["weather-watch"])
+        self.assertIn("## 北京海淀天气", artifact["body_markdown"])
+        self.assertNotIn("## weather-watch", artifact["body_markdown"])
+        self.assertIn("### 北京海淀天气", artifact["body_markdown"])
+
+        validate_report_markdown(
+            artifact["body_markdown"],
+            report_date=REPORT_DATE,
+            expected_section_titles=[FIXED_SECTION_TITLES["weather-watch"]],
+            expected_sources={
+                FIXED_SECTION_TITLES["weather-watch"]: [
+                    "https://weather.example.com/beijing-haidian/2026-04-12"
+                ]
+            },
+        )
+
+    def test_build_report_artifact_renders_weather_watch_as_concise_chinese_weather_bullet(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "weather-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "weather-watch",
+                    "title": "Beijing Haidian Weather",
+                    "source_url": "https://weather.example.com/beijing-haidian/2026-04-12",
+                    "signal_path": "weather-watch/2026-04-12/signals/beijing-haidian.md",
+                    "fetched_at": "2026-04-12T05:30:00+0000",
+                    "source_snippet": (
+                        "Condition: 多云 Temperature: 9°C - 21°C "
+                        "Precipitation: 20% Wind: 西北风 3-4级"
+                    ),
+                    "excerpt": "Condition: 多云 Temperature: 9°C - 21°C",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "weather-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("## 北京海淀天气", body_markdown)
+        self.assertIn("多云", body_markdown)
+        self.assertIn("9°C - 21°C", body_markdown)
+        self.assertIn("20%", body_markdown)
+        self.assertIn("西北风 3-4级", body_markdown)
+        self.assertNotIn("Condition:", body_markdown)
+        self.assertNotIn("Temperature:", body_markdown)
+        self.assertNotIn("Precipitation:", body_markdown)
+        self.assertNotIn("Wind:", body_markdown)
+        self.assertNotIn("该栏目收录", body_markdown)
 
     def test_hacker_news_lanes_round_trip_into_reader_facing_sections(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
