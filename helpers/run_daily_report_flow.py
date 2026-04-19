@@ -209,24 +209,112 @@ def run_collect_with_retry(*, lane: str, report_date: str, data_dir: Path, run_d
     }
 
 
+def _walk_json_scalars(payload: Any) -> list[tuple[str | None, Any]]:
+    if isinstance(payload, dict):
+        values: list[tuple[str | None, Any]] = []
+        for key, value in payload.items():
+            values.append((str(key), value))
+            values.extend(_walk_json_scalars(value))
+        return values
+    if isinstance(payload, list):
+        values: list[tuple[str | None, Any]] = []
+        for item in payload:
+            values.extend(_walk_json_scalars(item))
+        return values
+    return [(None, payload)]
+
+
+def _find_json_value(
+    payload: Any,
+    *,
+    exact_keys: set[str] | None = None,
+    key_fragments: tuple[str, ...] = (),
+    value_pattern: re.Pattern[str] | None = None,
+) -> str | None:
+    normalized_exact_keys = {key.lower() for key in exact_keys or set()}
+    for key, value in _walk_json_scalars(payload):
+        if value is None:
+            continue
+        text = str(value)
+        if value_pattern and value_pattern.search(text):
+            return text
+        if key is None:
+            continue
+        lowered = key.lower()
+        if normalized_exact_keys and lowered in normalized_exact_keys:
+            return text
+        if key_fragments and any(fragment in lowered for fragment in key_fragments):
+            return text
+    return None
+
+
+def _extract_doc_url(text: str) -> str | None:
+    match = re.search(r"(https://\S+)", text)
+    return match.group(1) if match else None
+
+
 def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, Any]:
-    cmd = ["feishu-cli", "doc", "import", str(report_path), "--title", title]
-    result = run_and_capture(cmd, run_dir / "logs" / "feishu-import.log")
+    report_path = report_path.resolve()
+    cmd = [
+        "lark-cli",
+        "docs",
+        "+create",
+        "--as",
+        "user",
+        "--title",
+        title,
+        "--markdown",
+        f"@./{report_path.name}",
+    ]
+    result = run_and_capture(cmd, run_dir / "logs" / "feishu-import.log", cwd=report_path.parent)
     if result.exit_code != 0:
         return {
             "status": "failed",
             "log": result.output_path,
             "error_summary": "Feishu doc import failed",
         }
-    text = f"{result.stdout}\n{result.stderr}"
-    match = re.search(r"链接:\s*(https://\S+)", text)
-    if match is None:
-        match = re.search(r"(https://\S+)", text)
-    return {
+
+    doc_url: str | None = None
+    doc_token: str | None = None
+    doc_id: str | None = None
+    stdout = result.stdout.strip()
+    if stdout:
+        try:
+            payload = json.loads(stdout)
+        except json.JSONDecodeError:
+            doc_url = _extract_doc_url(f"{result.stdout}\n{result.stderr}")
+        else:
+            doc_url = _find_json_value(
+                payload,
+                exact_keys={"url", "doc_url", "document_url", "link"},
+                value_pattern=re.compile(r"^https://"),
+            )
+            doc_token = _find_json_value(
+                payload,
+                exact_keys={"token", "doc_token", "document_token", "obj_token"},
+                key_fragments=("token",),
+            )
+            doc_id = _find_json_value(
+                payload,
+                exact_keys={"id", "doc_id", "document_id", "obj_id"},
+                key_fragments=("doc_id", "document_id", "_id"),
+            )
+            if doc_url is None:
+                doc_url = _extract_doc_url(stdout)
+    if doc_url is None:
+        doc_url = _extract_doc_url(f"{result.stdout}\n{result.stderr}")
+
+    response: dict[str, Any] = {
         "status": "succeeded",
         "log": result.output_path,
-        "doc_url": match.group(1) if match else None,
     }
+    if doc_url is not None:
+        response["doc_url"] = doc_url
+    if doc_token is not None:
+        response["doc_token"] = doc_token
+    if doc_id is not None:
+        response["doc_id"] = doc_id
+    return response
 
 
 def resolve_audio_settings(config: dict[str, Any]) -> dict[str, Any]:

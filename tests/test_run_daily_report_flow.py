@@ -319,6 +319,102 @@ def test_generate_audio_bundle_marks_minimax_quota_local_fallback_as_failed(monk
     assert convert_calls == 0
 
 
+def test_import_to_feishu_uses_lark_cli_and_parses_json_stdout(monkeypatch, tmp_path: Path) -> None:
+    report_path = _write_report(tmp_path)
+    seen: dict[str, object] = {}
+
+    def fake_run_and_capture(
+        command: list[str],
+        output_path: Path,
+        *,
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
+    ) -> flow.CommandResult:
+        del env
+        seen["command"] = command
+        seen["output_path"] = output_path
+        seen["cwd"] = cwd
+        return flow.CommandResult(
+            command=command,
+            exit_code=0,
+            output_path=str(output_path),
+            stdout=json.dumps(
+                {
+                    "url": "https://feishu.example/wiki/doc-url",
+                    "token": "doc-token-123",
+                    "id": "doc-id-456",
+                }
+            ),
+            stderr="",
+        )
+
+    monkeypatch.setattr(flow, "run_and_capture", fake_run_and_capture)
+
+    result = flow.import_to_feishu(
+        report_path=report_path,
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+    )
+
+    resolved_report_path = report_path.resolve()
+    assert seen["command"] == [
+        "lark-cli",
+        "docs",
+        "+create",
+        "--as",
+        "user",
+        "--title",
+        "AI 日报（2026-04-16）",
+        "--markdown",
+        f"@./{resolved_report_path.name}",
+    ]
+    assert seen["output_path"] == tmp_path / "logs" / "feishu-import.log"
+    assert seen["cwd"] == resolved_report_path.parent
+    assert result == {
+        "status": "succeeded",
+        "log": str(tmp_path / "logs" / "feishu-import.log"),
+        "doc_url": "https://feishu.example/wiki/doc-url",
+        "doc_token": "doc-token-123",
+        "doc_id": "doc-id-456",
+    }
+
+
+def test_import_to_feishu_falls_back_to_url_extraction_when_stdout_is_not_json(
+    monkeypatch, tmp_path: Path
+) -> None:
+    report_path = _write_report(tmp_path)
+
+    def fake_run_and_capture(
+        command: list[str],
+        output_path: Path,
+        *,
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
+    ) -> flow.CommandResult:
+        del command, cwd, env
+        return flow.CommandResult(
+            command=["lark-cli"],
+            exit_code=0,
+            output_path=str(output_path),
+            stdout="Created doc successfully: https://feishu.example/wiki/fallback-doc",
+            stderr="",
+        )
+
+    monkeypatch.setattr(flow, "run_and_capture", fake_run_and_capture)
+
+    result = flow.import_to_feishu(
+        report_path=report_path,
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+    )
+
+    assert result == {
+        "status": "succeeded",
+        "log": str(tmp_path / "logs" / "feishu-import.log"),
+        "doc_url": "https://feishu.example/wiki/fallback-doc",
+    }
+
+
 def test_send_audio_to_feishu_uses_native_api_success(monkeypatch, tmp_path: Path) -> None:
     opus_path = tmp_path / "feishu-native-audio-test.opus"
     opus_path.write_bytes(b"opus-audio-bytes")
@@ -330,7 +426,7 @@ def test_send_audio_to_feishu_uses_native_api_success(monkeypatch, tmp_path: Pat
     monkeypatch.setenv("ALT_FEISHU_CHANNEL", "oc_channel_from_config_env")
 
     def fail_if_cli_is_used(*args, **kwargs):
-        raise AssertionError("send_audio_to_feishu should not shell out to feishu-cli")
+        raise AssertionError("send_audio_to_feishu should not shell out to a CLI")
 
     monkeypatch.setattr(flow, "run_and_capture", fail_if_cli_is_used)
 
