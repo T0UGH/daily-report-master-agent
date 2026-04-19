@@ -67,6 +67,19 @@ READOUT_OFFICIAL_SOURCE_PREFIXES = {
     "claudeai": "Anthropic 官方提到",
     "openai": "OpenAI 这边提到",
 }
+READOUT_ENGLISH_PHRASE_REWRITES = {
+    "source maps": "源码映射",
+    "TypeScript": "类型脚本",
+    "model-agnostic": "模型无关",
+    "heartbeat": "心跳检测",
+    "shell": "命令行环境",
+    "Ultraplan beta": "云端草案规划测试版",
+    "design system": "设计系统",
+    "coding harness builder": "AI 编码测试框架构建器",
+    "self-hosted / proactive / local-first assistant": "可自托管、主动式、本地优先助手",
+    "coding AI model": "编程模型",
+    "markdown handoff": "markdown 交接文件",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -399,10 +412,33 @@ def _rewrite_social_source_identity(text: str) -> str:
     return f"有用户提到，{body}"
 
 
+def _strip_leading_english_title(text: str) -> str:
+    first_cjk_match = re.search(r"[\u4e00-\u9fff]", text)
+    if first_cjk_match is None:
+        return text
+    prefix = text[: first_cjk_match.start()].strip()
+    if len(prefix) < 24:
+        return text
+    if re.search(r"[A-Za-z]", prefix) is None:
+        return text
+    if re.search(r"[。！？]", prefix):
+        return text
+    return text[first_cjk_match.start() :].lstrip(" ：:,-—–")
+
+
+def _rewrite_readout_english_phrases(text: str) -> str:
+    rewritten = text
+    for raw, replacement in READOUT_ENGLISH_PHRASE_REWRITES.items():
+        rewritten = rewritten.replace(raw, replacement)
+    return rewritten
+
+
 def _to_spoken_sentence(text: str) -> str:
     cleaned = _clean_readout_fragment(text)
     if not cleaned:
         return ""
+    cleaned = _strip_leading_english_title(cleaned)
+    cleaned = _rewrite_readout_english_phrases(cleaned)
     cleaned = _rewrite_social_source_identity(cleaned)
     cleaned = re.sub(r"^@[A-Za-z0-9_]+(?:\s+#\d+)?\s*", "", cleaned)
     cleaned = re.sub(r"\b([A-Za-z0-9_.+-]+(?:\s+[A-Za-z0-9_.+-]+){0,3})\s+\1\b", r"\1", cleaned)

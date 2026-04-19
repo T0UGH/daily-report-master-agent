@@ -134,6 +134,49 @@ def test_to_spoken_sentence_preserves_body_content_when_rewriting_social_source(
     assert body in text
 
 
+def test_build_readout_text_rewrites_long_english_headline_fragments_into_chinese() -> None:
+    report_markdown = (
+        "# AI Agent 日报（2026-04-19）\n\n"
+        "## Reddit 社区\n"
+        "- **I replaced chaotic solo Claude coding with a simple 3-agent team "
+        "(Architect + Builder + Reviewer) — it's stupidly effective and token-efficient** "
+        "这条帖子把 Architect、Builder、Reviewer 拆成三个角色，并强调 markdown handoff。\n\n"
+        "## Claude Code\n"
+        "- **Claude Code v2.1.92 introduces Ultraplan beta — source maps for TypeScript "
+        "model-agnostic heartbeat shell design system coding harness builder "
+        "self-hosted / proactive / local-first assistant coding AI model** "
+        "这次更新把 source maps、TypeScript、model-agnostic、heartbeat、shell、Ultraplan beta、"
+        "design system、coding harness builder、self-hosted / proactive / local-first assistant "
+        "和 coding AI model 这些说法一起带进播报。\n"
+    )
+
+    text = flow.build_readout_text(report_markdown)
+
+    assert "I replaced chaotic solo Claude coding" not in text
+    assert "introduces Ultraplan beta" not in text
+    assert "source maps" not in text
+    assert "TypeScript" not in text
+    assert "model-agnostic" not in text
+    assert "heartbeat" not in text
+    assert "shell" not in text
+    assert "Ultraplan beta" not in text
+    assert "design system" not in text
+    assert "coding harness builder" not in text
+    assert "self-hosted / proactive / local-first assistant" not in text
+    assert "coding AI model" not in text
+    assert "这条帖子把 Architect、Builder、Reviewer 拆成三个角色，并强调 markdown 交接文件。" in text
+    assert "云端草案规划测试版" in text
+    assert "源码映射" in text
+    assert "类型脚本" in text
+    assert "模型无关" in text
+    assert "心跳检测" in text
+    assert "命令行环境" in text
+    assert "设计系统" in text
+    assert "AI 编码测试框架构建器" in text
+    assert "可自托管、主动式、本地优先助手" in text
+    assert "编程模型" in text
+
+
 def test_generate_audio_bundle_creates_missing_run_dir_before_writing_outputs(monkeypatch, tmp_path: Path) -> None:
     run_dir = tmp_path / "artifacts" / "2026-04-16"
     report_markdown = (

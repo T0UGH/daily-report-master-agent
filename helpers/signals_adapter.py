@@ -2215,11 +2215,12 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
         front_matter={},
     )
     source_text = raw_source_snippet or raw_excerpt
-    title = build_reader_title(
+    base_title = build_reader_title(
         lane_name=lane_name,
         raw_title=display_title or normalize_whitespace(item.get("editor_headline", "")) or fallback_title,
         source_text=source_text,
     )
+    title = base_title
     if lane_name == "reddit-watch":
         title = prefix_reddit_selection_bucket_title(
             title=title,
@@ -2244,7 +2245,7 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
         excerpt=ensure_chinese_sentence(excerpt or f"该栏目收录 {useful_item_count} 条有用内容。"),
         source_url=source_url,
         link_label=LINK_LABELS[lane_name],
-        source_title=display_title,
+        source_title=base_title or display_title,
         sort_key=(str(fetched_at), str(signal_path)),
     )
 
@@ -2276,6 +2277,19 @@ def build_reader_title(*, lane_name: str, raw_title: str, source_text: str) -> s
             descriptor = build_generic_x_descriptor(source_text)
         if descriptor:
             return f"{cleaned_title}：{descriptor}"
+    is_long_english_headline = (
+        looks_like_english_text(cleaned_title)
+        and (
+            len(cleaned_title) >= 48
+            or cleaned_title.count(" ") >= 7
+            or "—" in cleaned_title
+            or "(" in cleaned_title
+        )
+    )
+    if lane_name in {"reddit-watch", "hacker-news-watch", "hacker-news-search-watch", "product-hunt-watch"} and is_long_english_headline:
+        descriptor, _ = build_known_signal_copy(lane_name=lane_name, title=cleaned_title, source_text=source_text)
+        if descriptor:
+            return descriptor
     return cleaned_title
 
 
@@ -3897,12 +3911,12 @@ def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, ma
         elif cleaned_query:
             facts.append(f"搜索词「{cleaned_query}」命中的这条 HN 讨论不是泛聊概念，而是在讲更具体的工程做法")
         elif cleaned_title and focus:
-            facts.append(f"`{cleaned_title}` 这条 HN 搜索命中把焦点放在 {focus}")
+            facts.append(f"这条 HN 搜索命中把焦点放在 {focus}")
 
         if any(topic in topics for topic in {"tmux", "git worktree", "review checklist", "agent 交接"}):
             facts.append("它把会话切分、代码隔离和评审交接串成了同一条 workflow")
         elif cleaned_title:
-            facts.append(f"`{cleaned_title}` 这条命中给出了可复述的工程细节，不只是一个标题")
+            facts.append("这条命中给出了可复述的工程细节，不只是一个标题")
 
     return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 
@@ -4011,7 +4025,8 @@ def build_reddit_detail(*, title: str, source_text: str) -> str:
 
 def build_known_signal_copy(*, lane_name: str, title: str, source_text: str) -> tuple[str, str]:
     normalized = normalize_whitespace(source_text)
-    lowered = normalized.lower()
+    combined = normalize_whitespace(f"{title} {source_text}")
+    lowered = combined.lower()
 
     if "agent harness" in lowered and "blog" in lowered:
         return (
@@ -4057,6 +4072,16 @@ def build_known_signal_copy(*, lane_name: str, title: str, source_text: str) -> 
         return (
             "三角色协作流程",
             "帖子把 Claude coding 拆成 Architect、Builder、Reviewer 三个角色，并用 markdown handoff 串起计划、实现和审核。",
+        )
+    if "swarm orchestrator" in lowered and "verification layer" in lowered:
+        return (
+            "Swarm Orchestrator 验证层",
+            "这条讨论把重点放在验证层：通过一层 coordinator 给 AI coding agents 补质量门槛和治理规则。",
+        )
+    if "agent memory" in lowered and "powerful gui" in lowered and "crispy" in lowered:
+        return (
+            "Crispy：给 Claude Code / Codex 加记忆层和图形界面",
+            "Crispy 想补的是终端形态的几个痛点：记忆检索、模型切换和图形化控制面。",
         )
     if "swarm" in lowered and "coordinator" in lowered and "codex" in lowered and "gemini" in lowered:
         return (

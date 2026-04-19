@@ -2328,9 +2328,7 @@ matched_query: Claude Code
         def body_line_for(title: str) -> str:
             return next(line for line in body_markdown.splitlines() if f"**{title}**" in line)
 
-        reddit_line = body_line_for(
-            "I replaced chaotic solo Claude coding with a simple 3-agent team (Architect + Builder + Reviewer) — it's stupidly effective and token-efficient"
-        )
+        reddit_line = body_line_for("三角色协作流程")
         self.assertIn("Architect", reddit_line)
         self.assertIn("Builder", reddit_line)
         self.assertIn("Reviewer", reddit_line)
@@ -4681,6 +4679,118 @@ matched_query: Claude Code
         self.assertIn("流动性 107,019.2", detail)
         self.assertIn("本周下跌 1.6%", detail)
         self.assertNotIn("Will DeepSeek have the best Coding AI model", detail)
+
+    def test_build_report_artifact_rewrites_long_english_titles_for_reader_facing_lanes(self) -> None:
+        collect_result = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "reddit-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "hacker-news-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "hacker-news-search-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 4, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": REPORT_DATE,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "reddit-watch",
+                    "title": (
+                        "I replaced chaotic solo Claude coding with a simple 3-agent team "
+                        "(Architect + Builder + Reviewer) — it's stupidly effective and token-efficient"
+                    ),
+                    "source_url": "https://www.reddit.com/r/ClaudeAI/comments/example/review/",
+                    "signal_path": "reddit-watch/2026-04-12/signals/review.md",
+                    "fetched_at": "2026-04-12T01:23:53+0000",
+                    "source_snippet": (
+                        "The workflow splits Architect, Builder, and Reviewer with markdown handoff files "
+                        "and focuses on token efficiency."
+                    ),
+                    "excerpt": (
+                        "The workflow splits Architect, Builder, and Reviewer with markdown handoff files "
+                        "and focuses on token efficiency."
+                    ),
+                },
+                {
+                    "lane": "hacker-news-watch",
+                    "title": "CLI tools that actually work well with AI coding agents (Claude Code, Codex)",
+                    "source_url": "https://news.ycombinator.com/item?id=44000021",
+                    "signal_path": "hacker-news-watch/2026-04-12/signals/cli-tools.md",
+                    "fetched_at": "2026-04-12T01:24:53+0000",
+                    "source_snippet": (
+                        "CLI flags won't block on a prompt, structured JSON output matters, and review "
+                        "checklist handoff is part of the workflow."
+                    ),
+                    "excerpt": (
+                        "CLI flags won't block on a prompt, structured JSON output matters, and review "
+                        "checklist handoff is part of the workflow."
+                    ),
+                },
+                {
+                    "lane": "hacker-news-search-watch",
+                    "title": (
+                        "Swarm Orchestrator v4.1.0, verification layer for AI coding agents "
+                        "(Copilot CLI, Claude Code, Codex)"
+                    ),
+                    "source_url": "https://news.ycombinator.com/item?id=44000022",
+                    "signal_path": "hacker-news-search-watch/2026-04-12/signals/swarm-orchestrator.md",
+                    "fetched_at": "2026-04-12T01:25:53+0000",
+                    "matched_query": "Claude Code",
+                    "source_snippet": (
+                        "A verification layer for AI coding agents across Copilot CLI, Claude Code, and Codex."
+                    ),
+                    "excerpt": (
+                        "A verification layer for AI coding agents across Copilot CLI, Claude Code, and Codex."
+                    ),
+                },
+                {
+                    "lane": "product-hunt-watch",
+                    "title": (
+                        "Crispy — VS Code extension with Agent Memory that wraps Claude Code and Codex "
+                        "with a Powerful GUI"
+                    ),
+                    "source_url": "https://www.producthunt.com/posts/crispy",
+                    "signal_path": "product-hunt-watch/2026-04-12/signals/crispy.md",
+                    "fetched_at": "2026-04-12T01:26:53+0000",
+                    "source_snippet": (
+                        "Agent Memory and a GUI wrap Claude Code and Codex inside VS Code for team workflows. "
+                        "Votes: 42 Comments: 7 Topic: Developer Tools"
+                    ),
+                    "excerpt": (
+                        "Agent Memory and a GUI wrap Claude Code and Codex inside VS Code for team workflows. "
+                        "Votes: 42 Comments: 7 Topic: Developer Tools"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 4,
+                "lane_counts": [
+                    {"lane": "reddit-watch", "selected_item_count": 1},
+                    {"lane": "hacker-news-watch", "selected_item_count": 1},
+                    {"lane": "hacker-news-search-watch", "selected_item_count": 1},
+                    {"lane": "product-hunt-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("- **三角色协作流程**", body_markdown)
+        self.assertIn("- **适合 agent 的 CLI 工具**", body_markdown)
+        self.assertIn("- **Swarm Orchestrator 验证层**", body_markdown)
+        self.assertIn("- **Crispy：给 Claude Code / Codex 加记忆层和图形界面**", body_markdown)
+        self.assertIn("- 三角色协作流程 — https://www.reddit.com/r/ClaudeAI/comments/example/review/", body_markdown)
+        self.assertIn("- 适合 agent 的 CLI 工具 — https://news.ycombinator.com/item?id=44000021", body_markdown)
+        self.assertIn("- Swarm Orchestrator 验证层 — https://news.ycombinator.com/item?id=44000022", body_markdown)
+        self.assertIn("- Crispy：给 Claude Code / Codex 加记忆层和图形界面 — https://www.producthunt.com/posts/crispy", body_markdown)
+        self.assertNotIn("I replaced chaotic solo Claude coding with a simple 3-agent team", body_markdown)
+        self.assertNotIn("CLI tools that actually work well with AI coding agents", body_markdown)
+        self.assertNotIn("Swarm Orchestrator v4.1.0, verification layer for AI coding agents", body_markdown)
+        self.assertNotIn("VS Code extension with Agent Memory that wraps Claude Code and Codex with a Powerful GUI", body_markdown)
 
 
 if __name__ == "__main__":
