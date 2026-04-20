@@ -96,6 +96,44 @@ class ReportOutputContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bullet"):
             validate_single_section_report(bad_markdown)
 
+    def test_validator_rejects_placeholder_count_copy_in_body_line(self) -> None:
+        bad_markdown = build_report(
+            f"## {SECTION_TITLE}\n- 该栏目收录 32 条有用内容。[原帖]({SOURCE_URL})"
+        )
+        with self.assertRaisesRegex(ValueError, "占位统计"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_generic_source_fallback_in_body_line(self) -> None:
+        bad_markdown = build_report(
+            f"## {SECTION_TITLE}\n- 原文围绕 agent workflow 展开，具体变化见来源。[原帖]({SOURCE_URL})"
+        )
+        with self.assertRaisesRegex(ValueError, "兜底句"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_generic_github_fallback_in_body_line(self) -> None:
+        bad_markdown = build_report(
+            f"## {SECTION_TITLE}\n- 项目说明主要在讲它的定位、工作流和使用场景。[GitHub]({SOURCE_URL})"
+        )
+        with self.assertRaisesRegex(ValueError, "GitHub/README"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_english_heavy_explanatory_leakage(self) -> None:
+        bad_markdown = build_report(
+            "## {section_title}\n"
+            "- This post explains the agent orchestration workflow for tool routing and memory management in production."
+            "[原帖]({source_url})".format(section_title=SECTION_TITLE, source_url=SOURCE_URL)
+        )
+        with self.assertRaisesRegex(ValueError, "英文解释泄漏"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_allows_mixed_language_technical_line_with_chinese_grounding(self) -> None:
+        markdown = build_report(
+            "## {section_title}\n"
+            "- Codex CLI v1.2 新增 session replay 导出，命令是 `codex replay --latest`，并补了 tool routing trace。"
+            "[Release]({source_url})".format(section_title=SECTION_TITLE, source_url=SOURCE_URL)
+        )
+        validate_single_section_report(markdown)
+
     def test_fixture_schema_is_minimal_json(self) -> None:
         case_path = FIXTURE_ROOT / "empty-section-omission.json"
         case_data = json.loads(case_path.read_text(encoding="utf-8"))

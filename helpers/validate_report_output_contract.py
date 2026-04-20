@@ -41,6 +41,7 @@ READER_SECTION_ORDER = [FIXED_SECTION_TITLES[lane] for lane in FIXED_SECTION_ORD
 READER_SECTION_SET = set(READER_SECTION_ORDER)
 LEGACY_MARKERS = ("今日要点", "## 正文", "编辑结论", "### Sources")
 MARKDOWN_LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
+MARKDOWN_LINK_INLINE_RE = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
 PLAIN_URL_RE = re.compile(r"https?://[^\s)>]+")
 CITATION_WRAPPER_PATTERNS = (
     re.compile(r"<\s*/?\s*citation\b", re.IGNORECASE),
@@ -49,6 +50,20 @@ CITATION_WRAPPER_PATTERNS = (
 )
 BULLET_ITEM_RE = re.compile(r"^[-*+]\s+\S")
 BULLET_CONTINUATION_RE = re.compile(r"^(?: {2,}|\t+)\S")
+INLINE_CODE_RE = re.compile(r"`[^`]*`")
+CHINESE_CHAR_RE = re.compile(r"[\u4e00-\u9fff]")
+ENGLISH_WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9+./_-]*")
+LONG_ENGLISH_PHRASE_RE = re.compile(r"\b(?:[A-Za-z][A-Za-z0-9+./_-]*\s+){5,}[A-Za-z][A-Za-z0-9+./_-]*\b")
+PLACEHOLDER_COUNT_COPY_RE = re.compile(
+    r"^(?:该|本|此)栏目(?:共)?(?:收录|整理|汇总|包含)\s*\d+\s*条(?:有用)?(?:内容|信息|信号|动态|更新)(?:[。！!？?]|$)"
+)
+GENERIC_SOURCE_FALLBACK_RE = re.compile(
+    r"^原文围绕.+(?:展开|讨论|介绍|说明)[，,].*(?:具体变化|详细变化|具体内容|更多细节).*(?:见来源|见原文|详见来源|详见原文)(?:[。！!？?]|$)"
+)
+GENERIC_GITHUB_FALLBACK_RE = re.compile(
+    r"^(?:项目|仓库|README|readme|项目说明|仓库说明)(?:主要)?(?:在讲|介绍)(?:它的)?"
+    r"[^。]*(?:定位|目标定位)[^。]*(?:工作流|workflow)[^。]*(?:使用场景|场景)[^。]*(?:[。！!？?]|$)"
+)
 
 
 def load_json(path: Path) -> Any:
@@ -219,13 +234,61 @@ def validate_section_body_lines(title: str, lines: list[str]) -> None:
         if BULLET_ITEM_RE.match(raw_line):
             saw_bullet_item = True
             inside_bullet_item = True
+            validate_body_line_content_quality(title, raw_line)
             continue
         require(
             inside_bullet_item and BULLET_CONTINUATION_RE.match(raw_line) is not None,
             f"{title} 的正文必须使用 bullet-style reader items，不允许散文段落",
         )
+        validate_body_line_content_quality(title, raw_line)
 
     require(saw_bullet_item, f"{title} 的正文必须使用 bullet-style reader items，不允许散文段落")
+
+
+def validate_body_line_content_quality(title: str, raw_line: str) -> None:
+    normalized_line = normalize_body_line_for_quality(raw_line)
+    if not normalized_line:
+        return
+
+    require(
+        PLACEHOLDER_COUNT_COPY_RE.match(normalized_line) is None,
+        f"{title} 的正文条目不得使用占位统计文案",
+    )
+    require(
+        GENERIC_SOURCE_FALLBACK_RE.match(normalized_line) is None,
+        f"{title} 的正文条目不得使用“围绕 X 展开，具体变化见来源”式兜底句",
+    )
+    require(
+        GENERIC_GITHUB_FALLBACK_RE.match(normalized_line) is None,
+        f"{title} 的正文条目不得使用 GitHub/README 泛化兜底句",
+    )
+    require(
+        not is_english_heavy_explanatory_leakage(normalized_line),
+        f"{title} 的正文条目存在英文解释泄漏，必须用中文交代核心信息",
+    )
+
+
+def normalize_body_line_for_quality(raw_line: str) -> str:
+    line = raw_line
+    if BULLET_ITEM_RE.match(line):
+        line = re.sub(r"^[-*+]\s+", "", line)
+    else:
+        line = line.lstrip()
+
+    line = INLINE_CODE_RE.sub(" ", line)
+    line = MARKDOWN_LINK_INLINE_RE.sub(" ", line)
+    line = PLAIN_URL_RE.sub(" ", line)
+    line = re.sub(r"\s+", " ", line)
+    return line.strip()
+
+
+def is_english_heavy_explanatory_leakage(line: str) -> bool:
+    if LONG_ENGLISH_PHRASE_RE.search(line) is None:
+        return False
+
+    chinese_char_count = len(CHINESE_CHAR_RE.findall(line))
+    english_word_count = len(ENGLISH_WORD_RE.findall(line))
+    return english_word_count >= 8 and chinese_char_count < 8
 
 
 def extract_body_sources(sections: list[tuple[str, list[str]]]) -> dict[str, list[str]]:
