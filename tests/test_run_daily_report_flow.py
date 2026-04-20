@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 from pathlib import Path
+
+import pytest
 
 from helpers import run_daily_report_flow as flow
 
@@ -705,3 +708,76 @@ def test_publish_report_bundle_fails_when_doc_import_fails(monkeypatch, tmp_path
     assert result["audio_status"] == "skipped"
     assert result["error_summary"] == "Feishu doc import failed"
     assert send_calls == 0
+
+
+def test_main_publish_path_validates_markdown_before_publish_report_bundle(
+    monkeypatch, tmp_path: Path
+) -> None:
+    invalid_report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "## X 推荐流\n"
+        "- 该栏目收录 32 条有用内容。[原帖](https://example.com/x)\n\n"
+        "## 来源\n"
+        "### X 推荐流\n"
+        "- https://example.com/x\n"
+    )
+    publish_calls = 0
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-16",
+            config=tmp_path / "runtime-config.json",
+            skip_collect=True,
+            publish=True,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "load_runtime_config",
+        lambda _path: {
+            "runtime": {"timezone": "Asia/Shanghai"},
+            "paths": {
+                "signals_root": str(tmp_path / "signals" / "snapshots"),
+                "runtime_root": str(tmp_path / "runtime"),
+            },
+            "reader_facing": {"fixed_section_order": ["x-feed"]},
+            "repo_root": str(tmp_path),
+        },
+    )
+    monkeypatch.setattr(flow, "expand_path", lambda value: Path(value))
+    monkeypatch.setattr(flow, "is_path_writable", lambda _path: True)
+    monkeypatch.setattr(flow, "build_collect_result", lambda **_: {"summary": {"useful_item_count": 1}})
+    monkeypatch.setattr(
+        flow,
+        "resolve_previous_selected_items_path",
+        lambda **_: tmp_path / "previous-selected-items.json",
+    )
+    monkeypatch.setattr(flow, "resolve_lane_item_limits", lambda _config: {"x-feed": 1})
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 1}],
+            }
+        },
+    )
+    monkeypatch.setattr(flow, "build_validation_bundle", lambda **_: {"status": "ok"})
+    monkeypatch.setattr(flow, "build_report_artifact", lambda **_: {"body_markdown": invalid_report_markdown})
+
+    def fake_publish_report_bundle(**_: object) -> dict[str, str]:
+        nonlocal publish_calls
+        publish_calls += 1
+        return {"status": "succeeded"}
+
+    monkeypatch.setattr(flow, "publish_report_bundle", fake_publish_report_bundle)
+
+    with pytest.raises(ValueError, match="X 推荐流 的正文条目不得使用占位统计文案"):
+        flow.main()
+
+    assert publish_calls == 0
