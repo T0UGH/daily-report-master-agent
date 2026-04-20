@@ -42,6 +42,13 @@ READER_SECTION_SET = set(READER_SECTION_ORDER)
 LEGACY_MARKERS = ("今日要点", "## 正文", "编辑结论", "### Sources")
 MARKDOWN_LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
 PLAIN_URL_RE = re.compile(r"https?://[^\s)>]+")
+CITATION_WRAPPER_PATTERNS = (
+    re.compile(r"<\s*/?\s*citation\b", re.IGNORECASE),
+    re.compile(r"```+\s*citation\b", re.IGNORECASE),
+    re.compile(r":::\s*citation\b", re.IGNORECASE),
+)
+BULLET_ITEM_RE = re.compile(r"^[-*+]\s+\S")
+BULLET_CONTINUATION_RE = re.compile(r"^(?: {2,}|\t+)\S")
 
 
 def load_json(path: Path) -> Any:
@@ -63,10 +70,15 @@ def validate_report_markdown(
 ) -> None:
     lines = markdown.splitlines()
     first_content_line = next((line.strip() for line in lines if line.strip()), "")
-    require(first_content_line == f"# AI Agent 日报（{report_date}）", "标题必须固定为 AI Agent 日报（YYYY-MM-DD）")
+    title_line = f"# AI Agent 日报（{report_date}）"
+
+    require(markdown.startswith(title_line), "标题必须从响应开头开始，第一行必须是 AI Agent 日报（YYYY-MM-DD）")
+    require(first_content_line == title_line, "标题必须固定为 AI Agent 日报（YYYY-MM-DD）")
 
     for marker in LEGACY_MARKERS:
         require(marker not in markdown, f"最终 Markdown 不得包含旧结构: {marker}")
+
+    validate_no_citation_wrappers(markdown)
 
     appendix_index = find_line_index(lines, "## 来源")
     require(appendix_index is not None, "最终 Markdown 必须包含统一的 ## 来源")
@@ -173,7 +185,7 @@ def parse_h2_sections(lines: list[str]) -> list[tuple[str, list[str]]]:
         if current_title is not None:
             current_lines.append(line)
         else:
-            require(not line.strip(), "标题后必须直接进入正文栏目，不允许导语或其他前置块")
+            require(not line.strip(), "标题后必须直接进入第一个正文栏目，不允许状态、导语或其他前置文本")
 
     if current_title is not None:
         finalize_section(sections, current_title, current_lines)
@@ -185,7 +197,35 @@ def parse_h2_sections(lines: list[str]) -> list[tuple[str, list[str]]]:
 def finalize_section(sections: list[tuple[str, list[str]]], title: str, lines: list[str]) -> None:
     validate_reader_section_title(title, field_name="section_title")
     require(any(line.strip() for line in lines), f"{title} 不能为空栏目")
+    validate_section_body_lines(title, lines)
     sections.append((title, lines))
+
+
+def validate_no_citation_wrappers(markdown: str) -> None:
+    for pattern in CITATION_WRAPPER_PATTERNS:
+        require(
+            pattern.search(markdown) is None,
+            "最终 Markdown 不得包含 citation 样式标签或代码块包裹",
+        )
+
+
+def validate_section_body_lines(title: str, lines: list[str]) -> None:
+    saw_bullet_item = False
+    inside_bullet_item = False
+
+    for raw_line in lines:
+        if not raw_line.strip():
+            continue
+        if BULLET_ITEM_RE.match(raw_line):
+            saw_bullet_item = True
+            inside_bullet_item = True
+            continue
+        require(
+            inside_bullet_item and BULLET_CONTINUATION_RE.match(raw_line) is not None,
+            f"{title} 的正文必须使用 bullet-style reader items，不允许散文段落",
+        )
+
+    require(saw_bullet_item, f"{title} 的正文必须使用 bullet-style reader items，不允许散文段落")
 
 
 def extract_body_sources(sections: list[tuple[str, list[str]]]) -> dict[str, list[str]]:

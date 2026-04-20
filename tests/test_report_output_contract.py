@@ -11,6 +11,28 @@ from helpers.validate_report_output_contract import (
 
 
 FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "report-output-contract"
+REPORT_DATE = "2026-04-12"
+SECTION_TITLE = FIXED_SECTION_TITLES["x-feed"]
+SOURCE_URL = "https://x.com/example/status/1"
+
+
+def build_report(body: str, *, prefix: str = "") -> str:
+    return (
+        f"{prefix}# AI Agent 日报（{REPORT_DATE}）\n\n"
+        f"{body}\n\n"
+        "## 来源\n\n"
+        f"### {SECTION_TITLE}\n"
+        f"- 示例 — {SOURCE_URL}\n"
+    )
+
+
+def validate_single_section_report(markdown: str) -> None:
+    validate_report_markdown(
+        markdown,
+        report_date=REPORT_DATE,
+        expected_section_titles=[SECTION_TITLE],
+        expected_sources={SECTION_TITLE: [SOURCE_URL]},
+    )
 
 
 class ReportOutputContractTest(unittest.TestCase):
@@ -37,12 +59,42 @@ class ReportOutputContractTest(unittest.TestCase):
 - 示例 — https://x.com/example/status/1
 """
         with self.assertRaisesRegex(ValueError, "今日要点"):
-            validate_report_markdown(
-                bad_markdown,
-                report_date="2026-04-12",
-                expected_section_titles=[FIXED_SECTION_TITLES["x-feed"]],
-                expected_sources={FIXED_SECTION_TITLES["x-feed"]: ["https://x.com/example/status/1"]},
-            )
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_leading_content_before_title_start(self) -> None:
+        bad_markdown = build_report(
+            f"## {SECTION_TITLE}\n- 有效条目。[原帖]({SOURCE_URL})",
+            prefix="\n",
+        )
+        with self.assertRaisesRegex(ValueError, "响应开头"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_status_text_between_title_and_first_section(self) -> None:
+        bad_markdown = build_report(
+            "生成状态：已完成\n\n"
+            f"## {SECTION_TITLE}\n"
+            f"- 有效条目。[原帖]({SOURCE_URL})"
+        )
+        with self.assertRaisesRegex(ValueError, "标题后必须直接进入第一个正文栏目"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_citation_wrappers(self) -> None:
+        bad_bodies = [
+            f"## {SECTION_TITLE}\n<citation>\n- 有效条目。[原帖]({SOURCE_URL})\n</citation>",
+            f"## {SECTION_TITLE}\n```citation\n- 有效条目。[原帖]({SOURCE_URL})\n```",
+        ]
+
+        for body in bad_bodies:
+            with self.subTest(body=body):
+                with self.assertRaisesRegex(ValueError, "citation"):
+                    validate_single_section_report(build_report(body))
+
+    def test_validator_rejects_prose_only_body_section(self) -> None:
+        bad_markdown = build_report(
+            f"## {SECTION_TITLE}\n这是一整段正文摘要，但不是 bullet reader item。[原帖]({SOURCE_URL})"
+        )
+        with self.assertRaisesRegex(ValueError, "bullet"):
+            validate_single_section_report(bad_markdown)
 
     def test_fixture_schema_is_minimal_json(self) -> None:
         case_path = FIXTURE_ROOT / "empty-section-omission.json"
