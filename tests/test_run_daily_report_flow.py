@@ -794,3 +794,91 @@ def test_main_publish_path_blocks_and_records_contract_failure_before_publish(
         "status": "skipped",
         "reason": "report_output_contract_failed",
     }
+    assert run_summary["ops_notice"]["status"] == "generated"
+    ops_notice_path = Path(run_summary["ops_notice"]["path"])
+    assert ops_notice_path.exists()
+    ops_notice = ops_notice_path.read_text(encoding="utf-8")
+    assert "- 状态：blocked" in ops_notice
+    assert "reader-facing 成稿未通过输出合同校验：X 推荐流 的正文条目不得使用占位统计文案" in ops_notice
+
+
+def test_main_writes_ops_notice_when_publish_degrades(monkeypatch, tmp_path: Path) -> None:
+    valid_report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "## X 推荐流\n"
+        "- Claude Code 新增了 review gate，并补了失败原因。[原帖](https://example.com/x)\n\n"
+        "## 来源\n"
+        "### X 推荐流\n"
+        "- https://example.com/x\n"
+    )
+    runtime_root = tmp_path / "runtime"
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-16",
+            config=tmp_path / "runtime-config.json",
+            skip_collect=True,
+            publish=True,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "load_runtime_config",
+        lambda _path: {
+            "runtime": {"timezone": "Asia/Shanghai"},
+            "paths": {
+                "signals_root": str(tmp_path / "signals" / "snapshots"),
+                "runtime_root": str(runtime_root),
+            },
+            "reader_facing": {"fixed_section_order": ["x-feed"]},
+            "repo_root": str(tmp_path),
+        },
+    )
+    monkeypatch.setattr(flow, "expand_path", lambda value: Path(value))
+    monkeypatch.setattr(flow, "is_path_writable", lambda _path: True)
+    monkeypatch.setattr(flow, "build_collect_result", lambda **_: {"summary": {"useful_item_count": 1}})
+    monkeypatch.setattr(
+        flow,
+        "resolve_previous_selected_items_path",
+        lambda **_: tmp_path / "previous-selected-items.json",
+    )
+    monkeypatch.setattr(flow, "resolve_lane_item_limits", lambda _config: {"x-feed": 1})
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 1}],
+            }
+        },
+    )
+    monkeypatch.setattr(flow, "build_validation_bundle", lambda **_: {"status": "ok"})
+    monkeypatch.setattr(flow, "build_report_artifact", lambda **_: {"body_markdown": valid_report_markdown})
+    monkeypatch.setattr(
+        flow,
+        "publish_report_bundle",
+        lambda **_: {
+            "status": "degraded",
+            "doc_url": "https://example.com/doc",
+            "error_summary": "Feishu audio send failed",
+        },
+    )
+
+    exit_code = flow.main()
+
+    run_summary = json.loads(
+        (runtime_root / "2026-04-16" / "run-summary.json").read_text(encoding="utf-8")
+    )
+
+    assert exit_code == 0
+    assert run_summary["publish"]["status"] == "degraded"
+    assert run_summary["ops_notice"]["status"] == "generated"
+    ops_notice = Path(run_summary["ops_notice"]["path"]).read_text(encoding="utf-8")
+    assert "- 状态：degraded" in ops_notice
+    assert "- 原因：Feishu audio send failed" in ops_notice
+    assert "- 发布引用：https://example.com/doc" in ops_notice

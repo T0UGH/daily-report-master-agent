@@ -80,6 +80,7 @@ READOUT_ENGLISH_PHRASE_REWRITES = {
     "coding AI model": "编程模型",
     "markdown handoff": "markdown 交接文件",
 }
+OPS_NOTICE_TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "ops-notice.md"
 
 
 def parse_args() -> argparse.Namespace:
@@ -266,8 +267,73 @@ def _extract_doc_url(text: str) -> str | None:
     return match.group(1) if match else None
 
 
+def summarize_ops_reason(summary: dict[str, Any]) -> str:
+    reason = str(summary.get("reason") or "").strip()
+    validation_error = str(summary.get("validation_error") or "").strip()
+    publish = summary.get("publish") or {}
+
+    if reason == "report_output_contract_failed":
+        if validation_error:
+            return f"reader-facing 成稿未通过输出合同校验：{validation_error}"
+        return "reader-facing 成稿未通过输出合同校验"
+    if reason == "no usable content after collect":
+        return "收集结束后没有可用内容，日报未成立"
+    if publish.get("status") == "failed":
+        return str(publish.get("error_summary") or "发布失败")
+    if publish.get("status") == "degraded":
+        return str(publish.get("error_summary") or "发布降级")
+    if reason:
+        return reason
+    return "运行结果异常，请检查 run-summary.json 和相关日志"
+
+
+def build_ops_notice_markdown(summary: dict[str, Any]) -> str:
+    try:
+        template = OPS_NOTICE_TEMPLATE_PATH.read_text(encoding="utf-8")
+    except OSError:
+        template = (
+            "# 日报状态通知\n\n"
+            "- 日期：{{report_date}}\n"
+            "- 状态：{{verdict_status}}\n"
+            "- 原因：{{reason_summary}}\n"
+            "- 发布引用：{{publish_reference}}\n"
+            "- 归档信息：{{archive_summary}}\n"
+        )
+
+    publish = summary.get("publish") or {}
+    verdict_status = str(summary.get("decision") or publish.get("status") or "unknown")
+    if verdict_status == "generated" and publish.get("status") in {"degraded", "failed"}:
+        verdict_status = str(publish.get("status"))
+    publish_reference = str(publish.get("doc_url") or publish.get("reference") or "无")
+    archive_summary = str((summary.get("archive") or {}).get("summary") or "未归档")
+    reason_summary = summarize_ops_reason(summary)
+    replacements = {
+        "{{report_date}}": str(summary.get("report_date") or ""),
+        "{{verdict_status}}": verdict_status,
+        "{{reason_summary}}": reason_summary,
+        "{{publish_reference}}": publish_reference,
+        "{{archive_summary}}": archive_summary,
+    }
+    rendered = template
+    for key, value in replacements.items():
+        rendered = rendered.replace(key, value)
+    return rendered
+
+
+def write_ops_notice(summary: dict[str, Any], run_dir: Path) -> dict[str, Any]:
+    notice_path = run_dir / "ops-notice.md"
+    notice_markdown = build_ops_notice_markdown(summary)
+    notice_path.write_text(notice_markdown, encoding="utf-8")
+    return {
+        "status": "generated",
+        "path": str(notice_path),
+        "reason_summary": summarize_ops_reason(summary),
+    }
+
+
 def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, Any]:
     report_path = report_path.resolve()
+
     cmd = [
         "lark-cli",
         "docs",
@@ -1137,6 +1203,7 @@ def main() -> int:
     if collect_result["summary"]["useful_item_count"] <= 0:
         summary["decision"] = "blocked"
         summary["reason"] = "no usable content after collect"
+        summary["ops_notice"] = write_ops_notice(summary, run_dir)
         dump_json(summary, summary_path)
         print(json.dumps(summary, ensure_ascii=False, indent=2))
         return 3
@@ -1172,6 +1239,7 @@ def main() -> int:
             "status": "skipped",
             "reason": "report_output_contract_failed",
         }
+        summary["ops_notice"] = write_ops_notice(summary, run_dir)
         dump_json(summary, summary_path)
         print(json.dumps(summary, ensure_ascii=False, indent=2))
         return 4
@@ -1191,6 +1259,9 @@ def main() -> int:
         )
     else:
         summary["publish"] = {"status": "skipped"}
+
+    if summary["publish"].get("status") in {"degraded", "failed"}:
+        summary["ops_notice"] = write_ops_notice(summary, run_dir)
 
     dump_json(summary, summary_path)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
