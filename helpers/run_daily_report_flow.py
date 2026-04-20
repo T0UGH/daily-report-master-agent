@@ -1145,9 +1145,7 @@ def main() -> int:
     dump_json(artifact, artifact_path)
     report_markdown = artifact["body_markdown"]
     report_path.write_text(report_markdown, encoding="utf-8")
-    validate_report_markdown(report_markdown, report_date=args.report_date)
 
-    summary["decision"] = "generated"
     summary["artifact_path"] = str(artifact_path)
     summary["report_path"] = str(report_path)
     summary["collect_result_path"] = str(collect_result_path)
@@ -1159,6 +1157,27 @@ def main() -> int:
         for item in selected_items["summary"]["lane_counts"]
         if item["lane"] in {"x-feed", "x-following"}
     }
+
+    try:
+        validate_report_markdown(report_markdown, report_date=args.report_date)
+    except ValueError as exc:
+        summary["decision"] = "blocked"
+        summary["reason"] = "report_output_contract_failed"
+        summary["validation"] = {
+            "status": "failed",
+            "error": str(exc),
+        }
+        summary["validation_error"] = str(exc)
+        summary["publish"] = {
+            "status": "skipped",
+            "reason": "report_output_contract_failed",
+        }
+        dump_json(summary, summary_path)
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        return 4
+
+    summary["validation"] = {"status": "passed"}
+    summary["decision"] = "generated"
 
     if args.publish:
         title = f"AI 日报（{args.report_date}）{args.title_suffix}" if args.title_suffix else f"AI 日报（{args.report_date}）"

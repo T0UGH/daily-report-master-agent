@@ -710,7 +710,7 @@ def test_publish_report_bundle_fails_when_doc_import_fails(monkeypatch, tmp_path
     assert send_calls == 0
 
 
-def test_main_publish_path_validates_markdown_before_publish_report_bundle(
+def test_main_publish_path_blocks_and_records_contract_failure_before_publish(
     monkeypatch, tmp_path: Path
 ) -> None:
     invalid_report_markdown = (
@@ -722,6 +722,7 @@ def test_main_publish_path_validates_markdown_before_publish_report_bundle(
         "- https://example.com/x\n"
     )
     publish_calls = 0
+    runtime_root = tmp_path / "runtime"
 
     monkeypatch.setattr(
         flow,
@@ -742,7 +743,7 @@ def test_main_publish_path_validates_markdown_before_publish_report_bundle(
             "runtime": {"timezone": "Asia/Shanghai"},
             "paths": {
                 "signals_root": str(tmp_path / "signals" / "snapshots"),
-                "runtime_root": str(tmp_path / "runtime"),
+                "runtime_root": str(runtime_root),
             },
             "reader_facing": {"fixed_section_order": ["x-feed"]},
             "repo_root": str(tmp_path),
@@ -777,7 +778,19 @@ def test_main_publish_path_validates_markdown_before_publish_report_bundle(
 
     monkeypatch.setattr(flow, "publish_report_bundle", fake_publish_report_bundle)
 
-    with pytest.raises(ValueError, match="X 推荐流 的正文条目不得使用占位统计文案"):
-        flow.main()
+    exit_code = flow.main()
 
+    run_summary = json.loads(
+        (runtime_root / "2026-04-16" / "run-summary.json").read_text(encoding="utf-8")
+    )
+
+    assert exit_code == 4
     assert publish_calls == 0
+    assert run_summary["decision"] == "blocked"
+    assert run_summary["reason"] == "report_output_contract_failed"
+    assert run_summary["validation"]["status"] == "failed"
+    assert run_summary["validation_error"] == "X 推荐流 的正文条目不得使用占位统计文案"
+    assert run_summary["publish"] == {
+        "status": "skipped",
+        "reason": "report_output_contract_failed",
+    }
