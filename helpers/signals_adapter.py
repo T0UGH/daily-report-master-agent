@@ -250,6 +250,31 @@ KEYWORD_WEIGHTS = (
     ("chatgpt import", 6),
     ("dreaming", 5),
 )
+HACKER_NEWS_HOT_REPORTABLE_KEYWORD_GROUPS = (
+    ("claude design",),
+    ("claude code",),
+    ("codex",),
+    ("openclaw",),
+    ("mcp",),
+    ("agent harness",),
+    ("agent workflow",),
+    ("agent handoff",),
+    ("review checklist",),
+    ("review loop",),
+    ("reviewer loop",),
+    ("git worktree",),
+    ("tmux", "worktree"),
+    ("coding ai",),
+    ("coding agents",),
+    ("ai", "benchmark"),
+    ("coding", "benchmark"),
+    ("agent", "benchmark"),
+    ("frontiermath",),
+    ("swe-bench",),
+    ("repo boundary",),
+    ("repo boundaries",),
+)
+HACKER_NEWS_HOT_RELEVANCE_SCORE_THRESHOLD = 10
 KNOWN_TERMS = (
     "Claude Code",
     "Codex",
@@ -1056,6 +1081,13 @@ def curate_lane_candidates(
     if not scored_candidates:
         return []
 
+    if lane_name == "hacker-news-watch":
+        scored_candidates = [
+            candidate for candidate in scored_candidates if is_hacker_news_hot_candidate_reportable(candidate)
+        ]
+        if not scored_candidates:
+            return []
+
     if lane_name in NOISY_X_LANES:
         kept_candidates = [
             candidate
@@ -1372,6 +1404,30 @@ def topic_tokens_overlap_too_much(current: set[str], existing: set[str]) -> bool
         return False
     smaller_size = min(len(current), len(existing))
     return len(overlap) >= max(2, (smaller_size + 1) // 2)
+
+
+def is_hacker_news_hot_candidate_reportable(candidate: dict[str, Any]) -> bool:
+    relevance_score = int(candidate.get("_relevance_score", 0))
+    if relevance_score >= HACKER_NEWS_HOT_RELEVANCE_SCORE_THRESHOLD:
+        return True
+
+    combined_text = normalize_whitespace(
+        " ".join(
+            (
+                str(candidate.get("title", "")),
+                str(candidate.get("source_snippet", "")),
+                str(candidate.get("excerpt", "")),
+                str(candidate.get("_body", "")),
+            )
+        )
+    ).lower()
+    if not combined_text:
+        return False
+
+    return any(
+        all(keyword in combined_text for keyword in keyword_group)
+        for keyword_group in HACKER_NEWS_HOT_REPORTABLE_KEYWORD_GROUPS
+    )
 
 
 def enrich_candidate_for_report(*, candidate: dict[str, Any], lane_name: str) -> dict[str, Any]:
@@ -1988,8 +2044,61 @@ def count_cjk_characters(value: str) -> int:
     return sum(1 for char in value if "\u4e00" <= char <= "\u9fff")
 
 
-def ensure_chinese_sentence(value: str) -> str:
+COMMON_READER_PHRASE_REPLACEMENTS: tuple[tuple[str, str], ...] = (
+    (r"\bAI Technical Cofounder\b", "AI 技术联合创始人"),
+    (r"\bAI-simulated team\b", "AI 模拟团队"),
+    (r"\bfuture-ready skills\b", "面向未来的技能"),
+    (r"\bPractice\s*&\s*assess\b", "练习并评估"),
+    (r"\bproduction-grade engineering skills\b", "生产级工程技能"),
+    (r"\bdelivery checklists?\b", "交付清单"),
+    (r"\brepo setup\b", "仓库初始化"),
+    (r"\bdesign context\b", "设计上下文"),
+    (r"\bdesktop app\b", "桌面应用"),
+    (r"\binstallation and support messaging\b", "安装与支持说明"),
+    (r"\bsupport messaging\b", "支持说明"),
+    (r"\bcoding AI model\b", "编程 AI 模型"),
+    (r"\bruntime\b", "运行时"),
+)
+
+
+def localize_common_reader_phrases(value: str) -> str:
     cleaned = normalize_whitespace(value)
+    if not cleaned:
+        return ""
+
+    localized = cleaned
+    for pattern, replacement in COMMON_READER_PHRASE_REPLACEMENTS:
+        localized = re.sub(pattern, replacement, localized, flags=re.IGNORECASE)
+
+    localized = re.sub(
+        r"\bfor macOS Intel and Windows users\b",
+        "面向 macOS Intel 和 Windows 用户",
+        localized,
+        flags=re.IGNORECASE,
+    )
+    localized = re.sub(
+        r"\bBuild product strategy, ship features, and unblock engineering follow-through\b",
+        "帮团队定产品策略、推进功能上线，并打通后续工程执行",
+        localized,
+        flags=re.IGNORECASE,
+    )
+    localized = re.sub(
+        r"\bPractice & assess future-ready skills with AI-simulated team\b",
+        "用 AI 模拟团队来练习并评估面向未来的技能",
+        localized,
+        flags=re.IGNORECASE,
+    )
+    localized = re.sub(
+        r"\bYour AI Technical Cofounder\b",
+        "你的 AI 技术联合创始人",
+        localized,
+        flags=re.IGNORECASE,
+    )
+    return normalize_whitespace(localized)
+
+
+def ensure_chinese_sentence(value: str) -> str:
+    cleaned = localize_common_reader_phrases(value)
     if not cleaned:
         return ""
     if cleaned[-1] not in "。！？.!?":
@@ -2276,7 +2385,7 @@ def build_reader_title(*, lane_name: str, raw_title: str, source_text: str) -> s
         if not descriptor:
             descriptor = build_generic_x_descriptor(source_text)
         if descriptor:
-            return f"{cleaned_title}：{descriptor}"
+            return localize_common_reader_phrases(f"{cleaned_title}：{descriptor}")
     is_long_english_headline = (
         looks_like_english_text(cleaned_title)
         and (
@@ -2289,7 +2398,11 @@ def build_reader_title(*, lane_name: str, raw_title: str, source_text: str) -> s
     if lane_name in {"reddit-watch", "hacker-news-watch", "hacker-news-search-watch", "product-hunt-watch"} and is_long_english_headline:
         descriptor, _ = build_known_signal_copy(lane_name=lane_name, title=cleaned_title, source_text=source_text)
         if descriptor:
-            return descriptor
+            return localize_common_reader_phrases(descriptor)
+        if lane_name == "product-hunt-watch":
+            localized_title = localize_product_hunt_reader_title(cleaned_title)
+            if localized_title:
+                return localized_title
     return cleaned_title
 
 
@@ -2314,7 +2427,20 @@ def build_reader_excerpt(
     matched_query: str = "",
     useful_item_count: int,
 ) -> str:
-    cleaned_source = trim_fragmentary_tail(normalize_whitespace(source_text))
+    raw_cleaned_source = normalize_whitespace(source_text)
+    cleaned_fallback = normalize_whitespace(fallback_excerpt)
+    if lane_name == "weather-watch":
+        weather_excerpt = build_lane_fact_summary(
+            lane_name=lane_name,
+            title=raw_title,
+            source_text=raw_cleaned_source,
+            source_url=source_url,
+            matched_query=matched_query,
+        )
+        if weather_excerpt:
+            return ensure_chinese_sentence(weather_excerpt)
+
+    cleaned_source = trim_fragmentary_tail(raw_cleaned_source)
     if lane_name == "weather-watch":
         weather_excerpt = build_lane_fact_summary(
             lane_name=lane_name,
@@ -2330,7 +2456,6 @@ def build_reader_excerpt(
         if count_cjk_characters(cleaned_source) >= 8 and not looks_like_english_text(cleaned_source):
             return ensure_chinese_sentence(cleaned_source)
 
-        cleaned_fallback = normalize_whitespace(fallback_excerpt)
         detailed_excerpt = build_lane_fact_summary(
             lane_name=lane_name,
             title=raw_title,
@@ -2339,6 +2464,18 @@ def build_reader_excerpt(
             matched_query=matched_query,
         )
         if detailed_excerpt:
+            if is_generic_placeholder_copy(detailed_excerpt):
+                guarded_excerpt = build_minimal_reader_fact_fallback(
+                    lane_name=lane_name,
+                    title=raw_title,
+                    source_text=cleaned_source,
+                    source_url=source_url,
+                    matched_query=matched_query,
+                )
+                if guarded_excerpt and not is_generic_placeholder_copy(guarded_excerpt):
+                    return ensure_chinese_sentence(guarded_excerpt)
+                if cleaned_fallback and not looks_like_english_text(cleaned_fallback) and not is_generic_placeholder_copy(cleaned_fallback):
+                    return ensure_chinese_sentence(cleaned_fallback)
             if (
                 lane_name in NOISY_X_LANES
                 and cleaned_fallback
@@ -2359,6 +2496,15 @@ def build_reader_excerpt(
         if looks_like_english_text(cleaned_source):
             if cleaned_fallback and not looks_like_english_text(cleaned_fallback) and not is_generic_placeholder_copy(cleaned_fallback):
                 return ensure_chinese_sentence(cleaned_fallback)
+            guarded_excerpt = build_minimal_reader_fact_fallback(
+                lane_name=lane_name,
+                title=raw_title,
+                source_text=cleaned_source,
+                source_url=source_url,
+                matched_query=matched_query,
+            )
+            if guarded_excerpt:
+                return ensure_chinese_sentence(guarded_excerpt)
             return ensure_chinese_sentence(f"该栏目收录 {useful_item_count} 条有用内容。")
 
         return ensure_chinese_sentence(cleaned_source)
@@ -2367,7 +2513,20 @@ def build_reader_excerpt(
     if sparse_summary:
         return ensure_chinese_sentence(sparse_summary)
 
-    return ensure_chinese_sentence(fallback_excerpt or f"该栏目收录 {useful_item_count} 条有用内容。")
+    if cleaned_fallback and not is_generic_placeholder_copy(cleaned_fallback):
+        return ensure_chinese_sentence(cleaned_fallback)
+
+    guarded_excerpt = build_minimal_reader_fact_fallback(
+        lane_name=lane_name,
+        title=raw_title,
+        source_text=raw_cleaned_source,
+        source_url=source_url,
+        matched_query=matched_query,
+    )
+    if guarded_excerpt:
+        return ensure_chinese_sentence(guarded_excerpt)
+
+    return ensure_chinese_sentence(f"该栏目收录 {useful_item_count} 条有用内容。")
 
 
 def build_candidate_reader_excerpt(*, candidate: dict[str, Any], useful_item_count: int) -> str:
@@ -2453,10 +2612,12 @@ def is_generic_placeholder_copy(value: str) -> bool:
     if not cleaned:
         return False
     return bool(
-        re.fullmatch(r"原文围绕 .+ 展开，具体变化见来源", cleaned)
+        re.fullmatch(r"(?:该栏目|本栏)收录 \d+ 条有用内容", cleaned)
+        or re.fullmatch(r"原文围绕 .+ 展开，具体变化见来源", cleaned)
         or re.fullmatch(r"帖子在讨论 [`“\"]?.+[`”\"]? 相关内容", cleaned)
         or re.fullmatch(r"帖子在讨论 .+ 相关内容", cleaned)
         or re.fullmatch(r"这条帖子围绕 [`“\"]?.+[`”\"]? 展开.*", cleaned)
+        or re.fullmatch(r"`?.+`? 这周能进趋势榜，至少因为：项目说明主要在讲它的定位、工作流和使用场景", cleaned)
     )
 
 
@@ -2596,6 +2757,39 @@ def build_sparse_lane_summary(*, lane_name: str, title: str, source_url: str) ->
     version = normalize_whitespace(title) or tag
     product_name = humanize_repo_slug(repo_slug)
     return f"`{product_name}` 发布了 `{version}` 这个 release 版本更新"
+
+
+
+def build_minimal_reader_fact_fallback(
+    *,
+    lane_name: str,
+    title: str,
+    source_text: str,
+    source_url: str,
+    matched_query: str = "",
+) -> str:
+    cleaned_source = normalize_whitespace(source_text)
+    if not cleaned_source:
+        return ""
+
+    if lane_name == "reddit-watch":
+        return build_reddit_detail(title=title, source_text=cleaned_source)
+    if lane_name == "github-trending-weekly":
+        return build_github_trending_detail(title=title, source_text=cleaned_source)
+    if lane_name == "product-hunt-watch":
+        return build_product_hunt_detail(title=title, source_text=cleaned_source)
+    if lane_name == "codex-watch":
+        return build_codex_detail(title=title, source_text=cleaned_source, source_url=source_url)
+    if lane_name in {"hacker-news-watch", "hacker-news-search-watch"}:
+        return build_hacker_news_detail(
+            lane_name=lane_name,
+            title=title,
+            source_text=cleaned_source,
+            matched_query=matched_query,
+        )
+    if lane_name == "polymarket-watch":
+        return build_polymarket_detail(title=title, source_text=cleaned_source)
+    return ""
 
 
 def humanize_repo_slug(repo_slug: str) -> str:
@@ -3307,6 +3501,29 @@ def build_codex_detail(*, title: str, source_text: str, source_url: str) -> str:
     merged_at_match = re.search(r"Merged at:\s*([0-9T:+-]+Z?)", source_text, re.IGNORECASE)
     commit_match = re.search(r"Merge commit:\s*`?([0-9a-f]{7,})`?", source_text, re.IGNORECASE)
 
+    if (
+        ("macos intel" in lowered or "windows" in lowered)
+        and ("support" in lowered or "installation" in lowered)
+    ):
+        lead = "这次合入的是 Codex 的 PR"
+        if pr_match:
+            lead += f" #{pr_match.group(1)}"
+        metadata: list[str] = []
+        if author_match:
+            metadata.append(f"作者 {author_match.group(1)}")
+        if commit_match:
+            metadata.append(f"merge commit `{commit_match.group(1)}`")
+        if metadata:
+            lead += f"（{'，'.join(metadata)}）"
+        facts = [
+            f"{lead}，重点是把 `macOS Intel` 和 `Windows` 的安装与支持说明补清楚",
+        ]
+        if merged_at_match:
+            facts.append(f"这条改动在 {merged_at_match.group(1)} 合入，属于平台覆盖面和安装文案的收口修整")
+        else:
+            facts.append("这类改动不是加新功能，而是把已有平台支持说清楚，减少用户理解成本")
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1))
+
     if "mcp" in lowered and "wall time" in lowered and "model output" in lowered:
         lead = "这次合入的是 Codex 的 PR"
         if pr_match:
@@ -3435,6 +3652,29 @@ def build_openclaw_release_detail(*, title: str, source_text: str) -> str:
 
 def build_github_trending_detail(*, title: str, source_text: str) -> str:
     lowered = source_text.lower()
+    if "production-grade engineering skills" in lowered:
+        facts = ["它不是泛泛聊 prompt，而是把 AI coding agents 的生产级工程技能整理成可复用工具包"]
+        if any(token in lowered for token in ("review loops", "delivery checklists", "repo setup", "quality gates", "best practices")):
+            facts.append("预览里点名了仓库初始化、质量门槛、评审循环或交付清单，说明目标是让团队直接拿来落地")
+        return compose_fact_sentences(intro=f"`{title}` 这周能进趋势榜，至少因为：", facts=facts, group_sizes=(1, 1))
+    if "decompiles android" in lowered or ("apk" in lowered and "http apis" in lowered):
+        return compose_fact_sentences(
+            intro=f"`{title}` 这周能进趋势榜，至少因为：",
+            facts=[
+                "它把 Claude Code 的 skill 直接收口到 Android 逆向场景，能处理 APK/XAPK/JAR/AAR 这类包",
+                "重点不是泛泛聊逆向，而是把 HTTP API 提取和复现实操写成了可直接使用的流程",
+            ],
+            group_sizes=(1, 1),
+        )
+    if "markitdown now offers an mcp" in lowered or ("claude desktop" in lowered and "optional feature-groups" in lowered):
+        return compose_fact_sentences(
+            intro=f"`{title}` 这周能进趋势榜，至少因为：",
+            facts=[
+                "它已经把 `MCP` server 做进产品，能直接接到 `Claude Desktop` 这类 LLM 应用里",
+                "另外还明确提醒了从 `0.0.1` 到 `0.1.0` 的 breaking changes，依赖现在按 optional feature-groups 拆分",
+            ],
+            group_sizes=(1, 1),
+        )
     if "harness builder" in lowered and ("deterministic" in lowered or "repeatable" in lowered):
         return (
             f"`{title}` 把自己定位成开源的 AI coding harness builder，主打让 AI coding 流程变得 deterministic、repeatable。"
@@ -3506,12 +3746,27 @@ def build_weather_detail(*, title: str, source_text: str) -> str:
 
 
 def extract_weather_fields(source_text: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    known_patterns = {
+        "condition": r"(?:Condition|Weather|天气|现象)\s*[:：]\s*(.+?)(?=\s+(?:Temperature|Temp|气温|温度|Precipitation|Precip|Rain|降水|降雨|Wind|风)\s*[:：]|$)",
+        "temperature": r"(?:Temperature|Temp|气温|温度)\s*[:：]\s*(.+?)(?=\s+(?:Precipitation|Precip|Rain|降水|降雨|Wind|风)\s*[:：]|$)",
+        "precipitation": r"(?:Precipitation|Precip|Rain|降水|降雨)\s*[:：]\s*(.+?)(?=\s+(?:Wind|风)\s*[:：]|$)",
+        "wind": r"(?:Wind|风)\s*[:：]\s*(.+)$",
+    }
+    for field_key, pattern in known_patterns.items():
+        match = re.search(pattern, source_text, re.IGNORECASE)
+        if match:
+            field_value = normalize_weather_fact_value(match.group(1))
+            if field_value:
+                fields[field_key] = field_value
+
+    if fields:
+        return fields
+
     pattern = re.compile(
         r"(?P<label>[A-Za-z\u4e00-\u9fff][A-Za-z\u4e00-\u9fff /-]{0,31})\s*[:：]\s*"
         r"(?P<value>.*?)(?=(?:\s+[A-Za-z\u4e00-\u9fff][A-Za-z\u4e00-\u9fff /-]{0,31}\s*[:：])|$)"
     )
-    fields: dict[str, str] = {}
-
     for match in pattern.finditer(source_text):
         field_key = normalize_weather_field_key(match.group("label"))
         field_value = normalize_weather_fact_value(match.group("value"))
@@ -3627,9 +3882,55 @@ def localize_weather_wind(value: str) -> str:
     for source_phrase, target_phrase in replacements:
         localized = re.sub(rf"\b{re.escape(source_phrase)}\b", target_phrase, localized, flags=re.IGNORECASE)
 
+    for source_direction, target_direction in (("NW", "西北风"), ("NE", "东北风"), ("SW", "西南风"), ("SE", "东南风")):
+        localized = re.sub(rf"\b{source_direction}\b", target_direction, localized, flags=re.IGNORECASE)
+
+    localized = re.sub(r"\bup to\s+", "最大风速 ", localized, flags=re.IGNORECASE)
     localized = re.sub(r"(\d+(?:\s*-\s*\d+)?)\s*(?:level|force)\b", r"\1级", localized, flags=re.IGNORECASE)
     localized = re.sub(r"\blevel\b", "级", localized, flags=re.IGNORECASE)
-    return normalize_whitespace(localized)
+    localized = re.sub(r"\s+([东西南北]{1,2}风)$", r"，\1", localized)
+    return normalize_whitespace(localized).strip("，")
+
+
+def localize_product_hunt_tagline(value: str) -> str:
+    cleaned = normalize_whitespace(value).strip(" .")
+    if not cleaned:
+        return ""
+
+    lowered = cleaned.lower()
+    if lowered == "your ai technical cofounder":
+        return "你的 AI 技术联合创始人"
+    if lowered == "practice & assess future-ready skills with ai-simulated team":
+        return "用 AI 模拟团队来练习并评估面向未来的技能"
+    if lowered == "design context for ai agents":
+        return "给 AI agents 提供设计上下文"
+    if lowered == "watch agents spend money in real time":
+        return "实时看 agent 在花钱买什么"
+    if lowered == "watches your workflows":
+        return "盯住团队工作流"
+    if lowered == "builds your agents":
+        return "把 agent 搭建环节直接做成产品"
+    if lowered == "automates the busywork":
+        return "目标是把重复杂活自动化"
+    if lowered == "a cloud-native ai agent that can build literally anything":
+        return "一个号称几乎什么都能构建的云原生 AI agent"
+    if lowered == "gtm agents to find and reach your next customer":
+        return "帮你寻找并触达下一位客户的 GTM agents"
+    if "vs code extension" in lowered and "agent memory" in lowered and "claude code" in lowered and "codex" in lowered:
+        return "一个把 Agent Memory、Claude Code 和 Codex 包进 VS Code 图形界面的扩展"
+    return localize_common_reader_phrases(cleaned) if looks_like_english_text(cleaned) else cleaned
+
+
+
+def localize_product_hunt_reader_title(title: str) -> str:
+    name, tagline = split_title_tagline(title)
+    lowered_tagline = normalize_whitespace(tagline).lower()
+    if lowered_tagline in {"design context for ai agents", "watch agents spend money in real time"}:
+        return ""
+    translated_tagline = localize_product_hunt_tagline(tagline)
+    if name and translated_tagline and translated_tagline != tagline:
+        return f"{name}：{translated_tagline}"
+    return ""
 
 
 def build_product_hunt_detail(*, title: str, source_text: str) -> str:
@@ -3637,11 +3938,17 @@ def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     lowered = source_text.lower()
     lowered_title = title.lower()
     facts: list[str] = []
+    translated_tagline = localize_product_hunt_tagline(tagline)
+    source_sentence = localize_product_hunt_tagline(simple_sentences(source_text)[0] if simple_sentences(source_text) else "")
 
     if "microvm" in lowered and "sandbox" in lowered:
         facts.append(f"`{name}` 主打让 AI coding agents 跑在真实 `microVM` 沙箱里，强调真实隔离环境")
     elif tagline and not looks_like_english_text(tagline):
         facts.append(f"`{name}` 的定位很直接，就是 {tagline}")
+    elif translated_tagline:
+        facts.append(f"`{name}` 的定位很直接：{translated_tagline}")
+    elif source_sentence:
+        facts.append(f"`{name}` 主打的是：{source_sentence}")
     elif "design context" in lowered:
         facts.append(f"`{name}` 主打给 AI agents 提供 `Design context`")
 
@@ -4013,6 +4320,47 @@ def build_reddit_detail(*, title: str, source_text: str) -> str:
             "它强调的不只是角色分工，还强调透明流程和 token efficiency",
         ]
         return compose_fact_sentences(intro="这条 Reddit 长帖真正写清楚的是：", facts=facts, group_sizes=(1, 1, 1))
+
+    if "boris cherny" in lowered and ("homeless" in lowered or "sleep in his car" in lowered):
+        facts = [
+            "这帖把焦点放在 `Claude Code` 作者 Boris Cherny 的个人经历，而不是新功能发布",
+            "原文特别提到他曾经无家可归、睡过车里，后来一路走到今天的位置",
+            "讨论真正想表达的是：这场围绕 `OpenClaw` / `Claude Code` 的争议里，人物故事也在被重新翻出来审视",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if ("made $60k" in lowered or "revenue" in lowered or "replaced a hire" in lowered) and ("open claw" in lowered or "openclaw" in lowered):
+        facts = [
+            "提问者是在追问 `Claude Code Agents` / `OpenClaw` 到底有没有真实变现案例，不想再听模糊传说",
+            "他把问题拆得很实：大家到底拿它做什么、是赚到钱还是只是提效省时间、有没有替代外包或雇人",
+            "这类帖子值得看，是因为它会把社区里的夸张收益说法拉回到可验证的使用场景",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "non-technical users" in lowered and "technical users" in lowered:
+        facts = [
+            "这帖在对比技术用户和非技术用户今天从 AI 里实际拿到的东西已经有多大差距",
+            "作者认为非技术用户还主要把 LLM 当搜索框，而技术用户已经在用 thinking effort、模型选择、plugins、automations、skills 和 agents",
+            "真正的问题是：如果你不用 `Codex` 或 `Claude Code` 这类工具，过去一年很多进步其实并不会落到你头上",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "godmode" in lowered or ("measure, modify, verify" in lowered and "auto-reverted" in lowered):
+        facts = [
+            "作者做了个叫 `Godmode` 的开源插件，想给 `Claude Code` 补上自主迭代闭环",
+            "核心流程不是一次写完就收工，而是 `measure -> modify -> verify -> keep or revert`，必要时自动回滚",
+            "另外它还把并行 agents、失败记忆和 Git 提交前置绑在一起，目标是让 agent 改代码更像可控实验",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "mac mini" in lowered_title and ("24/7" in lowered or "remote access" in lowered or "performance" in lowered):
+        facts = [
+            "这帖不是在吹某个新工具，而是在问为什么很多人会把 `Claude Code` 放到 `Mac mini` 上常驻运行",
+            "提问者关心的几个点都很具体：是不是为了 24/7 在线、远程接入、更低打扰，还是性能和成本上真有差别",
+            "讨论价值在于它把“AI 机器”这个趋势拆成了实际工作流问题，而不是单纯跟风硬件摆设",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
     if all(token in lowered for token in ("swarm", "coordinator", "codex", "gemini")):
         facts = [
             "帖子把 Claude、Codex、Gemini 放进同一条协作链路",

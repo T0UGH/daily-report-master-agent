@@ -1741,6 +1741,187 @@ matched_query: Claude Code
             },
         )
 
+    def test_build_selected_items_hacker_news_watch_filters_generic_hot_posts_without_dropping_ai_posts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="hacker-news-watch",
+                signal_text_by_name={
+                    "claude-design.md": """---
+type: hacker_news_story
+lane: hacker-news-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000011
+title: Claude Design review ownership and repo boundaries
+url: https://news.ycombinator.com/item?id=44000011
+fetched_at: 2026-04-12T16:05:00+0000
+created_at: '2026-04-12T16:00:00Z'
+---
+
+## Post
+
+Claude Design 这条热榜讨论把 reviewer loop、review checklist、repo boundaries 和 git worktree handoff 写成了一套可执行做法。
+
+## Comments
+
+- Points: 140
+- Comments: 61
+""",
+                    "emacs.md": """---
+type: hacker_news_story
+lane: hacker-news-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000012
+title: Why I still trust Emacs for coding workflow
+url: https://news.ycombinator.com/item?id=44000012
+fetched_at: 2026-04-12T16:06:00+0000
+created_at: '2026-04-12T16:01:00Z'
+---
+
+## Post
+
+这是一篇关于个人编辑器习惯、键盘宏和 Lisp 配置的帖子，重点是长期维护一个安静的 coding workflow。
+
+## Comments
+
+- Points: 560
+- Comments: 203
+""",
+                    "geometry.md": """---
+type: hacker_news_story
+lane: hacker-news-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000013
+title: A visual proof for a geometry shortcut
+url: https://news.ycombinator.com/item?id=44000013
+fetched_at: 2026-04-12T16:07:00+0000
+created_at: '2026-04-12T16:02:00Z'
+---
+
+## Post
+
+这篇热榜帖子在讨论三角形、圆和纯几何证明。
+
+## Comments
+
+- Points: 620
+- Comments: 244
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["hacker-news-watch"],
+                per_lane_limit=5,
+            )
+
+        self.assertEqual(
+            [item["title"] for item in selected_items["selected_items"]],
+            ["Claude Design review ownership and repo boundaries"],
+        )
+
+    def test_build_report_artifact_hacker_news_watch_omits_generic_hot_titles_when_mixed_with_relevant_items(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="hacker-news-watch",
+                signal_text_by_name={
+                    "claude-design.md": """---
+type: hacker_news_story
+lane: hacker-news-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000014
+title: Claude Design review ownership and repo boundaries
+url: https://news.ycombinator.com/item?id=44000014
+fetched_at: 2026-04-12T17:05:00+0000
+created_at: '2026-04-12T17:00:00Z'
+---
+
+## Post
+
+Claude Design 这条热榜讨论把 reviewer loop、review checklist、repo boundaries 和 git worktree handoff 写成了一套可执行做法。
+
+## Comments
+
+- Points: 150
+- Comments: 57
+""",
+                    "emacs.md": """---
+type: hacker_news_story
+lane: hacker-news-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000015
+title: Why I still trust Emacs for coding workflow
+url: https://news.ycombinator.com/item?id=44000015
+fetched_at: 2026-04-12T17:06:00+0000
+created_at: '2026-04-12T17:01:00Z'
+---
+
+## Post
+
+这是一篇关于个人编辑器习惯、键盘宏和 Lisp 配置的帖子，重点是长期维护一个安静的 coding workflow。
+
+## Comments
+
+- Points: 580
+- Comments: 188
+""",
+                },
+            )
+            self.write_signal_bundle(
+                signals_root,
+                lane="hacker-news-search-watch",
+                signal_text_by_name={
+                    "search-hit.md": """---
+type: hacker_news_search_hit
+lane: hacker-news-search-watch
+source: hacker-news
+entity_type: story
+entity_id: 44000016
+title: Shipping agents with tmux and git worktrees
+url: https://news.ycombinator.com/item?id=44000016
+fetched_at: 2026-04-12T17:10:00+0000
+created_at: '2026-04-12T17:08:00Z'
+matched_query: Claude Code
+---
+
+## Post
+
+作者把 tmux、git worktree 和 review checklist 串成一条 agent 交接链路。
+""",
+                },
+            )
+
+            collect_result = build_collect_result(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["hacker-news-watch", "hacker-news-search-watch"],
+            )
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["hacker-news-watch", "hacker-news-search-watch"],
+                per_lane_limit=5,
+            )
+            artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+
+        body_markdown = artifact["body_markdown"]
+        self.assertIn("## Hacker News 热榜", body_markdown)
+        self.assertIn("Claude Design review ownership and repo boundaries", body_markdown)
+        self.assertNotIn("Why I still trust Emacs for coding workflow", body_markdown)
+        self.assertIn("Shipping agents with tmux and git worktrees", body_markdown)
+
     def test_hacker_news_search_watch_preserves_matched_query_in_rendering(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             signals_root = Path(temp_dir)
@@ -3185,6 +3366,547 @@ matched_query: Claude Code
         self.assertIn("Anthropic", market_line)
         self.assertTrue("第二强" in market_line or "排名" in market_line)
         self.assertNotIn("Will Anthropic have the second-best Coding AI model at the end of April 2026?", market_line)
+
+    def test_build_report_artifact_weather_rewrites_up_to_and_cardinal_wind_into_chinese(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "weather-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "weather-watch",
+                    "title": "Beijing Haidian Weather",
+                    "source_url": "https://weather.example.com/beijing-haidian/2026-04-20",
+                    "signal_path": "weather-watch/2026-04-20/signals/beijing-haidian.md",
+                    "fetched_at": "2026-04-20T05:30:00+0000",
+                    "source_snippet": (
+                        "Condition: Cloudy to sunny Temperature: 11°C to 23°C "
+                        "Precipitation: none Wind: up to 22 km/h NW"
+                    ),
+                    "excerpt": "Condition: Cloudy to sunny Temperature: 11°C to 23°C",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "weather-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**今日天气**" in line)
+
+        self.assertIn("多云转晴", body_line)
+        self.assertIn("11°C - 23°C", body_line)
+        self.assertIn("无明显降水", body_line)
+        self.assertIn("西北风", body_line)
+        self.assertIn("22 km/h", body_line)
+        self.assertNotIn("up to", body_line)
+        self.assertNotIn("NW", body_line)
+        self.assertNotIn("Condition:", body_line)
+        self.assertNotIn("该栏目收录", artifact["body_markdown"])
+
+    def test_build_report_artifact_sparse_codex_support_copy_turns_chinese_first(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "codex-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "codex-watch",
+                    "title": "clarify macOS Intel + Windows support wording",
+                    "source_url": "https://github.com/openai/codex/pull/17666",
+                    "signal_path": "codex-watch/2026-04-20/signals/17666.md",
+                    "fetched_at": "2026-04-20T08:03:11+0000",
+                    "source_snippet": (
+                        "**Title:** clarify macOS Intel + Windows support wording "
+                        "**Author:** @sally-openai **Merged at:** 2026-04-20T08:03:11Z "
+                        "**Merge commit:** `abc1234` "
+                        "This PR clarifies installation and support messaging for macOS Intel and Windows users."
+                    ),
+                    "excerpt": (
+                        "**Title:** clarify macOS Intel + Windows support wording "
+                        "**Author:** @sally-openai **Merged at:** 2026-04-20T08:03:11Z "
+                        "**Merge commit:** `abc1234` "
+                        "This PR clarifies installation and support messaging for macOS Intel and Windows users."
+                    ),
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "codex-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(
+            line for line in artifact["body_markdown"].splitlines() if "**clarify macOS Intel + Windows support wording**" in line
+        )
+
+        self.assertIn("PR #17666", body_line)
+        self.assertIn("@sally-openai", body_line)
+        self.assertIn("macOS Intel", body_line)
+        self.assertIn("Windows", body_line)
+        self.assertTrue("支持" in body_line or "安装说明" in body_line)
+        self.assertNotIn("This PR clarifies installation and support messaging", body_line)
+        self.assertNotIn("原文围绕 clarify macOS Intel + Windows support wording 展开", body_line)
+        self.assertNotIn("该栏目收录", artifact["body_markdown"])
+
+    def test_build_report_artifact_github_trending_engineering_skills_stays_chinese_first_and_factual(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "github-trending-weekly",
+                    "title": "agent-skills",
+                    "source_url": "https://github.com/example/agent-skills",
+                    "signal_path": "github-trending-weekly/2026-04-20/signals/agent-skills.md",
+                    "fetched_at": "2026-04-20T08:20:00+0000",
+                    "source_snippet": (
+                        "Production-grade engineering skills for AI coding agents. "
+                        "Includes repo setup, review loops, and delivery checklists that teams can reuse."
+                    ),
+                    "excerpt": (
+                        "Production-grade engineering skills for AI coding agents. "
+                        "Includes repo setup, review loops, and delivery checklists that teams can reuse."
+                    ),
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "github-trending-weekly", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**agent-skills**" in line)
+
+        self.assertTrue("生产级" in body_line or "工程技能" in body_line)
+        self.assertTrue("评审" in body_line or "checklist" in body_line)
+        self.assertNotIn("Production-grade engineering skills for AI coding agents", body_line)
+        self.assertNotIn("项目说明主要在讲它的定位、工作流和使用场景", body_line)
+        self.assertNotIn("该栏目收录", artifact["body_markdown"])
+
+    def test_build_report_artifact_product_hunt_ai_taglines_turn_into_chinese_explanations(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 2},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "Forgebase — Your AI Technical Cofounder",
+                    "source_url": "https://www.producthunt.com/posts/forgebase",
+                    "signal_path": "product-hunt-watch/2026-04-20/signals/forgebase.md",
+                    "fetched_at": "2026-04-20T09:00:00+0000",
+                    "source_snippet": (
+                        "Your AI Technical Cofounder. Build product strategy, ship features, and unblock engineering follow-through. "
+                        "Votes: 188 Comments: 11 Topic: Artificial Intelligence"
+                    ),
+                    "excerpt": (
+                        "Your AI Technical Cofounder. Build product strategy, ship features, and unblock engineering follow-through. "
+                        "Votes: 188 Comments: 11 Topic: Artificial Intelligence"
+                    ),
+                },
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "SkillSprint — Practice & assess future-ready skills with AI-simulated team",
+                    "source_url": "https://www.producthunt.com/posts/skillsprint",
+                    "signal_path": "product-hunt-watch/2026-04-20/signals/skillsprint.md",
+                    "fetched_at": "2026-04-20T09:05:00+0000",
+                    "source_snippet": (
+                        "Practice & assess future-ready skills with AI-simulated team. "
+                        "Topic: Education Votes: 96 Comments: 7"
+                    ),
+                    "excerpt": (
+                        "Practice & assess future-ready skills with AI-simulated team. "
+                        "Topic: Education Votes: 96 Comments: 7"
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [
+                    {"lane": "product-hunt-watch", "selected_item_count": 2},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+        forgebase_line = next(line for line in body_markdown.splitlines() if "Forgebase" in line)
+        skillsprint_line = next(line for line in body_markdown.splitlines() if "SkillSprint" in line)
+
+        self.assertIn("AI 技术联合创始人", forgebase_line)
+        self.assertIn("你的 AI 技术联合创始人", forgebase_line)
+        self.assertTrue("AI 模拟团队" in skillsprint_line or "面向未来的技能" in skillsprint_line)
+        self.assertIn("用 AI 模拟团队来练习并评估面向未来的技能", skillsprint_line)
+        self.assertNotIn("该栏目收录", body_markdown)
+
+    def test_build_report_artifact_general_phrase_localizer_keeps_product_name_but_translates_design_context(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "Nicelydone MCP — Design context for AI agents",
+                    "source_url": "https://www.producthunt.com/products/nicely-done",
+                    "signal_path": "product-hunt-watch/2026-04-20/signals/nicelydone.md",
+                    "fetched_at": "2026-04-20T09:20:00+0000",
+                    "source_snippet": "Design context for AI agents. Topic: Artificial Intelligence Votes: 44 Comments: 3",
+                    "excerpt": "Design context for AI agents. Topic: Artificial Intelligence Votes: 44 Comments: 3",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [
+                    {"lane": "product-hunt-watch", "selected_item_count": 1},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "Nicelydone MCP" in line)
+
+        self.assertIn("Nicelydone MCP", body_line)
+        self.assertIn("给 AI agents 提供设计上下文", body_line)
+        self.assertNotIn("该栏目收录", artifact["body_markdown"])
+
+    def test_build_report_artifact_live_like_reddit_second_wave_fallbacks_replace_reader_placeholders(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "reddit-watch", "status": "ok", "useful_item_count": 32},
+            ],
+            "summary": {"useful_item_count": 32, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "reddit-watch",
+                    "title": "Peter Steinberger (OpenClaw Creator) credits Boris Cherny (Claude Code Creator) amid anthropic subscription ban for using openclaw",
+                    "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1scigaq/peter_steinberger_openclaw_creator_credits_boris/",
+                    "signal_path": "reddit-watch/2026-04-20/signals/peter-boris.md",
+                    "fetched_at": "2026-04-20T09:00:00+0000",
+                    "selection_bucket": "heat",
+                    "source_snippet": (
+                        "Boris Cherny's life story is pretty inspirational. At one point he was homeless and used "
+                        "to sleep in his car before turning around his life and now becoming the CTO of claude code."
+                    ),
+                    "excerpt": (
+                        "Boris Cherny's life story is pretty inspirational. At one point he was homeless and used "
+                        "to sleep in his car before turning around his life and now becoming the CTO of claude code."
+                    ),
+                },
+                {
+                    "lane": "reddit-watch",
+                    "title": "Has anyone here actually made money with Claude Code Agents / OpenClaw?",
+                    "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1s95796/has_anyone_here_actually_made_money_with_claude/",
+                    "signal_path": "reddit-watch/2026-04-20/signals/made-money.md",
+                    "fetched_at": "2026-04-20T09:05:00+0000",
+                    "selection_bucket": "voice",
+                    "source_snippet": (
+                        "I keep seeing wild claims that Claude Code / Open Claw bots made $60K, but I can't tell "
+                        "what's real versus hype. What are you actually using it for, and has it generated revenue, "
+                        "saved time, or replaced a hire?"
+                    ),
+                    "excerpt": (
+                        "I keep seeing wild claims that Claude Code / Open Claw bots made $60K, but I can't tell "
+                        "what's real versus hype. What are you actually using it for, and has it generated revenue, "
+                        "saved time, or replaced a hire?"
+                    ),
+                },
+                {
+                    "lane": "reddit-watch",
+                    "title": "The gap between what technical and non-technical people get from AI is huge now",
+                    "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1spnb80/the_gap_between_what_technical_and_nontechnical/",
+                    "signal_path": "reddit-watch/2026-04-20/signals/gap.md",
+                    "fetched_at": "2026-04-20T09:10:00+0000",
+                    "selection_bucket": "voice",
+                    "source_snippet": (
+                        "Non-technical users still treat LLMs as better search, while technical users know about "
+                        "thinking effort, model choice, plugins, automations, skills, and agents."
+                    ),
+                    "excerpt": (
+                        "Non-technical users still treat LLMs as better search, while technical users know about "
+                        "thinking effort, model choice, plugins, automations, skills, and agents."
+                    ),
+                },
+                {
+                    "lane": "reddit-watch",
+                    "title": "I built an open-source plugin that gives Claude Code autonomous iteration with parallel agents and failure memory. 126 skills, works on Cursor/Codex/Gemini too.",
+                    "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1sdteey/i_built_an_opensource_plugin_that_gives_claude/",
+                    "signal_path": "reddit-watch/2026-04-20/signals/godmode.md",
+                    "fetched_at": "2026-04-20T09:15:00+0000",
+                    "selection_bucket": "voice",
+                    "source_snippet": (
+                        "I built Godmode to add an autonomous loop to Claude Code: measure, modify, verify, keep or "
+                        "revert, repeat. Every change is committed before verification and bad changes get auto-reverted."
+                    ),
+                    "excerpt": (
+                        "I built Godmode to add an autonomous loop to Claude Code: measure, modify, verify, keep or "
+                        "revert, repeat. Every change is committed before verification and bad changes get auto-reverted."
+                    ),
+                },
+                {
+                    "lane": "reddit-watch",
+                    "title": "Why are people running Claude Code on a Mac mini instead of their personal MacBook?",
+                    "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1sgix71/why_are_people_running_claude_code_on_a_mac_mini/",
+                    "signal_path": "reddit-watch/2026-04-20/signals/mac-mini.md",
+                    "fetched_at": "2026-04-20T09:20:00+0000",
+                    "selection_bucket": "voice",
+                    "source_snippet": (
+                        "The thread is asking whether Mac mini setups are better because they stay dedicated and "
+                        "online 24/7, or because of real performance, cost, convenience, and remote access benefits."
+                    ),
+                    "excerpt": (
+                        "The thread is asking whether Mac mini setups are better because they stay dedicated and "
+                        "online 24/7, or because of real performance, cost, convenience, and remote access benefits."
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 5,
+                "lane_counts": [
+                    {"lane": "reddit-watch", "selected_item_count": 5},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+        made_money_line = next(
+            line for line in body_markdown.splitlines() if "https://www.reddit.com/r/ClaudeAI/comments/1s95796/" in line
+        )
+        gap_line = next(
+            line for line in body_markdown.splitlines() if "https://www.reddit.com/r/ClaudeAI/comments/1spnb80/" in line
+        )
+        godmode_line = next(
+            line for line in body_markdown.splitlines() if "https://www.reddit.com/r/ClaudeAI/comments/1sdteey/" in line
+        )
+        mac_mini_line = next(
+            line for line in body_markdown.splitlines() if "https://www.reddit.com/r/ClaudeAI/comments/1sgix71/" in line
+        )
+        peter_line = next(
+            line for line in body_markdown.splitlines() if "https://www.reddit.com/r/ClaudeAI/comments/1scigaq/" in line
+        )
+
+        self.assertNotIn("该栏目收录 32 条有用内容", body_markdown)
+        self.assertIn("变现", made_money_line)
+        self.assertTrue("提效" in made_money_line or "省时间" in made_money_line)
+        self.assertIn("技术用户", gap_line)
+        self.assertIn("非技术用户", gap_line)
+        self.assertTrue("模型选择" in gap_line or "agents" in gap_line)
+        self.assertIn("Godmode", godmode_line)
+        self.assertTrue("并行" in godmode_line or "parallel agents" in godmode_line)
+        self.assertTrue("自动回滚" in godmode_line or "回滚" in godmode_line)
+        self.assertIn("Mac mini", mac_mini_line)
+        self.assertTrue("常驻" in mac_mini_line or "24/7" in mac_mini_line)
+        self.assertTrue("远程" in mac_mini_line or "成本" in mac_mini_line)
+        self.assertIn("Peter Steinberger", peter_line)
+        self.assertIn("Boris Cherny", peter_line)
+        self.assertTrue("OpenClaw" in peter_line or "Claude Code" in peter_line)
+
+    def test_build_report_artifact_live_like_github_trending_second_wave_fallbacks_replace_generic_placeholder(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "github-trending-weekly", "status": "ok", "useful_item_count": 3},
+            ],
+            "summary": {"useful_item_count": 3, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "github-trending-weekly",
+                    "title": "agent-skills",
+                    "source_url": "https://github.com/addyosmani/agent-skills",
+                    "signal_path": "github-trending-weekly/2026-04-20/signals/agent-skills.md",
+                    "fetched_at": "2026-04-20T10:00:00+0000",
+                    "source_snippet": (
+                        "**Production-grade engineering skills for AI coding agents.** Skills encode the workflows, "
+                        "quality gates, and best practices that senior engineers use when building software. These "
+                        "ones are packaged so AI agents follow them consistently across every phase of development."
+                    ),
+                    "excerpt": (
+                        "**Production-grade engineering skills for AI coding agents.** Skills encode the workflows, "
+                        "quality gates, and best practices that senior engineers use when building software. These "
+                        "ones are packaged so AI agents follow them consistently across every phase of development."
+                    ),
+                },
+                {
+                    "lane": "github-trending-weekly",
+                    "title": "android-reverse-engineering-skill",
+                    "source_url": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill",
+                    "signal_path": "github-trending-weekly/2026-04-20/signals/android-reverse-engineering-skill.md",
+                    "fetched_at": "2026-04-20T10:05:00+0000",
+                    "source_snippet": (
+                        "A Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files and extracts the HTTP APIs "
+                        "used by the app so you can document and reproduce them without the original source code."
+                    ),
+                    "excerpt": (
+                        "A Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files and extracts the HTTP APIs "
+                        "used by the app so you can document and reproduce them without the original source code."
+                    ),
+                },
+                {
+                    "lane": "github-trending-weekly",
+                    "title": "markitdown",
+                    "source_url": "https://github.com/microsoft/markitdown",
+                    "signal_path": "github-trending-weekly/2026-04-20/signals/markitdown.md",
+                    "fetched_at": "2026-04-20T10:10:00+0000",
+                    "source_snippet": (
+                        "![PyPI](badge) ![Downloads](badge) > [!TIP] > MarkItDown now offers an MCP (Model Context "
+                        "Protocol) server for integration with LLM applications like Claude Desktop. > [!IMPORTANT] "
+                        "> Breaking changes between 0.0.1 to 0.1.0: dependencies are now organized into optional "
+                        "feature-groups."
+                    ),
+                    "excerpt": (
+                        "![PyPI](badge) ![Downloads](badge) > [!TIP] > MarkItDown now offers an MCP (Model Context "
+                        "Protocol) server for integration with LLM applications like Claude Desktop. > [!IMPORTANT] "
+                        "> Breaking changes between 0.0.1 to 0.1.0: dependencies are now organized into optional "
+                        "feature-groups."
+                    ),
+                },
+            ],
+            "summary": {
+                "selected_item_count": 3,
+                "lane_counts": [
+                    {"lane": "github-trending-weekly", "selected_item_count": 3},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+        agent_skills_line = next(line for line in body_markdown.splitlines() if "https://github.com/addyosmani/agent-skills" in line)
+        android_line = next(
+            line
+            for line in body_markdown.splitlines()
+            if "https://github.com/SimoneAvogadro/android-reverse-engineering-skill" in line
+        )
+        markitdown_line = next(line for line in body_markdown.splitlines() if "https://github.com/microsoft/markitdown" in line)
+
+        self.assertNotIn("项目说明主要在讲它的定位、工作流和使用场景", body_markdown)
+        self.assertTrue("生产级" in agent_skills_line or "工程技能" in agent_skills_line)
+        self.assertTrue("质量门槛" in agent_skills_line or "工作流" in agent_skills_line or "最佳实践" in agent_skills_line)
+        self.assertTrue("反编译" in android_line or "提取" in android_line)
+        self.assertIn("HTTP API", android_line)
+        self.assertIn("MCP", markitdown_line)
+        self.assertTrue("Claude Desktop" in markitdown_line or "LLM" in markitdown_line)
+
+    def test_build_report_artifact_live_like_product_hunt_second_wave_localizes_generic_english_taglines(self) -> None:
+        report_date = "2026-04-20"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 2},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "Fixa.dev — A cloud-native AI agent that can build literally anything",
+                    "source_url": "https://www.producthunt.com/products/fixa-dev",
+                    "signal_path": "product-hunt-watch/2026-04-20/signals/fixa-dev.md",
+                    "fetched_at": "2026-04-20T11:00:00+0000",
+                    "source_snippet": "Votes: 87 Comments: 5 Topic: Developer Tools",
+                    "excerpt": "Votes: 87 Comments: 5 Topic: Developer Tools",
+                },
+                {
+                    "lane": "product-hunt-watch",
+                    "title": "Avina — GTM Agents to Find and Reach Your Next Customer",
+                    "source_url": "https://www.producthunt.com/products/avina-2",
+                    "signal_path": "product-hunt-watch/2026-04-20/signals/avina.md",
+                    "fetched_at": "2026-04-20T11:05:00+0000",
+                    "source_snippet": "Votes: 170 Comments: 10 Topic: Artificial Intelligence",
+                    "excerpt": "Votes: 170 Comments: 10 Topic: Artificial Intelligence",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [
+                    {"lane": "product-hunt-watch", "selected_item_count": 2},
+                ],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+        fixa_line = next(line for line in body_markdown.splitlines() if "https://www.producthunt.com/products/fixa-dev" in line)
+        avina_line = next(line for line in body_markdown.splitlines() if "https://www.producthunt.com/products/avina-2" in line)
+
+        self.assertNotIn("A cloud-native AI agent that can build literally anything", body_markdown)
+        self.assertNotIn("GTM Agents to Find and Reach Your Next Customer", body_markdown)
+        self.assertIn("Fixa.dev", fixa_line)
+        self.assertTrue("cloud-native" in fixa_line or "云原生" in fixa_line)
+        self.assertTrue("几乎什么都能构建" in fixa_line or "什么都能做" in fixa_line)
+        self.assertIn("Avina", avina_line)
+        self.assertTrue("找" in avina_line or "获取" in avina_line)
+        self.assertTrue("触达" in avina_line or "客户" in avina_line)
+        self.assertNotIn("该栏目收录", body_markdown)
 
     def test_build_report_artifact_sparse_release_without_notes_uses_non_placeholder_summary(self) -> None:
         collect_result = {
