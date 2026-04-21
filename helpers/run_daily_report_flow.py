@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
@@ -48,6 +49,9 @@ FEISHU_OPEN_API_BASE = "https://open.feishu.cn/open-apis"
 FEISHU_AUDIO_SKILL_DIR = Path.home() / ".hermes" / "skills" / "productivity" / "feishu-playable-daily-audio"
 MINIMAX_TTS_SCRIPT = FEISHU_AUDIO_SKILL_DIR / "scripts" / "generate_minimax_tts.py"
 FEISHU_OPUS_SCRIPT = FEISHU_AUDIO_SKILL_DIR / "scripts" / "convert_to_feishu_opus.py"
+DEFAULT_ARCHIVE_REMOTE = "origin"
+DEFAULT_ARCHIVE_BRANCH = "main"
+DEFAULT_ARCHIVE_DAILY_REPORT_DIR = "raw/inbound/ai-daily-report"
 READOUT_INTRO = "以下是今天的 AI Agent 日报语音简报。"
 READOUT_OUTRO = "以上就是今天的重点内容，感谢收听。"
 READOUT_PLACEHOLDER_SNIPPETS = ("原文围绕", "具体变化见来源", "值得关注")
@@ -271,6 +275,7 @@ def summarize_ops_reason(summary: dict[str, Any]) -> str:
     reason = str(summary.get("reason") or "").strip()
     validation_error = str(summary.get("validation_error") or "").strip()
     publish = summary.get("publish") or {}
+    archive = summary.get("archive") or {}
 
     if reason == "report_output_contract_failed":
         if validation_error:
@@ -282,6 +287,10 @@ def summarize_ops_reason(summary: dict[str, Any]) -> str:
         return str(publish.get("error_summary") or "发布失败")
     if publish.get("status") == "degraded":
         return str(publish.get("error_summary") or "发布降级")
+    if archive.get("status") == "failed":
+        return str(archive.get("error_summary") or "knowledge-wiki 归档失败")
+    if archive.get("status") == "degraded":
+        return str(archive.get("error_summary") or "knowledge-wiki 归档降级")
     if reason:
         return reason
     return "运行结果异常，请检查 run-summary.json 和相关日志"
@@ -329,6 +338,176 @@ def write_ops_notice(summary: dict[str, Any], run_dir: Path) -> dict[str, Any]:
         "path": str(notice_path),
         "reason_summary": summarize_ops_reason(summary),
     }
+
+
+def resolve_archive_settings(config: dict[str, Any]) -> dict[str, str]:
+    raw_archive = ((config.get("archive") or {}).get("knowledge_wiki") or {})
+    daily_report_dir = str(raw_archive.get("daily_report_dir") or DEFAULT_ARCHIVE_DAILY_REPORT_DIR).strip().strip("/")
+    if not daily_report_dir:
+        daily_report_dir = DEFAULT_ARCHIVE_DAILY_REPORT_DIR
+    return {
+        "repo_root": str(raw_archive.get("repo_root") or "").strip(),
+        "remote": str(raw_archive.get("remote") or DEFAULT_ARCHIVE_REMOTE).strip() or DEFAULT_ARCHIVE_REMOTE,
+        "branch": str(raw_archive.get("branch") or DEFAULT_ARCHIVE_BRANCH).strip() or DEFAULT_ARCHIVE_BRANCH,
+        "daily_report_dir": daily_report_dir,
+    }
+
+
+def build_archive_note_path(*, report_date: str, daily_report_dir: str) -> Path:
+    year_segment = report_date[:4] if len(report_date) >= 4 else report_date
+    return Path(daily_report_dir) / year_segment / f"{report_date}.md"
+
+
+def is_noop_git_commit(result: subprocess.CompletedProcess[str]) -> bool:
+    combined = "\n".join(part for part in (result.stdout, result.stderr) if part).lower()
+    return "nothing to commit" in combined or "working tree clean" in combined
+
+
+def archive_report_to_knowledge_wiki(
+    *,
+    report_path: Path,
+    report_date: str,
+    run_dir: Path,
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    settings = resolve_archive_settings(config)
+    note_path = build_archive_note_path(
+        report_date=report_date,
+        daily_report_dir=settings["daily_report_dir"],
+    )
+    log_path = run_dir / "logs" / "knowledge-wiki-archive.json"
+    events: list[dict[str, Any]] = []
+    repo_root_text = settings["repo_root"]
+    repo_root = expand_path(repo_root_text) if repo_root_text else None
+    destination_path = repo_root / note_path if repo_root else None
+
+    base_result: dict[str, Any] = {
+        "repo": str(repo_root) if repo_root else repo_root_text,
+        "remote": settings["remote"],
+        "branch": settings["branch"],
+        "note_path": note_path.as_posix(),
+        "log": str(log_path),
+    }
+    if destination_path is not None:
+        base_result["path"] = str(destination_path)
+
+    def finish(
+        *,
+        status: str,
+        summary_text: str,
+        error_summary: str | None = None,
+        commit: str | None = None,
+    ) -> dict[str, Any]:
+        result = {**base_result, "status": status, "summary": summary_text}
+        if error_summary:
+            result["error_summary"] = error_summary
+        if commit:
+            result["commit"] = commit
+        write_json_log(log_path, {"events": events, "result": result})
+        return result
+
+    def run_git(command: list[str]) -> subprocess.CompletedProcess[str]:
+        if repo_root is None:
+            raise RuntimeError("archive repo_root is not configured")
+        completed = subprocess.run(
+            command,
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+        )
+        events.append(
+            {
+                "command": command,
+                "cwd": str(repo_root),
+                "exit_code": completed.returncode,
+                "stdout": completed.stdout,
+                "stderr": completed.stderr,
+            }
+        )
+        return completed
+
+    def command_failed(step: str, completed: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+        return finish(
+            status="failed",
+            summary_text=f"归档失败：knowledge-wiki {step} failed",
+            error_summary=f"knowledge-wiki {step} failed",
+        )
+
+    report_path = report_path.resolve()
+    if repo_root is None:
+        return finish(
+            status="failed",
+            summary_text="归档失败：knowledge-wiki repo_root 未配置",
+            error_summary="knowledge-wiki repo_root 未配置",
+        )
+    if not report_path.is_file():
+        return finish(
+            status="failed",
+            summary_text=f"归档失败：Missing report file: {report_path}",
+            error_summary=f"Missing report file: {report_path}",
+        )
+    if not repo_root.is_dir():
+        return finish(
+            status="failed",
+            summary_text=f"归档失败：Missing knowledge-wiki repo: {repo_root}",
+            error_summary=f"Missing knowledge-wiki repo: {repo_root}",
+        )
+
+    try:
+        branch_result = run_git(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+        if branch_result.returncode != 0:
+            return command_failed("git rev-parse --abbrev-ref HEAD", branch_result)
+        current_branch = branch_result.stdout.strip()
+        if current_branch != settings["branch"]:
+            return finish(
+                status="failed",
+                summary_text=f"归档失败：knowledge-wiki branch is {current_branch or 'unknown'}, expected {settings['branch']}",
+                error_summary=f"knowledge-wiki branch is {current_branch or 'unknown'}, expected {settings['branch']}",
+            )
+
+        pull_result = run_git(["git", "pull", "--ff-only", settings["remote"], settings["branch"]])
+        if pull_result.returncode != 0:
+            return command_failed("git pull", pull_result)
+
+        assert destination_path is not None
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(report_path, destination_path)
+
+        add_result = run_git(["git", "add", note_path.as_posix()])
+        if add_result.returncode != 0:
+            return command_failed("git add", add_result)
+
+        commit_message = f"archive(ai-daily-report): {report_date}"
+        commit_result = run_git(["git", "commit", "-m", commit_message])
+        if commit_result.returncode != 0 and not is_noop_git_commit(commit_result):
+            return command_failed("git commit", commit_result)
+
+        head_result = run_git(["git", "rev-parse", "HEAD"])
+        if head_result.returncode != 0:
+            return command_failed("git rev-parse HEAD", head_result)
+        commit_sha = head_result.stdout.strip()
+
+        push_result = run_git(["git", "push", settings["remote"], settings["branch"]])
+        if push_result.returncode != 0:
+            return finish(
+                status="failed",
+                summary_text="归档失败：knowledge-wiki git push failed",
+                error_summary="knowledge-wiki git push failed",
+                commit=commit_sha,
+            )
+
+        return finish(
+            status="succeeded",
+            summary_text=f"已归档到 {note_path.as_posix()} @ {commit_sha}",
+            commit=commit_sha,
+        )
+    except Exception as exc:
+        events.append({"step": "exception", "error": str(exc)})
+        return finish(
+            status="failed",
+            summary_text=f"归档失败：knowledge-wiki archive failed: {exc}",
+            error_summary=f"knowledge-wiki archive failed: {exc}",
+        )
 
 
 def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, Any]:
@@ -1158,6 +1337,11 @@ def main() -> int:
         "timezone": runtime["timezone"],
         "lanes": lane_order,
         "collect": [],
+        "archive": {
+            "status": "skipped",
+            "reason": "publish_not_attempted",
+            "summary": "未归档：未进入发布阶段",
+        },
     }
 
     should_collect = not args.skip_collect
@@ -1259,8 +1443,39 @@ def main() -> int:
         )
     else:
         summary["publish"] = {"status": "skipped"}
+    publish_status = summary["publish"].get("status")
+    doc_status = summary["publish"].get("doc_status")
+    should_archive = publish_status in {"succeeded", "degraded"} and doc_status == "succeeded"
+    if should_archive:
+        summary["archive"] = archive_report_to_knowledge_wiki(
+            report_path=report_path,
+            report_date=args.report_date,
+            run_dir=run_dir,
+            config=config,
+        )
+        if summary["archive"].get("status") != "succeeded":
+            summary["decision"] = "degraded"
+            summary["reason"] = "knowledge_wiki_archive_failed"
+    elif publish_status == "skipped":
+        summary["archive"] = {
+            "status": "skipped",
+            "reason": "publish_skipped",
+            "summary": "未归档：发布已跳过",
+        }
+    elif doc_status != "succeeded":
+        summary["archive"] = {
+            "status": "skipped",
+            "reason": "doc_publish_not_succeeded",
+            "summary": "未归档：文档发布未成功",
+        }
+    else:
+        summary["archive"] = {
+            "status": "skipped",
+            "reason": "publish_not_succeeded",
+            "summary": "未归档：发布未成功",
+        }
 
-    if summary["publish"].get("status") in {"degraded", "failed"}:
+    if summary["publish"].get("status") in {"degraded", "failed"} or summary["archive"].get("status") in {"degraded", "failed"}:
         summary["ops_notice"] = write_ops_notice(summary, run_dir)
 
     dump_json(summary, summary_path)

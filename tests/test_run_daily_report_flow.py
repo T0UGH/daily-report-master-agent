@@ -710,6 +710,120 @@ def test_publish_report_bundle_fails_when_doc_import_fails(monkeypatch, tmp_path
     assert send_calls == 0
 
 
+def test_archive_report_to_knowledge_wiki_pulls_writes_commits_and_pushes(
+    monkeypatch, tmp_path: Path
+) -> None:
+    report_path = _write_report(tmp_path)
+    repo_root = tmp_path / "knowledge-wiki"
+    repo_root.mkdir(parents=True, exist_ok=True)
+    run_dir = tmp_path / "runtime" / "2026-04-16"
+    commands: list[tuple[list[str], str | None]] = []
+
+    config = {
+        "archive": {
+            "knowledge_wiki": {
+                "repo_root": str(repo_root),
+                "remote": "origin",
+                "branch": "main",
+                "daily_report_dir": "raw/inbound/ai-daily-report",
+            }
+        }
+    }
+
+    def fake_subprocess_run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+        cwd = kwargs.get("cwd")
+        commands.append((command, cwd))
+        if command == ["git", "rev-parse", "--abbrev-ref", "HEAD"]:
+            return subprocess.CompletedProcess(command, 0, "main\n", "")
+        if command == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(command, 0, "abc123def456\n", "")
+        return subprocess.CompletedProcess(command, 0, "ok\n", "")
+
+    monkeypatch.setattr(flow.subprocess, "run", fake_subprocess_run)
+
+    result = flow.archive_report_to_knowledge_wiki(
+        report_path=report_path,
+        report_date="2026-04-16",
+        run_dir=run_dir,
+        config=config,
+    )
+
+    archived_path = repo_root / "raw" / "inbound" / "ai-daily-report" / "2026" / "2026-04-16.md"
+    assert archived_path.read_text(encoding="utf-8") == report_path.read_text(encoding="utf-8")
+    assert commands == [
+        (["git", "rev-parse", "--abbrev-ref", "HEAD"], str(repo_root)),
+        (["git", "pull", "--ff-only", "origin", "main"], str(repo_root)),
+        (["git", "add", "raw/inbound/ai-daily-report/2026/2026-04-16.md"], str(repo_root)),
+        (["git", "commit", "-m", "archive(ai-daily-report): 2026-04-16"], str(repo_root)),
+        (["git", "rev-parse", "HEAD"], str(repo_root)),
+        (["git", "push", "origin", "main"], str(repo_root)),
+    ]
+    assert result == {
+        "status": "succeeded",
+        "repo": str(repo_root),
+        "remote": "origin",
+        "branch": "main",
+        "path": str(archived_path),
+        "note_path": "raw/inbound/ai-daily-report/2026/2026-04-16.md",
+        "commit": "abc123def456",
+        "log": str(run_dir / "logs" / "knowledge-wiki-archive.json"),
+        "summary": "已归档到 raw/inbound/ai-daily-report/2026/2026-04-16.md @ abc123def456",
+    }
+
+
+def test_archive_report_to_knowledge_wiki_treats_nothing_to_commit_as_succeeded(
+    monkeypatch, tmp_path: Path
+) -> None:
+    report_path = _write_report(tmp_path)
+    repo_root = tmp_path / "knowledge-wiki"
+    repo_root.mkdir(parents=True, exist_ok=True)
+    run_dir = tmp_path / "runtime" / "2026-04-16"
+    commands: list[tuple[list[str], str | None]] = []
+
+    config = {
+        "archive": {
+            "knowledge_wiki": {
+                "repo_root": str(repo_root),
+                "remote": "origin",
+                "branch": "main",
+                "daily_report_dir": "raw/inbound/ai-daily-report",
+            }
+        }
+    }
+
+    def fake_subprocess_run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+        cwd = kwargs.get("cwd")
+        commands.append((command, cwd))
+        if command == ["git", "rev-parse", "--abbrev-ref", "HEAD"]:
+            return subprocess.CompletedProcess(command, 0, "main\n", "")
+        if command == ["git", "commit", "-m", "archive(ai-daily-report): 2026-04-16"]:
+            return subprocess.CompletedProcess(command, 1, "On branch main\nnothing to commit, working tree clean\n", "")
+        if command == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(command, 0, "existingcommit123\n", "")
+        return subprocess.CompletedProcess(command, 0, "ok\n", "")
+
+    monkeypatch.setattr(flow.subprocess, "run", fake_subprocess_run)
+
+    result = flow.archive_report_to_knowledge_wiki(
+        report_path=report_path,
+        report_date="2026-04-16",
+        run_dir=run_dir,
+        config=config,
+    )
+
+    assert commands == [
+        (["git", "rev-parse", "--abbrev-ref", "HEAD"], str(repo_root)),
+        (["git", "pull", "--ff-only", "origin", "main"], str(repo_root)),
+        (["git", "add", "raw/inbound/ai-daily-report/2026/2026-04-16.md"], str(repo_root)),
+        (["git", "commit", "-m", "archive(ai-daily-report): 2026-04-16"], str(repo_root)),
+        (["git", "rev-parse", "HEAD"], str(repo_root)),
+        (["git", "push", "origin", "main"], str(repo_root)),
+    ]
+    assert result["status"] == "succeeded"
+    assert result["commit"] == "existingcommit123"
+    assert result["summary"] == "已归档到 raw/inbound/ai-daily-report/2026/2026-04-16.md @ existingcommit123"
+
+
 def test_main_publish_path_blocks_and_records_contract_failure_before_publish(
     monkeypatch, tmp_path: Path
 ) -> None:
@@ -882,3 +996,354 @@ def test_main_writes_ops_notice_when_publish_degrades(monkeypatch, tmp_path: Pat
     assert "- 状态：degraded" in ops_notice
     assert "- 原因：Feishu audio send failed" in ops_notice
     assert "- 发布引用：https://example.com/doc" in ops_notice
+
+
+def test_main_archives_report_after_publish_success(monkeypatch, tmp_path: Path) -> None:
+    valid_report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "## X 推荐流\n"
+        "- Claude Code 新增了 review gate，并补了失败原因。[原帖](https://example.com/x)\n\n"
+        "## 来源\n"
+        "### X 推荐流\n"
+        "- https://example.com/x\n"
+    )
+    runtime_root = tmp_path / "runtime"
+    archive_repo = tmp_path / "knowledge-wiki"
+    sequence: list[str] = []
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-16",
+            config=tmp_path / "runtime-config.json",
+            skip_collect=True,
+            publish=True,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "load_runtime_config",
+        lambda _path: {
+            "runtime": {"timezone": "Asia/Shanghai"},
+            "paths": {
+                "signals_root": str(tmp_path / "signals" / "snapshots"),
+                "runtime_root": str(runtime_root),
+            },
+            "reader_facing": {"fixed_section_order": ["x-feed"]},
+            "repo_root": str(tmp_path),
+            "archive": {
+                "knowledge_wiki": {
+                    "repo_root": str(archive_repo),
+                    "remote": "origin",
+                    "branch": "main",
+                    "daily_report_dir": "raw/inbound/ai-daily-report",
+                }
+            },
+        },
+    )
+    monkeypatch.setattr(flow, "expand_path", lambda value: Path(value))
+    monkeypatch.setattr(flow, "is_path_writable", lambda _path: True)
+    monkeypatch.setattr(flow, "build_collect_result", lambda **_: {"summary": {"useful_item_count": 1}})
+    monkeypatch.setattr(
+        flow,
+        "resolve_previous_selected_items_path",
+        lambda **_: tmp_path / "previous-selected-items.json",
+    )
+    monkeypatch.setattr(flow, "resolve_lane_item_limits", lambda _config: {"x-feed": 1})
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 1}],
+            }
+        },
+    )
+    monkeypatch.setattr(flow, "build_validation_bundle", lambda **_: {"status": "ok"})
+    monkeypatch.setattr(flow, "build_report_artifact", lambda **_: {"body_markdown": valid_report_markdown})
+
+    def fake_publish_report_bundle(**_: object) -> dict[str, str]:
+        sequence.append("publish")
+        return {
+            "status": "succeeded",
+            "doc_status": "succeeded",
+            "doc_url": "https://example.com/doc",
+        }
+
+    def fake_archive_report_to_knowledge_wiki(
+        *, report_path: Path, report_date: str, run_dir: Path, config: dict
+    ) -> dict[str, str]:
+        sequence.append("archive")
+        assert report_date == "2026-04-16"
+        assert report_path == run_dir / "report.md"
+        assert report_path.read_text(encoding="utf-8") == valid_report_markdown
+        assert config["archive"]["knowledge_wiki"]["repo_root"] == str(archive_repo)
+        return {
+            "status": "succeeded",
+            "repo": str(archive_repo),
+            "remote": "origin",
+            "branch": "main",
+            "path": str(archive_repo / "raw" / "inbound" / "ai-daily-report" / "2026" / "2026-04-16.md"),
+            "note_path": "raw/inbound/ai-daily-report/2026/2026-04-16.md",
+            "commit": "abc123def456",
+            "log": str(run_dir / "logs" / "knowledge-wiki-archive.json"),
+            "summary": "已归档到 raw/inbound/ai-daily-report/2026/2026-04-16.md @ abc123def456",
+        }
+
+    monkeypatch.setattr(flow, "publish_report_bundle", fake_publish_report_bundle)
+    monkeypatch.setattr(flow, "archive_report_to_knowledge_wiki", fake_archive_report_to_knowledge_wiki)
+
+    exit_code = flow.main()
+
+    run_summary = json.loads(
+        (runtime_root / "2026-04-16" / "run-summary.json").read_text(encoding="utf-8")
+    )
+
+    assert exit_code == 0
+    assert sequence == ["publish", "archive"]
+    assert run_summary["decision"] == "generated"
+    assert run_summary["publish"]["status"] == "succeeded"
+    assert run_summary["archive"] == {
+        "status": "succeeded",
+        "repo": str(archive_repo),
+        "remote": "origin",
+        "branch": "main",
+        "path": str(archive_repo / "raw" / "inbound" / "ai-daily-report" / "2026" / "2026-04-16.md"),
+        "note_path": "raw/inbound/ai-daily-report/2026/2026-04-16.md",
+        "commit": "abc123def456",
+        "log": str(runtime_root / "2026-04-16" / "logs" / "knowledge-wiki-archive.json"),
+        "summary": "已归档到 raw/inbound/ai-daily-report/2026/2026-04-16.md @ abc123def456",
+    }
+
+
+def test_main_archives_report_when_publish_is_degraded_but_doc_succeeds(monkeypatch, tmp_path: Path) -> None:
+    valid_report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "## X 推荐流\n"
+        "- Claude Code 新增了 review gate，并补了失败原因。[原帖](https://example.com/x)\n\n"
+        "## 来源\n"
+        "### X 推荐流\n"
+        "- https://example.com/x\n"
+    )
+    runtime_root = tmp_path / "runtime"
+    archive_repo = tmp_path / "knowledge-wiki"
+    sequence: list[str] = []
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-16",
+            config=tmp_path / "runtime-config.json",
+            skip_collect=True,
+            publish=True,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "load_runtime_config",
+        lambda _path: {
+            "runtime": {"timezone": "Asia/Shanghai"},
+            "paths": {
+                "signals_root": str(tmp_path / "signals" / "snapshots"),
+                "runtime_root": str(runtime_root),
+            },
+            "reader_facing": {"fixed_section_order": ["x-feed"]},
+            "repo_root": str(tmp_path),
+            "archive": {
+                "knowledge_wiki": {
+                    "repo_root": str(archive_repo),
+                    "remote": "origin",
+                    "branch": "main",
+                    "daily_report_dir": "raw/inbound/ai-daily-report",
+                }
+            },
+        },
+    )
+    monkeypatch.setattr(flow, "expand_path", lambda value: Path(value))
+    monkeypatch.setattr(flow, "is_path_writable", lambda _path: True)
+    monkeypatch.setattr(flow, "build_collect_result", lambda **_: {"summary": {"useful_item_count": 1}})
+    monkeypatch.setattr(
+        flow,
+        "resolve_previous_selected_items_path",
+        lambda **_: tmp_path / "previous-selected-items.json",
+    )
+    monkeypatch.setattr(flow, "resolve_lane_item_limits", lambda _config: {"x-feed": 1})
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 1}],
+            }
+        },
+    )
+    monkeypatch.setattr(flow, "build_validation_bundle", lambda **_: {"status": "ok"})
+    monkeypatch.setattr(flow, "build_report_artifact", lambda **_: {"body_markdown": valid_report_markdown})
+
+    def fake_publish_report_bundle(**_: object) -> dict[str, str]:
+        sequence.append("publish")
+        return {
+            "status": "degraded",
+            "doc_status": "succeeded",
+            "doc_url": "https://example.com/doc",
+            "error_summary": "Feishu audio send failed",
+        }
+
+    def fake_archive_report_to_knowledge_wiki(
+        *, report_path: Path, report_date: str, run_dir: Path, config: dict
+    ) -> dict[str, str]:
+        sequence.append("archive")
+        assert report_date == "2026-04-16"
+        assert report_path == run_dir / "report.md"
+        assert report_path.read_text(encoding="utf-8") == valid_report_markdown
+        assert config["archive"]["knowledge_wiki"]["repo_root"] == str(archive_repo)
+        return {
+            "status": "succeeded",
+            "repo": str(archive_repo),
+            "remote": "origin",
+            "branch": "main",
+            "path": str(archive_repo / "raw" / "inbound" / "ai-daily-report" / "2026" / "2026-04-16.md"),
+            "note_path": "raw/inbound/ai-daily-report/2026/2026-04-16.md",
+            "commit": "abc123def456",
+            "log": str(run_dir / "logs" / "knowledge-wiki-archive.json"),
+            "summary": "已归档到 raw/inbound/ai-daily-report/2026/2026-04-16.md @ abc123def456",
+        }
+
+    monkeypatch.setattr(flow, "publish_report_bundle", fake_publish_report_bundle)
+    monkeypatch.setattr(flow, "archive_report_to_knowledge_wiki", fake_archive_report_to_knowledge_wiki)
+
+    exit_code = flow.main()
+
+    run_summary = json.loads(
+        (runtime_root / "2026-04-16" / "run-summary.json").read_text(encoding="utf-8")
+    )
+
+    assert exit_code == 0
+    assert sequence == ["publish", "archive"]
+    assert run_summary["decision"] == "generated"
+    assert run_summary["publish"]["status"] == "degraded"
+    assert run_summary["archive"]["status"] == "succeeded"
+    assert "ops_notice" in run_summary
+
+
+def test_main_archive_failure_degrades_run_after_publish_success(monkeypatch, tmp_path: Path) -> None:
+    valid_report_markdown = (
+        "# AI Agent 日报（2026-04-16）\n\n"
+        "## X 推荐流\n"
+        "- Claude Code 新增了 review gate，并补了失败原因。[原帖](https://example.com/x)\n\n"
+        "## 来源\n"
+        "### X 推荐流\n"
+        "- https://example.com/x\n"
+    )
+    runtime_root = tmp_path / "runtime"
+    archive_repo = tmp_path / "knowledge-wiki"
+    sequence: list[str] = []
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-16",
+            config=tmp_path / "runtime-config.json",
+            skip_collect=True,
+            publish=True,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "load_runtime_config",
+        lambda _path: {
+            "runtime": {"timezone": "Asia/Shanghai"},
+            "paths": {
+                "signals_root": str(tmp_path / "signals" / "snapshots"),
+                "runtime_root": str(runtime_root),
+            },
+            "reader_facing": {"fixed_section_order": ["x-feed"]},
+            "repo_root": str(tmp_path),
+            "archive": {
+                "knowledge_wiki": {
+                    "repo_root": str(archive_repo),
+                    "remote": "origin",
+                    "branch": "main",
+                    "daily_report_dir": "raw/inbound/ai-daily-report",
+                }
+            },
+        },
+    )
+    monkeypatch.setattr(flow, "expand_path", lambda value: Path(value))
+    monkeypatch.setattr(flow, "is_path_writable", lambda _path: True)
+    monkeypatch.setattr(flow, "build_collect_result", lambda **_: {"summary": {"useful_item_count": 1}})
+    monkeypatch.setattr(
+        flow,
+        "resolve_previous_selected_items_path",
+        lambda **_: tmp_path / "previous-selected-items.json",
+    )
+    monkeypatch.setattr(flow, "resolve_lane_item_limits", lambda _config: {"x-feed": 1})
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 1}],
+            }
+        },
+    )
+    monkeypatch.setattr(flow, "build_validation_bundle", lambda **_: {"status": "ok"})
+    monkeypatch.setattr(flow, "build_report_artifact", lambda **_: {"body_markdown": valid_report_markdown})
+
+    def fake_publish_report_bundle(**_: object) -> dict[str, str]:
+        sequence.append("publish")
+        return {
+            "status": "succeeded",
+            "doc_status": "succeeded",
+            "doc_url": "https://example.com/doc",
+        }
+
+    def fake_archive_report_to_knowledge_wiki(
+        *, report_path: Path, report_date: str, run_dir: Path, config: dict
+    ) -> dict[str, str]:
+        del report_path, report_date, run_dir, config
+        sequence.append("archive")
+        return {
+            "status": "failed",
+            "repo": str(archive_repo),
+            "remote": "origin",
+            "branch": "main",
+            "note_path": "raw/inbound/ai-daily-report/2026/2026-04-16.md",
+            "log": str(runtime_root / "2026-04-16" / "logs" / "knowledge-wiki-archive.json"),
+            "error_summary": "knowledge-wiki push failed",
+            "summary": "归档失败：knowledge-wiki push failed",
+        }
+
+    monkeypatch.setattr(flow, "publish_report_bundle", fake_publish_report_bundle)
+    monkeypatch.setattr(flow, "archive_report_to_knowledge_wiki", fake_archive_report_to_knowledge_wiki)
+
+    exit_code = flow.main()
+
+    run_summary = json.loads(
+        (runtime_root / "2026-04-16" / "run-summary.json").read_text(encoding="utf-8")
+    )
+
+    assert exit_code == 0
+    assert sequence == ["publish", "archive"]
+    assert run_summary["publish"]["status"] == "succeeded"
+    assert run_summary["decision"] == "degraded"
+    assert run_summary["archive"]["status"] == "failed"
+    assert run_summary["archive"]["error_summary"] == "knowledge-wiki push failed"
+    assert run_summary["ops_notice"]["status"] == "generated"
+    ops_notice = Path(run_summary["ops_notice"]["path"]).read_text(encoding="utf-8")
+    assert "- 状态：degraded" in ops_notice
+    assert "- 原因：knowledge-wiki push failed" in ops_notice
+    assert "- 发布引用：https://example.com/doc" in ops_notice
+    assert "- 归档信息：归档失败：knowledge-wiki push failed" in ops_notice
