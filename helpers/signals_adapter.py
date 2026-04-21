@@ -3898,6 +3898,20 @@ def localize_product_hunt_tagline(value: str) -> str:
         return ""
 
     lowered = cleaned.lower()
+    if "spatial analysis" in lowered and "agent-driven" in lowered:
+        return "做即时的 agent 驱动空间分析和决策"
+    if "transforming video" in lowered and "time-based me" in lowered:
+        return "把视频转成带时间轴的结构化元数据"
+    if "cloud sandbox" in lowered and "hermes agent" in lowered:
+        return "MiniMax 推出的云端沙箱版 Hermes Agent"
+    if "make 2d game art" in lowered and "playable games" in lowered:
+        return "用 AI 生成 2D 游戏美术和可玩的游戏，不用画图也不用写代码"
+    if "context-aware mac keypad" in lowered and "workflows" in lowered:
+        return "一块会根据上下文切换按键功能的 Mac 键盘，用来自动化工作流和会议"
+    if lowered == "self-custodial wallet built for ai agents":
+        return "给 AI agents 用的自托管钱包"
+    if lowered == "claro runs the ai agents that operate on your data":
+        return "让 AI agents 直接在你的数据上跑研究和操作"
     if lowered == "your ai technical cofounder":
         return "你的 AI 技术联合创始人"
     if lowered == "practice & assess future-ready skills with ai-simulated team":
@@ -3942,66 +3956,66 @@ def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     source_sentence = localize_product_hunt_tagline(simple_sentences(source_text)[0] if simple_sentences(source_text) else "")
 
     if "microvm" in lowered and "sandbox" in lowered:
-        facts.append(f"`{name}` 主打让 AI coding agents 跑在真实 `microVM` 沙箱里，强调真实隔离环境")
+        facts.append("主打让 AI coding agents 跑在真实 `microVM` 沙箱里，强调真实隔离环境")
     elif tagline and not looks_like_english_text(tagline):
-        facts.append(f"`{name}` 的定位很直接，就是 {tagline}")
+        facts.append(f"定位很直接，就是 {tagline}")
     elif translated_tagline:
-        facts.append(f"`{name}` 的定位很直接：{translated_tagline}")
+        facts.append(f"定位很直接：{translated_tagline}")
     elif source_sentence:
-        facts.append(f"`{name}` 主打的是：{source_sentence}")
+        facts.append(f"主打的是：{source_sentence}")
     elif "design context" in lowered:
-        facts.append(f"`{name}` 主打给 AI agents 提供 `Design context`")
+        facts.append("主打给 AI agents 提供 `Design context`")
 
     if "validate every pr" in lowered or ("visual pr testing" in lowered_title and "runs tests for you" in lowered):
         facts.extend([
-            f"`{name}` 切得很窄，专门做 PR 的视觉测试，而且是让 AI 帮你跑",
+            "切得很窄，专门做 PR 的视觉测试，而且是让 AI 帮你跑",
             "它对应的不是通用聊天场景，而是代码评审前的一个具体质量节点",
         ])
     elif "agent-native software dev" in lowered or ("desktop app" in lowered_title and "alongside you" in lowered):
         facts.extend([
-            f"`{name}` 卖的是 agent-native 的软件开发桌面应用，关键词不是聊天，而是并肩工作",
+            "卖的是 agent-native 的软件开发桌面应用，关键词不是聊天，而是并肩工作",
             "这说明新一轮工具竞争已经在争夺本地开发入口，而不是只争模型能力",
         ])
     elif "runs your entire startup" in lowered or ("startup" in lowered and "agent" in lowered):
         facts.extend([
-            f"`{name}` 的口号很大，直接想把完整 startup 的运营和执行都交给 AI agent",
+            "口号很大，直接想把完整 startup 的运营和执行都交给 AI agent",
             "这类产品通常要打的是流程串联和执行闭环，不只是单点生成能力",
         ])
     elif "spend money in real time" in lowered or "agents buying" in lowered:
         facts.extend([
-            f"`{name}` 的点子很直白：实时看 agent 在花钱买什么",
+            "点子很直白：实时看 agent 在花钱买什么",
             "它抓住的是一个新问题——当 agent 拥有采购和支付权限后，支出本身会变成新的观察面板",
         ])
     elif "ai to ai influence" in lowered or "moves the models" in lowered:
         facts.extend([
-            f"`{name}` 想做的是 AI 之间的影响力评分，而不只是给人看的内容榜单",
+            "想做的是 AI 之间的影响力评分，而不只是给人看的内容榜单",
             "方向上更像是在补 agent 生态里的舆情层：谁在影响谁、哪些信号正在带动模型和工作流选择",
         ])
     elif "participate live in meetings" in lowered or ("meetings" in lowered and "agents" in lowered):
         facts.extend([
-            f"`{name}` 切的是会议协作场景，强调让 AI agent 直接参与 live meetings",
+            "切的是会议协作场景，强调让 AI agent 直接参与 live meetings",
             "问题不在能不能转写，而在 agent 能不能在会议现场承担记录、提醒和后续跟进这些角色",
         ])
     elif "form backend for ai agents" in lowered or ("form backend" in lowered and "ai agents" in lowered):
         facts.extend([
-            f"`{name}` 把表单后端直接做成同时给人和 AI agents 用的基础设施",
+            "把表单后端直接做成同时给人和 AI agents 用的基础设施",
             "如果 agent 真要替人提交、登记、收集信息，这类后端迟早会从“给人用”改成“也给 agent 用”",
         ])
     elif "claude code for product teams" in lowered or ("product teams" in lowered and "claude code" in lowered):
         facts.extend([
-            f"`{name}` 直接把自己定位成“给产品团队用的 Claude Code”",
+            "直接把自己定位成“给产品团队用的 Claude Code”",
             "这说明 coding agent 的协作方式已经开始外溢到产品团队，而不是只停留在工程师侧",
         ])
 
     if not facts and looks_like_english_text(source_text):
         if "workflow" in lowered:
-            facts.append(f"`{name}` 主打盯住团队 workflow")
+            facts.append("主打盯住团队 workflow")
         if "builds your agents" in lowered or ("build" in lowered and "agent" in lowered):
             facts.append("把 agent 搭建环节直接做成产品")
         if "automate" in lowered or "busywork" in lowered:
             facts.append("目标是把重复杂活自动化")
         if not facts and "agent" in lowered:
-            facts.append(f"`{name}` 围绕 agent 工作流切了一个更具体的产品入口")
+            facts.append("围绕 agent 工作流切了一个更具体的产品入口")
 
     votes_match = re.search(r"Votes:\s*(\d+)", source_text, re.IGNORECASE)
     comments_match = re.search(r"Comments:\s*(\d+)", source_text, re.IGNORECASE)
@@ -4192,6 +4206,11 @@ def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, ma
             facts.append("这些边界一旦说清，团队在交接、评审和回滚时会更稳")
             return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 
+        if "qwen3.6-max-preview" in lowered:
+            facts.append("这条 HN 热榜讨论围着 `Qwen3.6-Max-Preview` 这版预览模型展开")
+            facts.append("标题本身就在强调它更聪明、更锐利，但还在持续迭代，不是已经定型的稳定版")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1))
+
         focus = format_hacker_news_topics(topics[:4])
         if focus:
             facts.append(f"这条 HN 热榜讨论把焦点放在 {focus}")
@@ -4211,6 +4230,16 @@ def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, ma
             )
             facts.append("它给的是可复用的团队协作流程，不是占位式搜索命中")
             return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+        if "busybee" in lowered and "fifo" in lowered:
+            facts.append(f"搜索词「{cleaned_query or '相关关键词'}」命中的 `Busybee`，本质上是给 multi-agent 开发流程加一层 `FIFO` build queue")
+            facts.append("作者是因为多条 `Claude Code` 会话同时 build 会打爆旧 MacBook Pro，所以把重活排队并顺手把 CPU 占用放进终端仪表盘")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1))
+
+        if "lazyagent" in lowered and "tui" in lowered:
+            facts.append(f"搜索词「{cleaned_query or '相关关键词'}」命中的 `Lazyagent`，做的是盯多条 AI coding agents 的终端 TUI")
+            facts.append("它会把 `Claude Code`、`Codex`、`OpenCode` 的事件收口到一个界面里，并按工作目录把同仓库会话并到同一项目下")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1))
 
         focus = format_hacker_news_topics(topics[:4])
         if cleaned_query and focus:
@@ -4358,6 +4387,46 @@ def build_reddit_detail(*, title: str, source_text: str) -> str:
             "这帖不是在吹某个新工具，而是在问为什么很多人会把 `Claude Code` 放到 `Mac mini` 上常驻运行",
             "提问者关心的几个点都很具体：是不是为了 24/7 在线、远程接入、更低打扰，还是性能和成本上真有差别",
             "讨论价值在于它把“AI 机器”这个趋势拆成了实际工作流问题，而不是单纯跟风硬件摆设",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "octopoda" in lowered or ("agent os" in lowered_title and "claude code" in lowered):
+        facts = [
+            "作者是被社区吐槽没开源自己的 agent OS 后，干脆把用 `Claude Code` 搭出来的 `Octopoda` 放了出来",
+            "他强调这不只是拿 Claude 写点样板代码，而是真的让它一起做系统设计、半夜查 production 问题和修数据库迁移",
+            "产品定位也写得很直白：想把管理多条 AI agents 的入口收进同一个 dashboard",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "source maps" in lowered and "model-agnostic" in lowered:
+        facts = [
+            "帖子先点名 `Claude Code` 的完整源码通过 `source maps` 暴露了出来，而且规模在 `500K+` 行 TypeScript 级别",
+            "作者重点研究的是多 agent 编排层：`coordinator mode`、team management、task scheduling 和 inter-agent messaging",
+            "他随后照着这套结构重写了一个 `model-agnostic` 开源框架，让 Claude 和 GPT 之类的 agent 能共享 workflow、memory 和 message bus",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "cowork" in lowered and "notion" in lowered and "no servers" in lowered:
+        facts = [
+            "作者晒的是一套没用 `OpenClaw` 的 `Claude Cowork` 工作流：销售线索、夜间研究、指标监控都拆成定时 session 并行跑",
+            "其中一条 session 会把发现写进 `Notion`、需要人工处理时再 DM 提醒，另外还有 heartbeat session 每 30 分钟汇总状态",
+            "他刻意强调这套栈不需要服务器、常驻进程或自定义代码，核心执行引擎就是 scheduled sessions 本身",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "/ultraplan" in lowered and "claude code web" in lowered:
+        facts = [
+            "这帖在讲 `Claude Code` 新上的 `/ultraplan (beta)`：先在终端发起，再到浏览器里审计划、写 inline comments",
+            "计划确认后既可以远程执行，也可以再发回 CLI 接着跑，所以它不只是多一个按钮，而是在拆“计划”和“执行”两个阶段",
+            "同时上线的还有 `Claude Code Web`（`claude.ai/code`），说明它在往 cloud-first workflow 继续推进，但终端仍是 power-user 入口",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "switched from mcps to clis" in lowered_title or ("mcp" in lowered and "cli" in lowered and "shell scripts" in lowered):
+        facts = [
+            "发帖人是在复盘自己为什么从一堆 `MCPs` 切回 `CLIs`，不是泛泛聊工具偏好",
+            "他给出的理由很具体：参数容易传错、鉴权会随机坏、超时频繁，而且整体响应明显更慢",
+            "转向 `CLI` 之后他觉得体验反而更顺，因为 `Claude` 本来就吃了大量 shell scripts、文档、Stack Overflow 和 GitHub issues 语料",
         ]
         return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 

@@ -9,8 +9,10 @@ from helpers.signals_adapter import (
     DEFAULT_LANE_ITEM_LIMITS,
     build_editor_copy,
     build_collect_result,
+    build_hacker_news_detail,
     build_polymarket_detail,
     build_product_hunt_detail,
+    build_reddit_detail,
     build_report_artifact,
     build_selected_items,
     build_validation_bundle,
@@ -5384,6 +5386,157 @@ matched_query: Claude Code
         self.assertIn("采购和支付权限", detail)
         self.assertNotIn("主打 agent 相关的自动化能力", detail)
         self.assertNotIn("Watch agents spend money in real time", detail)
+
+    def test_build_reddit_detail_covers_live_2026_04_21_placeholder_cases(self) -> None:
+        cases = [
+            (
+                "Got roasted for not open sourcing my agent OS (dashboard), so I did. Built the whole thing with Claude Code",
+                (
+                    "Got a lot of hate for not open sourcing my agent OS so decided to just do it. "
+                    "I've been building Octopoda with Claude Code over the past few months. Pretty much the entire thing "
+                    "was pair programmed with Claude, not just boilerplate but actually architecting systems, debugging "
+                    "production issues at 2am, fixing database migrations, all of it. The idea is basically one place to "
+                    "manage your AI agents."
+                ),
+                ("Octopoda", "开源", "数据库迁移"),
+            ),
+            (
+                "Claude Code's source code just leaked — so I had Claude Code analyze its own internals and build an open-source multi-agent framework from it",
+                (
+                    "Claude Code's full source was exposed via source maps. 500K+ lines of TypeScript with the full "
+                    "architecture visible. I studied the multi-agent orchestration layer — coordinator mode, team "
+                    "management, task scheduling, inter-agent messaging — and re-implemented it from scratch as a "
+                    "standalone open-source framework. The key difference from the original: it's model-agnostic. "
+                    "You can run a team where one agent uses Claude for planning and another uses GPT for "
+                    "implementation — same workflow, shared memory, message bus between them."
+                ),
+                ("500K+", "source maps", "model-agnostic"),
+            ),
+            (
+                "Anthropic just restricted OpenClaw from Claude subscriptions. I haven't used OpenClaw once — autonomous Claude agents with zero external harnesses.",
+                (
+                    "I have Claude Cowork sessions running in parallel right now: One manages a sales pipeline "
+                    "(runs every hour, logs findings to Notion, DMs me when a lead needs attention). One handles "
+                    "background research and prep work (fires nightly). One monitors metrics and surfaces anomalies "
+                    "(AM/PM). A heartbeat session rolls up status from all of them every 30 minutes and tells me "
+                    "what needs my attention. No servers. No custom code. No always-on processes. I'm not running "
+                    "OpenClaw. The full stack: Cowork scheduled sessions — the execution engine."
+                ),
+                ("Claude Cowork", "Notion", "不需要服务器"),
+            ),
+            (
+                "Claude Code v2.1.92 introduces Ultraplan — draft plans in the cloud, review in your browser, execute anywhere",
+                (
+                    "Claude Code just shipped /ultraplan (beta) — you run it in your terminal, review the plan in your "
+                    "browser with inline comments, then execute remotely or send it back to your CLI. It shipped "
+                    "alongside Claude Code Web at claude.ai/code, pushing toward cloud-first workflows while keeping "
+                    "the terminal as the power-user entry point. Anyone tried it yet?"
+                ),
+                ("/ultraplan", "浏览器", "claude.ai/code"),
+            ),
+            (
+                "Switched from MCPs to CLIs for Claude Code and honestly never going back",
+                (
+                    "I went pretty hard on MCPs at first. Set up a bunch of them, thought I was doing things the right "
+                    "way. But after actually using them for a bit it just got frustrating. Claude would mess up "
+                    "parameters, auth would randomly break, stuff would time out. And everything felt slower than it "
+                    "should be. Once I started using CLIs, it turned out Claude is genuinely excellent with them. "
+                    "Makes sense, it's been trained on years of shell scripts, docs, Stack Overflow answers, GitHub issues."
+                ),
+                ("MCP", "CLI", "shell scripts"),
+            ),
+        ]
+
+        for title, source_text, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_reddit_detail(title=title, source_text=source_text)
+
+                self.assertTrue(detail)
+                self.assertNotIn("该栏目收录", detail)
+                for term in expected_terms:
+                    self.assertIn(term, detail)
+
+    def test_build_hacker_news_detail_covers_live_2026_04_21_cases(self) -> None:
+        qwen_detail = build_hacker_news_detail(
+            lane_name="hacker-news-watch",
+            title="Qwen3.6-Max-Preview: Smarter, Sharper, Still Evolving",
+            source_text="Qwen3.6-Max-Preview: Smarter, Sharper, Still Evolving",
+        )
+        self.assertIn("Qwen3.6-Max-Preview", qwen_detail)
+        self.assertIn("预览", qwen_detail)
+        self.assertNotIn("不是泛聊概念", qwen_detail)
+
+        busybee_detail = build_hacker_news_detail(
+            lane_name="hacker-news-search-watch",
+            title="Show HN: Busybee - a FIFO build queue for multi-agent dev workflows",
+            source_text=(
+                "My old 8-core MacBook Pro used to get wrecked the moment two Claude Code sessions decided to build "
+                "at the same time. To combat that, I wanted to make sure dev agents queue up when they want to make "
+                "heavy builds. At the same time, I like to keep a constant overview of my CPU usage in the terminal. "
+                "Busybee solves both by rendering a compact set of core usage gauges with a one-line queue status underneath."
+            ),
+            matched_query="agent workflow",
+        )
+        self.assertIn("Busybee", busybee_detail)
+        self.assertIn("FIFO", busybee_detail)
+        self.assertIn("CPU", busybee_detail)
+        self.assertNotIn("不是泛聊概念", busybee_detail)
+
+        lazyagent_detail = build_hacker_news_detail(
+            lane_name="hacker-news-search-watch",
+            title="Show HN: Lazyagent – TUI for to watch all your AI coding agents",
+            source_text=(
+                "Running multiple coding agents could make user losing track of what they were doing. Once subagents "
+                "start spawning other subagents, basic questions get hard to answer: what is running right now, what "
+                "tool did it just call, did the child agent actually do what the parent asked. Lazyagent is a "
+                "terminal TUI that collects events from Claude Code, Codex, and OpenCode and shows them in one place. "
+                "It groups sessions from different runtimes by working directory, so Claude and Codex runs on the "
+                "same repo appear under the same project."
+            ),
+            matched_query="terminal coding agent",
+        )
+        self.assertIn("Lazyagent", lazyagent_detail)
+        self.assertIn("终端 TUI", lazyagent_detail)
+        self.assertIn("工作目录", lazyagent_detail)
+        self.assertNotIn("不是泛聊概念", lazyagent_detail)
+
+    def test_build_product_hunt_detail_localizes_live_2026_04_21_taglines(self) -> None:
+        cases = [
+            (
+                "PangeAI — Instant, agent-driven spatial analysis and decisio",
+                "Instant, agent-driven spatial analysis and decision-making **Author:** @PangeAI",
+                ("空间分析", "决策"),
+            ),
+            (
+                "Pegasus 1.5 by TwelveLabs — AI model for transforming video into Time-Based Me",
+                "AI model for transforming video into Time-Based Metadata **Author:** @Pegasus 1.5 by TwelveLabs",
+                ("视频", "时间", "元数据"),
+            ),
+            (
+                "MaxHermes — World's first cloud sandbox Hermes Agent from Mini",
+                "World's first cloud sandbox Hermes Agent from MiniMax **Author:** @MaxHermes",
+                ("云端沙箱", "Hermes Agent", "MiniMax"),
+            ),
+            (
+                "Makko AI — Make 2D game art and playable games. No drawing. N",
+                "Make 2D game art and playable games. No drawing. No coding. **Author:** @Makko",
+                ("2D 游戏", "不用画图", "不用写代码"),
+            ),
+            (
+                "Dune — Context-aware Mac keypad to automate workflows + m",
+                "Context-aware Mac keypad to automate workflows + meetings **Author:** @Dune",
+                ("Mac", "工作流", "会议"),
+            ),
+        ]
+
+        for title, source_text, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_product_hunt_detail(title=title, source_text=source_text)
+
+                self.assertTrue(detail)
+                self.assertNotIn("这条 Product Hunt 记录里写到：`", detail)
+                for term in expected_terms:
+                    self.assertIn(term, detail)
 
     def test_build_polymarket_detail_rewrites_best_coding_ai_question_into_chinese(self) -> None:
         detail = build_polymarket_detail(

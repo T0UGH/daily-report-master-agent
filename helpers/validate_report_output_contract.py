@@ -55,14 +55,18 @@ CHINESE_CHAR_RE = re.compile(r"[\u4e00-\u9fff]")
 ENGLISH_WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9+./_-]*")
 LONG_ENGLISH_PHRASE_RE = re.compile(r"\b(?:[A-Za-z][A-Za-z0-9+./_-]*\s+){5,}[A-Za-z][A-Za-z0-9+./_-]*\b")
 PLACEHOLDER_COUNT_COPY_RE = re.compile(
-    r"^(?:该|本|此)栏目(?:共)?(?:收录|整理|汇总|包含)\s*\d+\s*条(?:有用)?(?:内容|信息|信号|动态|更新)(?:[。！!？?]|$)"
+    r"(?:该|本|此)栏目(?:共)?(?:收录|整理|汇总|包含)\s*\d+\s*条(?:有用)?(?:内容|信息|信号|动态|更新)(?:[。！!？?]|$)"
 )
 GENERIC_SOURCE_FALLBACK_RE = re.compile(
-    r"^原文围绕.+(?:展开|讨论|介绍|说明)[，,].*(?:具体变化|详细变化|具体内容|更多细节).*(?:见来源|见原文|详见来源|详见原文)(?:[。！!？?]|$)"
+    r"原文围绕.+(?:展开|讨论|介绍|说明)[，,].*(?:具体变化|详细变化|具体内容|更多细节).*(?:见来源|见原文|详见来源|详见原文)(?:[。！!？?]|$)"
 )
 GENERIC_GITHUB_FALLBACK_RE = re.compile(
-    r"^(?:项目|仓库|README|readme|项目说明|仓库说明)(?:主要)?(?:在讲|介绍)(?:它的)?"
+    r"(?:项目|仓库|README|readme|项目说明|仓库说明)(?:主要)?(?:在讲|介绍)(?:它的)?"
     r"[^。]*(?:定位|目标定位)[^。]*(?:工作流|workflow)[^。]*(?:使用场景|场景)[^。]*(?:[。！!？?]|$)"
+)
+GENERIC_HN_FILLER_RE = re.compile(
+    r"(?:这条 HN 热榜讨论|搜索词「[^」]+」命中的这条 HN 讨论|这条 HN 搜索命中)"
+    r"[^。]*(?:不是泛聊概念，而是在(?:追|讲)更具体的工程做法)(?:[。！!？?]|$)"
 )
 
 
@@ -251,16 +255,24 @@ def validate_body_line_content_quality(title: str, raw_line: str) -> None:
         return
 
     require(
-        PLACEHOLDER_COUNT_COPY_RE.match(normalized_line) is None,
+        PLACEHOLDER_COUNT_COPY_RE.search(normalized_line) is None,
         f"{title} 的正文条目不得使用占位统计文案",
     )
     require(
-        GENERIC_SOURCE_FALLBACK_RE.match(normalized_line) is None,
+        GENERIC_SOURCE_FALLBACK_RE.search(normalized_line) is None,
         f"{title} 的正文条目不得使用“围绕 X 展开，具体变化见来源”式兜底句",
     )
     require(
-        GENERIC_GITHUB_FALLBACK_RE.match(normalized_line) is None,
+        GENERIC_GITHUB_FALLBACK_RE.search(normalized_line) is None,
         f"{title} 的正文条目不得使用 GitHub/README 泛化兜底句",
+    )
+    require(
+        GENERIC_HN_FILLER_RE.search(normalized_line) is None,
+        f"{title} 的正文条目不得使用 HN 泛化 filler",
+    )
+    require(
+        not is_product_hunt_raw_english_tagline_leakage(normalized_line),
+        f"{title} 的正文条目不得使用 Product Hunt 英文 tagline 泄漏",
     )
     require(
         not is_english_heavy_explanatory_leakage(normalized_line),
@@ -275,6 +287,7 @@ def normalize_body_line_for_quality(raw_line: str) -> str:
     else:
         line = line.lstrip()
 
+    line = re.sub(r"[*_~]+", " ", line)
     line = INLINE_CODE_RE.sub(" ", line)
     line = MARKDOWN_LINK_INLINE_RE.sub(" ", line)
     line = PLAIN_URL_RE.sub(" ", line)
@@ -289,6 +302,23 @@ def is_english_heavy_explanatory_leakage(line: str) -> bool:
     chinese_char_count = len(CHINESE_CHAR_RE.findall(line))
     english_word_count = len(ENGLISH_WORD_RE.findall(line))
     return english_word_count >= 8 and chinese_char_count < 8
+
+
+def is_product_hunt_raw_english_tagline_leakage(line: str) -> bool:
+    if "Product Hunt" not in line:
+        return False
+
+    match = re.search(r"(?:定位很直接|主打的是)[:：]\s*(.+?)(?:[。！!？?]|$)", line)
+    if not match:
+        return False
+
+    tail = normalize_body_line_for_quality(match.group(1))
+    if not tail:
+        return False
+
+    english_word_count = len(ENGLISH_WORD_RE.findall(tail))
+    chinese_char_count = len(CHINESE_CHAR_RE.findall(tail))
+    return english_word_count >= 4 and chinese_char_count < 4
 
 
 def extract_body_sources(sections: list[tuple[str, list[str]]]) -> dict[str, list[str]]:

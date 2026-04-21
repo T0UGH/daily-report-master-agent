@@ -103,6 +103,18 @@ class ReportOutputContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "占位统计"):
             validate_single_section_report(bad_markdown)
 
+    def test_validator_rejects_placeholder_tail_after_bold_title_prefix(self) -> None:
+        bad_markdown = build_report(
+            "## {section_title}\n"
+            "- **【热帖】Got roasted for not open sourcing my agent OS (dashboard), so I did. Built the whole thing with Claude Code** "
+            "该栏目收录 32 条有用内容。[原帖]({source_url})".format(
+                section_title=SECTION_TITLE,
+                source_url=SOURCE_URL,
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "占位统计"):
+            validate_single_section_report(bad_markdown)
+
     def test_validator_rejects_generic_source_fallback_in_body_line(self) -> None:
         bad_markdown = build_report(
             f"## {SECTION_TITLE}\n- 原文围绕 agent workflow 展开，具体变化见来源。[原帖]({SOURCE_URL})"
@@ -110,11 +122,37 @@ class ReportOutputContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "兜底句"):
             validate_single_section_report(bad_markdown)
 
+    def test_validator_rejects_hn_generic_filler_after_title_prefix(self) -> None:
+        bad_markdown = build_report(
+            "## {section_title}\n"
+            "- **「agent workflow」：Show HN: Busybee - a FIFO build queue for multi-agent dev workflows** "
+            "搜索词「agent workflow」命中的这条 HN 讨论不是泛聊概念，而是在讲更具体的工程做法。"
+            "[原帖]({source_url})".format(
+                section_title=SECTION_TITLE,
+                source_url=SOURCE_URL,
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "HN"):
+            validate_single_section_report(bad_markdown)
+
     def test_validator_rejects_generic_github_fallback_in_body_line(self) -> None:
         bad_markdown = build_report(
             f"## {SECTION_TITLE}\n- 项目说明主要在讲它的定位、工作流和使用场景。[GitHub]({SOURCE_URL})"
         )
         with self.assertRaisesRegex(ValueError, "GitHub/README"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_product_hunt_raw_english_tagline_leakage(self) -> None:
+        bad_markdown = build_report(
+            "## {section_title}\n"
+            "- **PangeAI — Instant, agent-driven spatial analysis and decisio** "
+            "`PangeAI` 这条 Product Hunt 记录里写到：`PangeAI` 的定位很直接："
+            "Instant, agent-driven spatial analysis and decisio。[Product Hunt]({source_url})".format(
+                section_title=SECTION_TITLE,
+                source_url=SOURCE_URL,
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "Product Hunt"):
             validate_single_section_report(bad_markdown)
 
     def test_validator_rejects_english_heavy_explanatory_leakage(self) -> None:
