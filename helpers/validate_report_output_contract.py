@@ -68,6 +68,10 @@ GENERIC_HN_FILLER_RE = re.compile(
     r"(?:这条 HN 热榜讨论|搜索词「[^」]+」命中的这条 HN 讨论|这条 HN 搜索命中)"
     r"[^。]*(?:不是泛聊概念，而是在(?:追|讲)更具体的工程做法)(?:[。！!？?]|$)"
 )
+HYBRID_ENGLISH_TAIL_PREFIX_RE = re.compile(
+    r"(?:提到|写明了|记录里写到|主打的是|定位很直接[:：]?|摘要里写到|改动主要是|主要更新是|更新是)\s*",
+    re.IGNORECASE,
+)
 
 
 def load_json(path: Path) -> Any:
@@ -301,7 +305,20 @@ def is_english_heavy_explanatory_leakage(line: str) -> bool:
 
     chinese_char_count = len(CHINESE_CHAR_RE.findall(line))
     english_word_count = len(ENGLISH_WORD_RE.findall(line))
-    return english_word_count >= 8 and chinese_char_count < 8
+    if english_word_count >= 8 and chinese_char_count < 8:
+        return True
+
+    prefix_match = HYBRID_ENGLISH_TAIL_PREFIX_RE.search(line)
+    if prefix_match is None:
+        return False
+
+    english_tail = normalize_body_line_for_quality(line[prefix_match.end() :])
+    if not english_tail:
+        return False
+
+    english_tail_word_count = len(ENGLISH_WORD_RE.findall(english_tail))
+    english_tail_chinese_count = len(CHINESE_CHAR_RE.findall(english_tail))
+    return english_tail_word_count >= 10 and english_tail_word_count > english_tail_chinese_count * 2
 
 
 def is_product_hunt_raw_english_tagline_leakage(line: str) -> bool:

@@ -7,8 +7,10 @@ from pathlib import Path
 
 from helpers.signals_adapter import (
     DEFAULT_LANE_ITEM_LIMITS,
-    build_editor_copy,
+    build_claude_code_release_detail,
+    build_codex_detail,
     build_collect_result,
+    build_editor_copy,
     build_hacker_news_detail,
     build_polymarket_detail,
     build_product_hunt_detail,
@@ -5666,6 +5668,72 @@ matched_query: Claude Code
         self.assertNotIn("CLI tools that actually work well with AI coding agents", body_markdown)
         self.assertNotIn("Swarm Orchestrator v4.1.0, verification layer for AI coding agents", body_markdown)
         self.assertNotIn("VS Code extension with Agent Memory that wraps Claude Code and Codex with a Powerful GUI", body_markdown)
+
+    def test_build_claude_code_release_detail_localizes_sparse_release_fix(self) -> None:
+        detail = build_claude_code_release_detail(
+            title="v2.1.112",
+            source_text='Fixed "claude-opus-4-7 is temporarily unavailable" for auto mode',
+        )
+
+        self.assertIn("auto mode", detail)
+        self.assertIn("temporarily unavailable", detail)
+        self.assertIn("问题被修掉了", detail)
+        self.assertNotIn('Fixed "claude-opus-4-7 is temporarily unavailable" for auto mode', detail)
+
+    def test_build_codex_detail_localizes_dependency_alert_commit(self) -> None:
+        detail = build_codex_detail(
+            title="[codex] Fix high severity dependency alerts (#18167)",
+            source_text=(
+                "Pin vulnerable npm dependencies through the existing root `resolutions` mechanism so the lockfile moves only to patched versions. "
+                "Refresh `pnpm-lock.yaml` for `@modelcontextprotocol/sdk`, `handlebars`"
+            ),
+            source_url="https://github.com/openai/codex/commit/fe04d75e0fdbbff77e02b5355c86108712abd151",
+        )
+
+        self.assertIn("高危依赖告警", detail)
+        self.assertIn("已修补版本", detail)
+        self.assertIn("pnpm-lock.yaml", detail)
+        self.assertNotIn("Pin vulnerable npm dependencies", detail)
+
+    def test_build_codex_detail_localizes_sparse_commit_and_realtime_summary(self) -> None:
+        fixture_detail = build_codex_detail(
+            title="[codex] Fix agent identity auth test fixture (#18697)",
+            source_text="Add the missing `background_task_id: None` field to the `AgentIdentityAuthRecord` fixture introduced in `auth_tests.rs`.",
+            source_url="https://github.com/openai/codex/commit/6b17adc231e038c35aeb6ac613fdaf6c6d79bb26",
+        )
+        self.assertIn("background_task_id: None", fixture_detail)
+        self.assertIn("数据形状", fixture_detail)
+        self.assertNotIn("Add the missing", fixture_detail)
+
+        merged_pr_detail = build_codex_detail(
+            title="[codex] Fix agent identity auth test fixture",
+            source_text="**Title:** [codex] Fix agent identity auth test fixture **Author:** @adrian-openai **Merged at:** 2026-04-20T18:05:58Z **Merge commit:** `6b17adc`",
+            source_url="https://github.com/openai/codex/pull/18697",
+        )
+        self.assertIn("PR #18697", merged_pr_detail)
+        self.assertIn("测试 fixture", merged_pr_detail)
+        self.assertNotIn("Title:", merged_pr_detail)
+
+        guardian_detail = build_codex_detail(
+            title="chore(guardian) disable mcps and plugins (#18722)",
+            source_text="Disables apps, plugins, mcps for the guardian subagent thread",
+            source_url="https://github.com/openai/codex/commit/14ebfbced9dc502713cf68d457ea78618563b7dc",
+        )
+        self.assertIn("guardian 子代理线程", guardian_detail)
+        self.assertIn("执行边界", guardian_detail)
+        self.assertNotIn("Disables apps, plugins, mcps", guardian_detail)
+
+        realtime_detail = build_codex_detail(
+            title="Update realtime handoff transcript handling (#18597)",
+            source_text=(
+                "This PR aims to improve integration between the realtime model and the codex agent by sharing more context with each other. "
+                "In particular, we now share full realtime conversation transcript deltas in addition to the delegation message."
+            ),
+            source_url="https://github.com/openai/codex/commit/126bd6e7a8839a861ee9bb40ec72c72ea1bf7b4d",
+        )
+        self.assertIn("上下文共享", realtime_detail)
+        self.assertIn("transcript deltas", realtime_detail)
+        self.assertNotIn("This PR aims to improve integration", realtime_detail)
 
 
 if __name__ == "__main__":

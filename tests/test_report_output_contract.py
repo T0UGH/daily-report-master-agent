@@ -164,6 +164,16 @@ class ReportOutputContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "英文解释泄漏"):
             validate_single_section_report(bad_markdown)
 
+    def test_validator_rejects_hybrid_english_tail_after_chinese_prefix(self) -> None:
+        bad_markdown = build_report(
+            "## {section_title}\n"
+            "- `[codex] Fix high severity dependency alerts (#18167)` 这次改动主要写明了"
+            "Pin vulnerable npm dependencies through the existing root `resolutions` mechanism so the lockfile moves only to patched versions。"
+            "[GitHub]({source_url})".format(section_title=SECTION_TITLE, source_url=SOURCE_URL)
+        )
+        with self.assertRaisesRegex(ValueError, "英文解释泄漏"):
+            validate_single_section_report(bad_markdown)
+
     def test_validator_allows_mixed_language_technical_line_with_chinese_grounding(self) -> None:
         markdown = build_report(
             "## {section_title}\n"

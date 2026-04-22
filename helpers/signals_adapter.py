@@ -3469,6 +3469,8 @@ def build_claude_code_release_detail(*, title: str, source_text: str) -> str:
         facts.append("MCP 大输出截断提示也会按格式给具体处理建议，比如 JSON 直接提示用 `jq`")
     if "queued messages" in lowered_source and "being dropped" in lowered_source:
         facts.append("Claude 忙时 `queued messages` 里的带图消息不再被悄悄丢掉")
+    if "temporarily unavailable" in lowered_source and "auto mode" in lowered_source:
+        facts.append("`auto mode` 下误报 `claude-opus-4-7 is temporarily unavailable` 的问题被修掉了")
 
     facts = prioritize_fact_tail(
         facts,
@@ -3562,6 +3564,64 @@ def build_codex_detail(*, title: str, source_text: str, source_url: str) -> str:
             "还补了 direct guardian event path 与 app-server notification path 的 snapshot tests",
         ]
         return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "dependency alerts" in lowered or "pin vulnerable npm dependencies" in lowered:
+        facts = [
+            "这次改动是在收口高危依赖告警，把有漏洞的 npm 依赖继续固定到已修补版本",
+            "做法是沿用根级 `resolutions` 机制推进 lockfile，只让它升级到安全版本",
+        ]
+        if "pnpm-lock.yaml" in source_text:
+            facts.append("同时刷新了 `pnpm-lock.yaml`，把 `@modelcontextprotocol/sdk` 等受影响依赖一起带到修补后的版本")
+        return compose_fact_sentences(intro=f"`{title}` 这次改动主要是：", facts=facts, group_sizes=(1, 1, 1))
+
+    if "background_task_id" in lowered and "agentidentityauthrecord" in lowered:
+        return compose_fact_sentences(
+            intro=f"`{title}` 这次改动主要是：",
+            facts=[
+                "给 `AgentIdentityAuthRecord` 的测试 fixture 补上了缺失的 `background_task_id: None` 字段",
+                "这类修补不是加新能力，而是把认证记录的数据形状和实际代码重新对齐",
+            ],
+            group_sizes=(1, 1),
+        )
+
+    if "fix agent identity auth test fixture" in lowered and "author:" in lowered:
+        lead = "这次合入的是 Codex 的 PR"
+        if pr_match:
+            lead += f" #{pr_match.group(1)}"
+        metadata: list[str] = []
+        if author_match:
+            metadata.append(f"作者 {author_match.group(1)}")
+        if merged_at_match:
+            metadata.append(f"merged at {merged_at_match.group(1)}")
+        if commit_match:
+            metadata.append(f"merge commit `{commit_match.group(1)}`")
+        if metadata:
+            lead += f"（{'，'.join(metadata)}）"
+        return compose_fact_sentences(
+            intro="",
+            facts=[
+                f"{lead}，主题就是补 `agent identity auth` 的测试 fixture",
+                "它对应的不是新功能发布，而是把认证相关测试记录补齐，避免 fixture 再缺字段",
+            ],
+            group_sizes=(1, 1),
+        )
+
+    if "guardian subagent thread" in lowered and any(token in lowered for token in ("mcps", "plugins", "apps")):
+        return compose_fact_sentences(
+            intro=f"`{title}` 这次改动主要是：",
+            facts=["把 guardian 子代理线程里的 apps、plugins 和 MCPs 全部关掉", "说明这条线更像是在收紧 guardian 的执行边界，而不是扩功能"],
+            group_sizes=(1, 1),
+        )
+
+    if "realtime model" in lowered and "conversation transcript deltas" in lowered:
+        return compose_fact_sentences(
+            intro=f"`{title}` 这次改动主要是：",
+            facts=[
+                "继续补 realtime model 和 Codex agent 之间的上下文共享",
+                "除了 delegation message 之外，现在还会同步完整的 realtime transcript deltas",
+            ],
+            group_sizes=(1, 1),
+        )
 
     sentences = simple_sentences(source_text)[:2]
     if sentences:
