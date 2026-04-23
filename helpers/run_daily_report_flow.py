@@ -52,6 +52,9 @@ FEISHU_OPUS_SCRIPT = FEISHU_AUDIO_SKILL_DIR / "scripts" / "convert_to_feishu_opu
 DEFAULT_ARCHIVE_REMOTE = "origin"
 DEFAULT_ARCHIVE_BRANCH = "main"
 DEFAULT_ARCHIVE_DAILY_REPORT_DIR = "raw/inbound/ai-daily-report"
+CURATED_CARD_LINK_LABEL = "查看完整文档"
+CURATED_CARD_DEFAULT_SECTION_ITEM_LIMIT = 2
+CURATED_CARD_PRODUCT_HUNT_ITEM_LIMIT = 3
 READOUT_INTRO = "以下是今天的 AI Agent 日报语音简报。"
 READOUT_OUTRO = "以上就是今天的重点内容，感谢收听。"
 READOUT_PLACEHOLDER_SNIPPETS = ("原文围绕", "具体变化见来源", "值得关注")
@@ -573,6 +576,191 @@ def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, 
     if doc_id is not None:
         response["doc_id"] = doc_id
     return response
+
+
+def parse_report_markdown_sections(report_markdown: str) -> tuple[str | None, list[tuple[str, list[str]]]]:
+    text = report_markdown.replace("\r\n", "\n").strip()
+    text = _truncate_sources_tail(text)
+    text = re.sub(r"```.*?```", "\n", text, flags=re.S)
+
+    report_title: str | None = None
+    sections: list[tuple[str, list[str]]] = []
+    current_heading: str | None = None
+    current_items: list[str] = []
+    current_item_lines: list[str] | None = None
+
+    def flush_item() -> None:
+        nonlocal current_item_lines
+        if current_item_lines is None:
+            return
+        item_text = " ".join(line.strip() for line in current_item_lines if line.strip()).strip()
+        current_item_lines = None
+        if item_text and current_heading is not None:
+            current_items.append(item_text)
+
+    def flush_section() -> None:
+        nonlocal current_heading, current_items
+        if current_heading is None:
+            return
+        if current_items:
+            sections.append((current_heading, current_items[:]))
+        current_heading = None
+        current_items = []
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            flush_item()
+            continue
+
+        heading_match = re.match(r"^(#{1,6})\s*(.+?)\s*$", line)
+        if heading_match:
+            flush_item()
+            heading_level = len(heading_match.group(1))
+            heading_text = heading_match.group(2).strip()
+            if heading_level == 1:
+                report_title = heading_text
+                continue
+            flush_section()
+            current_heading = heading_text
+            current_items = []
+            continue
+
+        bullet_match = re.match(r"^(?:[-*+]|\d+\.)\s+(.*)$", line)
+        if bullet_match:
+            flush_item()
+            current_item_lines = [bullet_match.group(1).strip()]
+            continue
+
+        if current_item_lines is not None:
+            current_item_lines.append(line)
+            continue
+
+        if current_heading is not None:
+            current_items.append(line)
+
+    flush_item()
+    flush_section()
+    return report_title, sections
+
+
+def _is_weather_section(heading: str) -> bool:
+    return "天气" in heading
+
+
+def _card_section_item_limit(heading: str) -> int:
+    if "product hunt" in heading.lower():
+        return CURATED_CARD_PRODUCT_HUNT_ITEM_LIMIT
+    return CURATED_CARD_DEFAULT_SECTION_ITEM_LIMIT
+
+
+def _order_card_sections(sections: list[tuple[str, list[str]]]) -> list[tuple[str, list[str]]]:
+    indexed_sections = list(enumerate(sections))
+    indexed_sections.sort(key=lambda item: (0 if _is_weather_section(item[1][0]) else 1, item[0]))
+    return [section for _, section in indexed_sections]
+
+
+def _build_card_section_element(*, heading: str, items: list[str]) -> dict[str, Any]:
+    limited_items = items[: _card_section_item_limit(heading)]
+    content_lines = [f"**{heading}**", *[f"- {item}" for item in limited_items]]
+    return {
+        "tag": "div",
+        "text": {
+            "tag": "lark_md",
+            "content": "\n".join(content_lines),
+        },
+    }
+
+
+def build_curated_card_payload(*, report_markdown: str, doc_url: str) -> dict[str, Any]:
+    report_title, sections = parse_report_markdown_sections(report_markdown)
+    ordered_sections = _order_card_sections(sections)
+    elements: list[dict[str, Any]] = [
+        {
+            "tag": "div",
+            "text": {
+                "tag": "lark_md",
+                "content": f"[{CURATED_CARD_LINK_LABEL}]({doc_url})",
+            },
+        }
+    ]
+
+    rendered_sections = [section for section in ordered_sections if section[1]]
+    if rendered_sections:
+        elements.append({"tag": "hr"})
+    for index, (heading, items) in enumerate(rendered_sections):
+        elements.append(_build_card_section_element(heading=heading, items=items))
+        if index != len(rendered_sections) - 1:
+            elements.append({"tag": "hr"})
+
+    return {
+        "config": {"wide_screen_mode": True},
+        "header": {
+            "title": {
+                "tag": "plain_text",
+                "content": report_title or "AI Agent 日报精选",
+            }
+        },
+        "elements": elements,
+    }
+
+
+def send_curated_card_to_feishu(*, card_payload: dict[str, Any], run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
+    delivery = resolve_feishu_audio_delivery(config)
+    log_path = run_dir / "logs" / "feishu-card.log"
+    if delivery["receive_id_type"] != "chat_id":
+        return {
+            "status": "failed",
+            "log": write_json_log(
+                log_path,
+                {"error": f"Unsupported receive_id_type for curated card delivery: {delivery['receive_id_type']}"},
+            ),
+            "error_summary": f"Unsupported receive_id_type for curated card delivery: {delivery['receive_id_type']}",
+        }
+    if not delivery["receive_id"]:
+        return {
+            "status": "failed",
+            "log": write_json_log(log_path, {"error": f"Missing {DEFAULT_FEISHU_RECEIVE_ID_ENV} for curated card delivery"}),
+            "error_summary": f"Missing {DEFAULT_FEISHU_RECEIVE_ID_ENV} for curated card delivery",
+        }
+
+    command = [
+        "lark-cli",
+        "im",
+        "+messages-send",
+        "--as",
+        "user",
+        "--chat-id",
+        delivery["receive_id"],
+        "--msg-type",
+        "interactive",
+        "--content",
+        json.dumps(card_payload, ensure_ascii=False),
+    ]
+    result = run_and_capture(command, log_path)
+    if result.exit_code != 0:
+        return {
+            "status": "failed",
+            "log": result.output_path,
+            "error_summary": "Feishu curated card send failed",
+        }
+
+    message_id: str | None = None
+    stdout = result.stdout.strip()
+    if stdout:
+        payload = extract_json_payload(stdout)
+        if payload is not None:
+            message_id = _find_json_value(
+                payload,
+                exact_keys={"message_id", "new_message_id"},
+                key_fragments=("message_id",),
+            )
+
+    return {
+        "status": "succeeded",
+        "log": result.output_path,
+        "message_id": message_id,
+    }
 
 
 def resolve_audio_settings(config: dict[str, Any]) -> dict[str, Any]:
@@ -1264,12 +1452,6 @@ def publish_report_bundle(
     run_dir: Path,
     config: dict[str, Any],
 ) -> dict[str, Any]:
-    audio_result = generate_audio_bundle(
-        report_markdown=report_markdown,
-        report_date=report_date,
-        run_dir=run_dir,
-        config=config,
-    )
     doc_result = import_to_feishu(report_path, title, run_dir)
 
     publish_result: dict[str, Any] = {
@@ -1277,14 +1459,18 @@ def publish_report_bundle(
         "doc_status": doc_result["status"],
         "doc_log": doc_result.get("log"),
         "doc_url": doc_result.get("doc_url"),
-        "audio_generation_status": audio_result["status"],
+        "card_status": "skipped",
+        "card_payload": None,
+        "card_message_log": None,
+        "card_message_id": None,
+        "audio_generation_status": "skipped",
         "audio_status": "skipped",
-        "audio_readout_path": audio_result.get("readout_path"),
-        "audio_intermediate_path": audio_result.get("intermediate_path"),
-        "audio_intermediate_format": audio_result.get("intermediate_format"),
-        "audio_opus_path": audio_result.get("opus_path"),
-        "audio_tts_log": audio_result.get("tts_log"),
-        "audio_convert_log": audio_result.get("convert_log"),
+        "audio_readout_path": None,
+        "audio_intermediate_path": None,
+        "audio_intermediate_format": None,
+        "audio_opus_path": None,
+        "audio_tts_log": None,
+        "audio_convert_log": None,
     }
 
     if doc_result["status"] != "succeeded":
@@ -1292,25 +1478,64 @@ def publish_report_bundle(
         publish_result["error_summary"] = doc_result.get("error_summary") or "Feishu doc import failed"
         return publish_result
 
-    if audio_result["status"] != "succeeded":
-        publish_result["status"] = "degraded"
-        publish_result["audio_status"] = "failed"
-        publish_result["error_summary"] = audio_result.get("error_summary") or "Audio bundle generation failed"
-        return publish_result
+    card_result: dict[str, Any]
+    if doc_result.get("doc_url"):
+        card_payload = build_curated_card_payload(
+            report_markdown=report_markdown,
+            doc_url=str(doc_result["doc_url"]),
+        )
+        publish_result["card_payload"] = card_payload
+        card_result = send_curated_card_to_feishu(
+            card_payload=card_payload,
+            run_dir=run_dir,
+            config=config,
+        )
+    else:
+        card_result = {
+            "status": "failed",
+            "error_summary": "Missing Feishu doc URL for curated card delivery",
+        }
+    publish_result["card_status"] = card_result["status"]
+    publish_result["card_message_log"] = card_result.get("log")
+    publish_result["card_message_id"] = card_result.get("message_id")
 
-    sent_audio = send_audio_to_feishu(
-        opus_path=Path(audio_result["opus_path"]),
+    audio_result = generate_audio_bundle(
+        report_markdown=report_markdown,
+        report_date=report_date,
         run_dir=run_dir,
-        doc_url=doc_result.get("doc_url"),
         config=config,
     )
-    publish_result["audio_status"] = sent_audio["status"]
-    publish_result["audio_message_log"] = sent_audio.get("log")
-    publish_result["audio_message_id"] = sent_audio.get("message_id")
+    publish_result["audio_generation_status"] = audio_result["status"]
+    publish_result["audio_readout_path"] = audio_result.get("readout_path")
+    publish_result["audio_intermediate_path"] = audio_result.get("intermediate_path")
+    publish_result["audio_intermediate_format"] = audio_result.get("intermediate_format")
+    publish_result["audio_opus_path"] = audio_result.get("opus_path")
+    publish_result["audio_tts_log"] = audio_result.get("tts_log")
+    publish_result["audio_convert_log"] = audio_result.get("convert_log")
 
-    if sent_audio["status"] != "succeeded":
+    failures: list[str] = []
+    if card_result["status"] != "succeeded":
+        failures.append(card_result.get("error_summary") or "Feishu curated card send failed")
+
+    if audio_result["status"] != "succeeded":
+        publish_result["audio_status"] = "failed"
+        failures.append(audio_result.get("error_summary") or "Audio bundle generation failed")
+    else:
+        sent_audio = send_audio_to_feishu(
+            opus_path=Path(audio_result["opus_path"]),
+            run_dir=run_dir,
+            doc_url=doc_result.get("doc_url"),
+            config=config,
+        )
+        publish_result["audio_status"] = sent_audio["status"]
+        publish_result["audio_message_log"] = sent_audio.get("log")
+        publish_result["audio_message_id"] = sent_audio.get("message_id")
+        if sent_audio["status"] != "succeeded":
+            failures.append(sent_audio.get("error_summary") or "Feishu audio send failed")
+
+    if failures:
         publish_result["status"] = "degraded"
-        publish_result["error_summary"] = sent_audio.get("error_summary") or "Feishu audio send failed"
+        publish_result["error_summary"] = " | ".join(failures)
         return publish_result
 
     publish_result["status"] = "succeeded"
