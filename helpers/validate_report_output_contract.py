@@ -34,7 +34,7 @@ FIXED_SECTION_TITLES = {
     "github-trending-weekly": "GitHub 趋势项目",
     "product-hunt-watch": "Product Hunt 新品",
     "polymarket-watch": "Polymarket 市场",
-    "weather-watch": "北京海淀天气",
+    "weather-watch": "天气",
 }
 
 READER_SECTION_ORDER = [FIXED_SECTION_TITLES[lane] for lane in FIXED_SECTION_ORDER]

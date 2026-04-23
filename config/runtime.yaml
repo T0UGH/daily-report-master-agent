@@ -23,7 +23,7 @@ selection:
     github-trending-weekly: 10
     product-hunt-watch: 10
     polymarket-watch: 10
-    weather-watch: 1
+    weather-watch: 2
 reader_facing:
   title_template: "AI Agent 日报（{report_date}）"
   lane_paragraph_targets:

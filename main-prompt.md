@@ -53,7 +53,7 @@
 - `notify-ops` 只在 `degraded` 或 `blocked` 时触发。
 - `build-report` 只返回一个最终 `report artifact`。
 - `publish-report` 成功后才允许进入 `archive-report`。
-- `publish-report` 默认主交付包含两部分：`Feishu 文档 + Feishu 原生可播放音频`。
+- `publish-report` 默认主交付包含三部分：`Feishu 文档完整版 + Feishu 精选卡片 + Feishu 原生可播放音频`。
 - 本 cron run 自己拥有 `collect-signals`，不要假设今天的 signals 已提前存在。
 
 ## 当天 collect 所有权
@@ -100,14 +100,17 @@ python3 /Users/haha/workspace/daily-report-master-agent/helpers/run_daily_report
 
 ## 发布要求
 
-- Feishu 文档继续通过 `feishu-cli doc import` 发布。
+- Feishu 文档继续作为完整版主交付发布。
+- 发布文档后，必须再发一张 Feishu 精选卡片；卡片顶部带文档链接。
+- 精选卡片默认规则：天气模块最上面，且默认至少包含北京和上海；Claude Code 与 Codex 固定保留；OpenClaw 不固定，只有当天确有值得看的信号才放；Product Hunt 默认保留 2~3 条。
+- 精选卡片内容层尽量保留原文条目本身，不做抽象摘要改写；只允许做结构调整与轻量整理，并且每条都带链接。
 - 朗读音频必须先生成原始 TTS，再转成 `.opus`（Ogg/Opus）。
 - 发给贵平的音频必须走 Feishu 原生音频消息，不要退回外链、附件说明页或下载页。
-- publish 顺序固定为：先产出朗读稿和 `.opus`，再发布 Feishu 文档，最后发送 Feishu 原生音频消息。
+- publish 顺序固定为：先产出朗读稿和 `.opus`，再发布 Feishu 文档完整版，再发送 Feishu 精选卡片，最后发送 Feishu 原生音频消息。
 - publish 语义固定为：
   - 文档失败 => `publish failed`
-  - 文档成功但音频失败 => `publish degraded`
-  - 文档和音频都成功 => `publish succeeded`
+  - 文档成功但卡片或音频任一失败 => `publish degraded`
+  - 文档、卡片、音频都成功 => `publish succeeded`
 
 ## 报告写作规则
 

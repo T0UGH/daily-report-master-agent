@@ -1097,7 +1097,7 @@ Design context for AI agents
 
     def test_default_lane_item_limits_keep_weather_small_without_changing_main_lanes(self) -> None:
         self.assertTrue(DEFAULT_LANE_ITEM_LIMITS)
-        self.assertEqual(DEFAULT_LANE_ITEM_LIMITS["weather-watch"], 1)
+        self.assertEqual(DEFAULT_LANE_ITEM_LIMITS["weather-watch"], 2)
         self.assertEqual(
             {
                 lane_name: limit
@@ -1540,7 +1540,7 @@ lane: weather-watch
 source: weather
 entity_type: district
 entity_id: beijing-haidian
-title: Beijing Haidian Weather
+title: 北京海淀天气
 url: https://weather.example.com/beijing-haidian/2026-04-12
 fetched_at: 2026-04-12T05:30:00+0000
 created_at: '2026-04-12T05:00:00Z'
@@ -1552,6 +1552,25 @@ created_at: '2026-04-12T05:00:00Z'
 - Temperature: 8°C - 20°C
 - Precipitation: 20%
 - Wind: 西北风 3-4级
+""",
+                    "shanghai-xuhui.md": """---
+type: weather_snapshot
+lane: weather-watch
+source: weather
+entity_type: district
+entity_id: shanghai-xuhui
+title: 上海徐汇天气
+url: https://weather.example.com/shanghai-xuhui/2026-04-12
+fetched_at: 2026-04-12T05:30:00+0000
+created_at: '2026-04-12T05:00:00Z'
+---
+
+## Weather
+
+- Condition: 阴转小雨
+- Temperature: 13°C - 22°C
+- Precipitation: 40%
+- Wind: 东风 3-4级
 """,
                 },
             )
@@ -1565,19 +1584,20 @@ created_at: '2026-04-12T05:00:00Z'
                 signals_root=signals_root,
                 report_date=REPORT_DATE,
                 lane_names=["weather-watch"],
-                per_lane_limit=1,
+                per_lane_limit=2,
             )
             artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
 
         self.assertEqual(
             selected_items["summary"]["lane_counts"],
-            [{"lane": "weather-watch", "selected_item_count": 1}],
+            [{"lane": "weather-watch", "selected_item_count": 2}],
         )
-        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 2)
         self.assertEqual(artifact["source_lanes"], ["weather-watch"])
-        self.assertIn("## 北京海淀天气", artifact["body_markdown"])
+        self.assertIn("## 天气", artifact["body_markdown"])
         self.assertNotIn("## weather-watch", artifact["body_markdown"])
-        self.assertIn("### 北京海淀天气", artifact["body_markdown"])
+        self.assertIn("**北京海淀天气**", artifact["body_markdown"])
+        self.assertIn("**上海徐汇天气**", artifact["body_markdown"])
 
         validate_report_markdown(
             artifact["body_markdown"],
@@ -1585,7 +1605,8 @@ created_at: '2026-04-12T05:00:00Z'
             expected_section_titles=[FIXED_SECTION_TITLES["weather-watch"]],
             expected_sources={
                 FIXED_SECTION_TITLES["weather-watch"]: [
-                    "https://weather.example.com/beijing-haidian/2026-04-12"
+                    "https://weather.example.com/shanghai-xuhui/2026-04-12",
+                    "https://weather.example.com/beijing-haidian/2026-04-12",
                 ]
             },
         )
@@ -1595,9 +1616,9 @@ created_at: '2026-04-12T05:00:00Z'
             "report_date": REPORT_DATE,
             "source": "signals-engine",
             "lanes": [
-                {"name": "weather-watch", "status": "ok", "useful_item_count": 1},
+                {"name": "weather-watch", "status": "ok", "useful_item_count": 2},
             ],
-            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
         }
         selected_items = {
             "report_date": REPORT_DATE,
@@ -1605,7 +1626,7 @@ created_at: '2026-04-12T05:00:00Z'
             "selected_items": [
                 {
                     "lane": "weather-watch",
-                    "title": "Beijing Haidian Weather",
+                    "title": "北京海淀天气",
                     "source_url": "https://weather.example.com/beijing-haidian/2026-04-12",
                     "signal_path": "weather-watch/2026-04-12/signals/beijing-haidian.md",
                     "fetched_at": "2026-04-12T05:30:00+0000",
@@ -1614,12 +1635,24 @@ created_at: '2026-04-12T05:00:00Z'
                         "Precipitation: 20% Wind: 西北风 3-4级"
                     ),
                     "excerpt": "Condition: 多云 Temperature: 9°C - 21°C",
+                },
+                {
+                    "lane": "weather-watch",
+                    "title": "上海徐汇天气",
+                    "source_url": "https://weather.example.com/shanghai-xuhui/2026-04-12",
+                    "signal_path": "weather-watch/2026-04-12/signals/shanghai-xuhui.md",
+                    "fetched_at": "2026-04-12T05:30:00+0000",
+                    "source_snippet": (
+                        "Condition: 阴 Temperature: 13°C - 22°C "
+                        "Precipitation: 40% Wind: 东风 3-4级"
+                    ),
+                    "excerpt": "Condition: 阴 Temperature: 13°C - 22°C",
                 }
             ],
             "summary": {
-                "selected_item_count": 1,
+                "selected_item_count": 2,
                 "lane_counts": [
-                    {"lane": "weather-watch", "selected_item_count": 1},
+                    {"lane": "weather-watch", "selected_item_count": 2},
                 ],
             },
         }
@@ -1627,11 +1660,17 @@ created_at: '2026-04-12T05:00:00Z'
         artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
         body_markdown = artifact["body_markdown"]
 
-        self.assertIn("## 北京海淀天气", body_markdown)
+        self.assertIn("## 天气", body_markdown)
+        self.assertIn("**北京海淀天气**", body_markdown)
+        self.assertIn("**上海徐汇天气**", body_markdown)
         self.assertIn("多云", body_markdown)
         self.assertIn("9°C - 21°C", body_markdown)
+        self.assertIn("阴", body_markdown)
+        self.assertIn("13°C - 22°C", body_markdown)
         self.assertIn("20%", body_markdown)
+        self.assertIn("40%", body_markdown)
         self.assertIn("西北风 3-4级", body_markdown)
+        self.assertIn("东风 3-4级", body_markdown)
         self.assertNotIn("Condition:", body_markdown)
         self.assertNotIn("Temperature:", body_markdown)
         self.assertNotIn("Precipitation:", body_markdown)
@@ -3407,7 +3446,7 @@ matched_query: Claude Code
         }
 
         artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
-        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**今日天气**" in line)
+        body_line = next(line for line in artifact["body_markdown"].splitlines() if "**Beijing Haidian Weather**" in line)
 
         self.assertIn("多云转晴", body_line)
         self.assertIn("11°C - 23°C", body_line)

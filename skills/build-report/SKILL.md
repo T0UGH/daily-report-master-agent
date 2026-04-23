@@ -48,6 +48,12 @@ reader-facing 产物必须遵守 `contracts/report-output-contract.md` 的固定
   - `github-trending-weekly` -> `GitHub 趋势项目`
   - `product-hunt-watch` -> `Product Hunt 新品`
   - `polymarket-watch` -> `Polymarket 市场`
+
+  额外 reader-facing 约束：
+  - `weather-watch` 作为天气模块，默认至少覆盖北京和上海两条天气信号
+  - `claude-code-watch` 与 `codex-watch` 固定保留，只要当天有有效信号就必须进 reader-facing 输出
+  - `openclaw-watch` 不固定保留，只有当天确有值得看的信号才进入 reader-facing 输出
+  - `product-hunt-watch` 默认保留 2~3 条，而不是只留 1 条
 - `github-watch` 不进入 reader-facing 输出
 - 最终正文栏目必须是固定顺序下的非空子序列
 - 标题后直接进入第一个非空栏目，不生成 `今日要点`、`正文`、`编辑结论`

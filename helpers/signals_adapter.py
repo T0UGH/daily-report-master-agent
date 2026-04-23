@@ -44,7 +44,7 @@ FALLBACK_SOURCE_URL_TEMPLATES = {
     "github-trending-weekly": "https://github.com/example/github-trending-weekly/{report_date}",
     "product-hunt-watch": "https://www.producthunt.com/posts/product-hunt-watch-{report_date}",
     "polymarket-watch": "https://polymarket.com/event/polymarket-watch-{report_date}",
-    "weather-watch": "https://weather.example.com/beijing-haidian/{report_date}",
+    "weather-watch": "https://weather.example.com/weather-watch/{report_date}",
 }
 LINK_LABELS = {
     "x-feed": "原帖",
@@ -72,7 +72,7 @@ DEFAULT_LANE_ITEM_LIMITS = {
     "github-trending-weekly": 10,
     "product-hunt-watch": 10,
     "polymarket-watch": 10,
-    "weather-watch": 1,
+    "weather-watch": 2,
 }
 SECONDARY_ITEM_SCORE_FLOORS = {
     "reddit-watch": 10,
@@ -1360,6 +1360,8 @@ def can_add_secondary_candidate(
     selected: Sequence[dict[str, Any]],
     top_score: int,
 ) -> bool:
+    if lane_name == "weather-watch":
+        return True
     score = int(candidate.get("_relevance_score", 0))
     if score < SECONDARY_ITEM_SCORE_FLOORS.get(lane_name, 0):
         return False
@@ -2362,7 +2364,7 @@ def normalize_render_item(item: dict[str, Any], *, useful_item_count: int, repor
 def decorate_lane_display_title(*, lane_name: str, title: str, matched_query: str) -> str:
     cleaned_title = normalize_whitespace(title)
     if lane_name == "weather-watch":
-        return "今日天气"
+        return cleaned_title or "今日天气"
     if lane_name != "hacker-news-search-watch":
         return cleaned_title
 
