@@ -1553,14 +1553,14 @@ created_at: '2026-04-12T05:00:00Z'
 - Precipitation: 20%
 - Wind: 西北风 3-4级
 """,
-                    "shanghai-xuhui.md": """---
+                    "shanghai-yangpu.md": """---
 type: weather_snapshot
 lane: weather-watch
 source: weather
 entity_type: district
-entity_id: shanghai-xuhui
-title: 上海徐汇天气
-url: https://weather.example.com/shanghai-xuhui/2026-04-12
+entity_id: shanghai-yangpu
+title: 上海杨浦天气
+url: https://weather.example.com/shanghai-yangpu/2026-04-12
 fetched_at: 2026-04-12T05:30:00+0000
 created_at: '2026-04-12T05:00:00Z'
 ---
@@ -1597,7 +1597,7 @@ created_at: '2026-04-12T05:00:00Z'
         self.assertIn("## 天气", artifact["body_markdown"])
         self.assertNotIn("## weather-watch", artifact["body_markdown"])
         self.assertIn("**北京海淀天气**", artifact["body_markdown"])
-        self.assertIn("**上海徐汇天气**", artifact["body_markdown"])
+        self.assertIn("**上海杨浦天气**", artifact["body_markdown"])
 
         validate_report_markdown(
             artifact["body_markdown"],
@@ -1605,7 +1605,7 @@ created_at: '2026-04-12T05:00:00Z'
             expected_section_titles=[FIXED_SECTION_TITLES["weather-watch"]],
             expected_sources={
                 FIXED_SECTION_TITLES["weather-watch"]: [
-                    "https://weather.example.com/shanghai-xuhui/2026-04-12",
+                    "https://weather.example.com/shanghai-yangpu/2026-04-12",
                     "https://weather.example.com/beijing-haidian/2026-04-12",
                 ]
             },
@@ -1638,9 +1638,9 @@ created_at: '2026-04-12T05:00:00Z'
                 },
                 {
                     "lane": "weather-watch",
-                    "title": "上海徐汇天气",
-                    "source_url": "https://weather.example.com/shanghai-xuhui/2026-04-12",
-                    "signal_path": "weather-watch/2026-04-12/signals/shanghai-xuhui.md",
+                    "title": "上海杨浦天气",
+                    "source_url": "https://weather.example.com/shanghai-yangpu/2026-04-12",
+                    "signal_path": "weather-watch/2026-04-12/signals/shanghai-yangpu.md",
                     "fetched_at": "2026-04-12T05:30:00+0000",
                     "source_snippet": (
                         "Condition: 阴 Temperature: 13°C - 22°C "
@@ -1662,7 +1662,7 @@ created_at: '2026-04-12T05:00:00Z'
 
         self.assertIn("## 天气", body_markdown)
         self.assertIn("**北京海淀天气**", body_markdown)
-        self.assertIn("**上海徐汇天气**", body_markdown)
+        self.assertIn("**上海杨浦天气**", body_markdown)
         self.assertIn("多云", body_markdown)
         self.assertIn("9°C - 21°C", body_markdown)
         self.assertIn("阴", body_markdown)

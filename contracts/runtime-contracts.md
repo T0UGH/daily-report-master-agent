@@ -17,6 +17,7 @@ v0 的根规则如下：
 - `build-report` 对主 agent 只暴露一个最终 `report artifact`。
 - `publish-report` 成功后才允许 `archive-report`。
 - Feishu 是主交付面；Obsidian 只归档最终日报，且只在发布成功后执行。
+- 默认发布交付物、内容编排与降级语义遵守 `contracts/publish-delivery-contract.md`。
 - `notify-ops` 只在 `degraded` 或 `blocked` 时触发。
 
 ## 主链路顺序
@@ -115,7 +116,7 @@ v0 的根规则如下：
 
 ### 4. `publish result`
 
-用途：记录 Feishu 发布结果，作为主交付面的最小摘要。
+用途：记录 Feishu 发布结果，作为主交付面的最小摘要。默认交付物组合与编排规则见 `contracts/publish-delivery-contract.md`。
 
 必需字段：
 
@@ -128,13 +129,16 @@ v0 的根规则如下：
 
 | 字段 | 规则 |
 | --- | --- |
-| `reference` | 成功时建议提供消息链接或消息 ID；失败或跳过时允许缺失。 |
+| `reference` | 成功时建议提供 Feishu 全量文档链接或消息 ID；失败或跳过时允许缺失。 |
 | `error_summary` | 成功时允许缺失；失败时建议填写。 |
+| `deliverables` | 可缺失；存在时应按 `feishu_full_doc`、`feishu_curated_card`、`feishu_native_audio` 提供各自的 `status`、`reference`、`error_summary`。 |
 
 最小语义：
 
-- Feishu 发布成功代表主交付成立。
+- Feishu 全量文档成功代表主交付成立，且 `reference` 默认指向该文档。
+- 默认发布交付物为 Feishu 全量文档、Feishu 精选卡片、Feishu 原生音频；精选卡片顶部必须包含全量文档链接。
 - `publish result.status != succeeded` 时，不允许执行 `archive-report`。
+- 若全量文档成功但精选卡片或原生音频失败，`publish result.status` 仍可为 `succeeded`，但最终 `verdict` 必须为 `degraded`，且失败明细必须写入 `deliverables` 或 `error_summary`。
 
 ### 5. `archive result`
 
@@ -164,5 +168,6 @@ v0 的根规则如下：
 - 完全成功时，最终 `verdict` 为 `normal`。
 - 部分 lane 异常但仍有内容时，最终 `verdict` 为 `degraded`，但仍继续 publish。
 - 无可用内容时，最终 `verdict` 为 `blocked`，不 publish，不 archive。
+- 全量文档成功但精选卡片或原生音频失败时，最终 `verdict` 为 `degraded`，但允许继续 archive。
 - 发布成功但归档失败时，最终 `verdict` 为 `degraded`。
 - 系统异常且无内容时，最终 `verdict` 为 `blocked`。
