@@ -5417,6 +5417,19 @@ matched_query: Claude Code
         self.assertIn("prototype、slides 和 one-pagers", detail)
         self.assertNotIn("by talking to Claude", detail)
 
+    def test_build_x_post_detail_preserves_decimal_versions_in_introducing_subject(self) -> None:
+        detail = build_x_post_detail(
+            lane_name="x-following",
+            title="@openai",
+            source_text=(
+                "Introducing GPT-5.5 A new class of intelligence for real work and powering agents, "
+                "built to understand complex goals"
+            ),
+        )
+
+        self.assertIn("GPT-5.5", detail)
+        self.assertNotIn("`GPT-5`", detail)
+
     def test_build_product_hunt_detail_rewrites_sparse_english_agent_titles(self) -> None:
         detail = build_product_hunt_detail(
             title="LIVE: wtf are agents buying? — Watch agents spend money in real time",

@@ -2842,6 +2842,18 @@ def sanitize_subject_label(value: str) -> str:
     return cleaned.strip(" ,;:()[]{}.-")
 
 
+def restore_decimal_version_suffix(*, subject: str, trailing_text: str) -> str:
+    cleaned_subject = normalize_whitespace(subject)
+    if not cleaned_subject or not trailing_text.startswith(".") or not re.search(r"\d$", cleaned_subject):
+        return cleaned_subject
+
+    version_suffix_match = re.match(r"(\.\d+(?:\.\d+)*)", trailing_text)
+    if not version_suffix_match:
+        return cleaned_subject
+
+    return normalize_whitespace(f"{cleaned_subject}{version_suffix_match.group(1)}")
+
+
 def extract_x_subject_label(*, title: str, source_text: str) -> str:
     normalized = normalize_whitespace(f"{title} {source_text}")
     lowered = normalized.lower()
@@ -3176,7 +3188,11 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
         re.IGNORECASE,
     )
     if introducing_match:
-        introduced_subject = sanitize_subject_label(introducing_match.group("subject")) or subject or "这个工具"
+        restored_subject = restore_decimal_version_suffix(
+            subject=introducing_match.group("subject"),
+            trailing_text=cleaned_source[introducing_match.end("subject") :],
+        )
+        introduced_subject = sanitize_subject_label(restored_subject) or subject or "这个工具"
         capability_match = re.search(r"\bYour agent now\s+(?P<capability>[^.!?]+)", cleaned_source, re.IGNORECASE)
         capability = build_agent_capability_phrase(capability_match.group("capability")) if capability_match else ""
         if capability:
