@@ -1198,6 +1198,256 @@ People keep bringing up Gemini in coding discussions this week without sharing a
         self.assertEqual(selected_items["summary"]["selected_item_count"], 0)
         self.assertEqual(selected_items["selected_items"], [])
 
+    def test_build_selected_items_low_information_x_feed_reactions_do_not_fill_lane_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir) / "signals"
+            self.write_signal_bundle(
+                signals_root,
+                lane="x-feed",
+                signal_text_by_name={
+                    "thin-codex-reaction.md": """---
+type: feed-exposure
+lane: x-feed
+source: x
+entity_type: author
+entity_id: nightcoder
+title: '@nightcoder #11'
+url: https://x.com/nightcoder/status/2046000000000000001
+fetched_at: 2026-04-24T15:11:42+0000
+created_at: '2026-04-24T14:59:00Z'
+position: 11
+---
+
+## Post
+
+不愧是你，对得起我这么晚还在 CodeX。
+
+## Engagement
+
+- Likes: 840
+- Retweets: 72
+- Replies: 33
+- Views: 88421
+""",
+                    "thin-codex-hype.md": """---
+type: feed-exposure
+lane: x-feed
+source: x
+entity_type: author
+entity_id: agentwatch
+title: '@agentwatch #18'
+url: https://x.com/agentwatch/status/2046000000000000002
+fetched_at: 2026-04-24T15:12:42+0000
+created_at: '2026-04-24T15:01:00Z'
+position: 18
+---
+
+## Post
+
+Codex 真的越来越像超级智能体了，太强了。
+
+## Engagement
+
+- Likes: 710
+- Retweets: 58
+- Replies: 21
+- Views: 76040
+""",
+                    "cta-tutorial-tease.md": """---
+type: feed-exposure
+lane: x-feed
+source: x
+entity_type: author
+entity_id: yanhua1010
+title: '@yanhua1010 #24'
+url: https://x.com/yanhua1010/status/2047645875904905432
+fetched_at: 2026-04-24T15:12:59+0000
+created_at: '2026-04-24T15:02:00Z'
+position: 24
+---
+
+## Post
+
+如果这个周末你只玩一款AI应用，那我推荐Codex 再搭配一个2026最新教程👇
+
+## Engagement
+
+- Likes: 980
+- Retweets: 84
+- Replies: 37
+- Views: 92820
+""",
+                    "concrete-codex-workflow.md": """---
+type: feed-exposure
+lane: x-feed
+source: x
+entity_type: author
+entity_id: codexflow
+title: '@codexflow #31'
+url: https://x.com/codexflow/status/2046000000000000100
+fetched_at: 2026-04-24T15:13:42+0000
+created_at: '2026-04-24T15:05:00Z'
+position: 31
+---
+
+## Post
+
+我把 Codex 放进日常前端工作流：先读取 issue 和设计稿，生成 patch，再自动跑 npm test 和 Playwright 截图；失败时它会把堆栈、截图路径和下一步修复建议一起写进审阅。
+
+## Engagement
+
+- Likes: 190
+- Retweets: 24
+- Replies: 9
+- Views: 31800
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["x-feed"],
+                per_lane_limit=5,
+            )
+
+        selected_urls = {item["source_url"] for item in selected_items["selected_items"]}
+        self.assertEqual(selected_urls, {"https://x.com/codexflow/status/2046000000000000100"})
+        self.assertNotIn("https://x.com/nightcoder/status/2046000000000000001", selected_urls)
+        self.assertNotIn("https://x.com/agentwatch/status/2046000000000000002", selected_urls)
+        self.assertNotIn("https://x.com/yanhua1010/status/2047645875904905432", selected_urls)
+        self.assertEqual(
+            selected_items["summary"]["lane_counts"],
+            [{"lane": "x-feed", "selected_item_count": 1}],
+        )
+
+    def test_build_selected_items_low_information_x_following_bio_and_dunks_do_not_fill_lane_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir) / "signals"
+            self.write_signal_bundle(
+                signals_root,
+                lane="x-following",
+                signal_text_by_name={
+                    "personal-bio.md": """---
+type: post
+lane: x-following
+source: x
+entity_type: author
+entity_id: AICodeMirror
+title: '@AICodeMirror'
+url: https://x.com/AICodeMirror/status/2046000000000001001
+fetched_at: 2026-04-24T15:21:42+0000
+created_at: '2026-04-24T15:18:00Z'
+position: 7
+group: uncategorized
+---
+
+## Post
+
+我是 AICodeMirror，每天研究 AI 编程工具和工作流。不站队，只记录。
+
+## Engagement
+
+- Likes: 65
+- Retweets: 7
+- Replies: 3
+- Views: 6410
+""",
+                    "generic-programming-dunk.md": """---
+type: post
+lane: x-following
+source: x
+entity_type: author
+entity_id: csdunk
+title: '@csdunk'
+url: https://x.com/csdunk/status/2046000000000001002
+fetched_at: 2026-04-24T15:22:42+0000
+created_at: '2026-04-24T15:19:00Z'
+position: 8
+group: uncategorized
+---
+
+## Post
+
+其实很多csphd 编程水平也不如参加过竞赛的小学生🤪
+
+## Engagement
+
+- Likes: 220
+- Retweets: 31
+- Replies: 44
+- Views: 20800
+""",
+                    "cta-tutorial-tease.md": """---
+type: post
+lane: x-following
+source: x
+entity_type: author
+entity_id: yanhua1010
+title: '@yanhua1010'
+url: https://x.com/yanhua1010/status/2047645875904905432
+fetched_at: 2026-04-24T15:22:59+0000
+created_at: '2026-04-24T15:02:00Z'
+position: 12
+group: uncategorized
+---
+
+## Post
+
+如果这个周末你只玩一款AI应用，那我推荐Codex 再搭配一个2026最新教程👇
+
+## Engagement
+
+- Likes: 980
+- Retweets: 84
+- Replies: 37
+- Views: 92820
+""",
+                    "concrete-agent-workflow.md": """---
+type: post
+lane: x-following
+source: x
+entity_type: author
+entity_id: workflowops
+title: '@workflowops'
+url: https://x.com/workflowops/status/2046000000000001100
+fetched_at: 2026-04-24T15:23:42+0000
+created_at: '2026-04-24T15:20:00Z'
+position: 9
+group: uncategorized
+---
+
+## Post
+
+今天让 Codex agent 接一个真实迁移任务：读 issue、拆 3 个子任务、改 6 个文件、跑 pytest 12 分钟，失败两次后自己定位到 fixture，总成本 0.43 美元。
+
+## Engagement
+
+- Likes: 118
+- Retweets: 16
+- Replies: 6
+- Views: 12900
+""",
+                },
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["x-following"],
+                per_lane_limit=5,
+            )
+
+        selected_urls = {item["source_url"] for item in selected_items["selected_items"]}
+        self.assertEqual(selected_urls, {"https://x.com/workflowops/status/2046000000000001100"})
+        self.assertNotIn("https://x.com/AICodeMirror/status/2046000000000001001", selected_urls)
+        self.assertNotIn("https://x.com/csdunk/status/2046000000000001002", selected_urls)
+        self.assertNotIn("https://x.com/yanhua1010/status/2047645875904905432", selected_urls)
+        self.assertEqual(
+            selected_items["summary"]["lane_counts"],
+            [{"lane": "x-following", "selected_item_count": 1}],
+        )
+
     def test_build_selected_items_keeps_openclaw_with_release_facts(self) -> None:
         """OpenClaw 2026.4.15 release info now generates proper Chinese facts - should be kept."""
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -2789,6 +2789,140 @@ def is_generic_placeholder_copy(value: str) -> bool:
     )
 
 
+def noisy_x_source_has_operational_detail(value: str) -> bool:
+    cleaned = normalize_whitespace(strip_x_leading_markers(value))
+    if not cleaned:
+        return False
+
+    lowered = cleaned.lower()
+    english_action = re.search(
+        r"\b(automate[ds]?|built|build(?:ing|s)?|configur(?:e|ed|ing)|fix(?:ed|es|ing)?|"
+        r"edit(?:s|ed|ing)?|execute[ds]?|generate[ds]?|include[ds]?|launch(?:ed|es)?|"
+        r"modif(?:y|ied|ies)|plan(?:s|ned|ning)?|read(?:s|ing)?|"
+        r"register(?:ed|s)?|retr(?:y|ied|ies)|run(?:s|ning)?|split(?:s|ting)?|support(?:s|ed)?|"
+        r"ship(?:s|ped|ping)?|use[sd]?|write(?:s|n|ing)?)\b",
+        lowered,
+    )
+    cjk_action_terms = (
+        "读取",
+        "读",
+        "生成",
+        "跑",
+        "改",
+        "拆",
+        "定位",
+        "修",
+        "操作",
+        "配置",
+        "注册",
+        "设计",
+        "测试",
+        "接入",
+        "上线",
+        "迁移",
+        "审阅",
+        "调用",
+        "自动",
+    )
+    has_action = bool(english_action) or any(term in cleaned for term in cjk_action_terms)
+
+    detail_terms = (
+        "agent harness",
+        "api",
+        "app store",
+        "apple iap",
+        "browser",
+        "cli",
+        "cloudflare",
+        "computer use",
+        "context",
+        "devtools",
+        "fixture",
+        "github",
+        "iap",
+        "implementation plan",
+        "iphone mirror",
+        "issue",
+        "lighthouse",
+        "locally",
+        "mcp",
+        "memory",
+        "npm test",
+        "patch",
+        "performance check",
+        "playwright",
+        "pull request",
+        "pytest",
+        "release",
+        "screenshot",
+        "sdk",
+        "stack",
+        "token",
+        "tokens",
+        "tts",
+        "/ultraplan",
+        "web",
+    )
+    cjk_detail_terms = (
+        "设计稿",
+        "截图",
+        "堆栈",
+        "文件",
+        "浏览器",
+        "成本",
+        "美元",
+        "分钟",
+        "小时",
+        "上下文",
+        "记忆",
+        "接入",
+        "注册",
+        "配置",
+        "测试",
+        "竞技场",
+        "实施计划",
+        "任务",
+        "迁移",
+        "审阅",
+        "修复建议",
+        "失败",
+        "电脑",
+        "应用",
+        "工作流",
+        "执行",
+    )
+    detail_hit_count = sum(1 for term in detail_terms if term in lowered) + sum(
+        1 for term in cjk_detail_terms if term in cleaned
+    )
+    has_detail = detail_hit_count > 0
+    measurement_patterns = (
+        r"[$￥€]\s*\d",
+        r"\b\d+(?:[.,]\d+)?\s*(?:%|k|m|b|tokens?|minutes?|hours?|seconds?|secs?|ms|gb|mb|kb|users?|agents?|models?|tasks?|steps?|runs?|tests?|prs?|issues?)\b",
+        r"\b\d+(?:[.,]\d+)?\s*[万亿]\s*(?:tokens?|用户|美元|上下文|参数)?",
+        r"\d+(?:[.,]\d+)?\s*(?:个|次|项|轮|份)?\s*(?:agent|agents|智能体|模型|文件|任务|子任务|用户|版本|工具|接口|步骤|测试|用例)",
+        r"[一二三四五六七八九十百千万]+(?:次|分钟|小时|美元|文件|任务|万)",
+        r"[一二三四五六七八九十百千万]+个多?(?:分钟|小时|月)",
+    )
+    has_measurement = any(
+        re.search(pattern, cleaned, re.IGNORECASE) for pattern in measurement_patterns
+    )
+    has_versioned_release = bool(VERSION_TOKEN_PATTERN.search(cleaned)) and (
+        has_detail
+        or any(term in lowered for term in ("live", "release", "support"))
+        or any(term in cleaned for term in ("发布", "更新", "接入", "支持"))
+    )
+
+    if has_versioned_release:
+        return True
+    if has_measurement and (has_action or has_detail):
+        return True
+    if has_action and has_detail:
+        return True
+    return detail_hit_count >= 3 and bool(
+        re.search(r"\b(?:agent|claude|codex|deepseek|devtools|gpt|mcp|openclaw)\b", lowered)
+    )
+
+
 def noisy_x_candidate_has_specific_summary(candidate: dict[str, Any]) -> bool:
     lane_name = normalize_whitespace(str(candidate.get("lane", "")))
     if lane_name not in NOISY_X_LANES:
@@ -2796,6 +2930,8 @@ def noisy_x_candidate_has_specific_summary(candidate: dict[str, Any]) -> bool:
 
     source_text = normalize_whitespace(str(candidate.get("source_snippet") or candidate.get("excerpt", "")))
     if not source_text:
+        return False
+    if not noisy_x_source_has_operational_detail(source_text):
         return False
     editor_summary = normalize_whitespace(str(candidate.get("editor_summary", "")))
     if editor_summary and noisy_x_excerpt_is_publishable(editor_summary):
