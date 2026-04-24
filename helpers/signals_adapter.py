@@ -3715,6 +3715,25 @@ def build_claude_code_release_detail(*, title: str, source_text: str) -> str:
             facts.append("API stream 若连续 5 分钟没有数据会主动 abort，并回退到 non-streaming 重试，避免一直挂死")
 
     lowered_source = source_text.lower()
+    if "settings.json" in lowered_source and "prurltemplate" in lowered_source:
+        facts.append("`/config` 里的 theme、editor mode、verbose 等设置现在会持久化到 `~/.claude/settings.json`，并参与 project / local / policy 的覆盖优先级")
+        facts.append("新增 `prUrlTemplate`，可以把页脚 PR badge 指向自定义 code-review URL，而不再只能指向 github.com")
+    if "claude_code_hide_cwd" in lowered_source:
+        facts.append("新增 `CLAUDE_CODE_HIDE_CWD`，启动 logo 里可以隐藏当前工作目录")
+    if "--from-pr" in lowered_source and "gitlab" in lowered_source:
+        facts.append("`--from-pr` 现在支持 GitLab merge request、Bitbucket pull request 和 GitHub Enterprise PR URL")
+    if "--print" in lowered_source and "disallowedtools" in lowered_source:
+        facts.append("`--print` mode 会遵守 agent frontmatter 里的 `tools:` 和 `disallowedTools:`，行为向 interactive mode 对齐")
+    if "vim visual mode" in lowered_source and "visual-line mode" in lowered_source:
+        facts.append("输入体验新增 vim visual mode `v` 和 visual-line mode `V`，带选择、operators 和视觉反馈")
+    if "merged `/cost` and `/stats` into `/usage`" in lowered_source or ("/cost" in lowered_source and "/stats" in lowered_source and "/usage" in lowered_source):
+        facts.append("`/cost` 和 `/stats` 合并进 `/usage`，原命令仍作为快捷入口打开对应 tab")
+    if "custom themes" in lowered_source and "~/.claude/themes" in lowered_source:
+        facts.append("`/theme` 可以创建和切换命名 custom themes，也支持手改 `~/.claude/themes/` 下的 JSON，插件还能随包携带 themes")
+    if "mcp tools directly" in lowered_source and "mcp_tool" in lowered_source:
+        facts.append("hooks 现在可以通过 `type: \"mcp_tool\"` 直接调用 MCP tools")
+    if "disable_updates" in lowered_source:
+        facts.append("新增 `DISABLE_UPDATES`，可以彻底阻断包括手动 `claude update` 在内的所有更新路径，比 `DISABLE_AUTOUPDATER` 更严格")
     if "/ultraplan" in source_text and "cloud environment" in lowered_source:
         facts.append("`/ultraplan` 和其他 remote-session 功能会自动创建默认 cloud environment，不再要求先去网页里手动 setup")
     if "brief mode" in lowered_source:
@@ -3891,6 +3910,21 @@ def build_codex_detail(*, title: str, source_text: str, source_url: str) -> str:
             group_sizes=(1, 1),
         )
 
+    release_facts: list[str] = []
+    if "quick reasoning controls" in lowered and "alt+," in lowered and "alt+." in lowered:
+        release_facts.append("TUI 新增快速 reasoning 控制：`Alt+,` 降低 reasoning，`Alt+.` 提高 reasoning")
+        release_facts.append("接受 model upgrade 后，reasoning 会重置到新模型默认值，不再沿用旧模型的过期设置")
+    if "multiple environments" in lowered and "working directory per turn" in lowered:
+        release_facts.append("app-server session 现在能管理多个 environments，并且每一轮都可选择 environment 和 working directory")
+    if "amazon bedrock" in lowered and "sigv4" in lowered:
+        release_facts.append("OpenAI-compatible providers 新增一等 Amazon Bedrock 支持，包括 AWS SigV4 signing 和 AWS credential auth")
+    if "remote plugin marketplaces" in lowered:
+        release_facts.append("remote plugin marketplaces 可以直接列出和读取，详情查询更稳，分页结果也更大")
+    if "hooks are now stable" in lowered and "config.toml" in lowered:
+        release_facts.append("hooks 进入 stable，可在 `config.toml` / `requirements.toml` 配置，并能观察 MCP tools、`apply_patch` 和长时间 Bash session")
+    if release_facts:
+        return compose_fact_sentences(intro=f"`{title}` 这版 Codex 更新重点是：", facts=release_facts, group_sizes=(2, 2, 1))
+
     sentences = simple_sentences(source_text)[:2]
     if sentences:
         return compose_fact_sentences(intro=f"`{title}` 这次改动主要写明了", facts=sentences, group_sizes=(1, 1))
@@ -3991,6 +4025,15 @@ def build_github_trending_detail(*, title: str, source_text: str) -> str:
             facts=[
                 "它把 Claude Code 的 skill 直接收口到 Android 逆向场景，能处理 APK/XAPK/JAR/AAR 这类包",
                 "重点不是泛泛聊逆向，而是把 HTTP API 提取和复现实操写成了可直接使用的流程",
+            ],
+            group_sizes=(1, 1),
+        )
+    if "code search mcp" in lowered and "entire codebase" in lowered:
+        return compose_fact_sentences(
+            intro=f"`{title}` 这周能进趋势榜，至少因为：",
+            facts=[
+                "它做的是给 `Claude Code` 用的 code search MCP，让 coding agent 查询代码时能把整个 codebase 当上下文",
+                "作者是 `zilliztech`，这类项目的重点不是 README 口号，而是把大仓库检索和上下文注入变成 MCP 工具",
             ],
             group_sizes=(1, 1),
         )
@@ -4258,6 +4301,8 @@ def localize_product_hunt_tagline(value: str) -> str:
         return "一个号称几乎什么都能构建的云原生 AI agent"
     if lowered == "gtm agents to find and reach your next customer":
         return "帮你寻找并触达下一位客户的 GTM agents"
+    if lowered == "codex can now build, test & debug on autopilot":
+        return "让 Codex 自动构建、测试和调试代码，主打更接近 autopilot 的开发流程"
     if "vs code extension" in lowered and "agent memory" in lowered and "claude code" in lowered and "codex" in lowered:
         return "一个把 Agent Memory、Claude Code 和 Codex 包进 VS Code 图形界面的扩展"
     return localize_common_reader_phrases(cleaned) if looks_like_english_text(cleaned) else cleaned
@@ -4528,6 +4573,12 @@ def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, ma
     facts: list[str] = []
 
     if lane_name == "hacker-news-watch":
+        if "how llms work" in lowered and "karpathy" in lowered:
+            facts.append("这条 Show HN 是把 Andrej Karpathy 的《Intro to Large Language Models》讲座做成交互式可视化指南")
+            facts.append("作者下载了讲座 transcript，再用 `Claude Code` 生成整个互动站点，而且实现形态是单个 HTML 文件")
+            facts.append("原帖说这个站点适合反复回看 LLM 基础内容，所以重点是学习材料的再包装和 Claude Code 参与生成")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
         if all(topic in topics for topic in ("评审分工", "review loop", "仓库边界")):
             facts.append("这条 HN 热榜讨论在聊评审分工、review loop 和仓库边界")
             facts.append("它想解决的是 agent 协作里谁来审、怎么交接、边界该怎么收紧")
@@ -4543,12 +4594,14 @@ def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, ma
         if focus:
             facts.append(f"这条 HN 热榜讨论把焦点放在 {focus}")
         elif cleaned_title:
-            facts.append("这条 HN 热榜讨论不是泛聊概念，而是在追更具体的工程做法")
+            facts.append(f"这条 HN 热榜标题指向 `{trim_text_to_safe_boundary(cleaned_title, limit=96)}`，先按标题本身交代主题")
 
         if any(topic in topics for topic in {"评审分工", "review loop", "review checklist", "agent 交接", "仓库边界"}):
             facts.append("讨论已经落到评审、交接和仓库约束这些可执行条件，不只是情绪化站队")
         elif "matter" in lowered or "why" in lowered:
             facts.append("讨论已经开始回答“为什么这件事会影响团队协作”，不只是复读标题")
+        elif stripped_source:
+            facts.append(f"摘要里能看到的具体信息是：{trim_text_to_safe_boundary(localize_common_reader_phrases(simple_sentences(stripped_source)[0] if simple_sentences(stripped_source) else stripped_source), limit=140)}")
 
     if lane_name == "hacker-news-search-watch":
         cleaned_query = normalize_whitespace(matched_query)
@@ -4569,18 +4622,37 @@ def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, ma
             facts.append("它会把 `Claude Code`、`Codex`、`OpenCode` 的事件收口到一个界面里，并按工作目录把同仓库会话并到同一项目下")
             return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1))
 
+        if "swarm orchestrator" in lowered and "verification layer" in lowered:
+            facts.append(f"搜索词「{cleaned_query or '相关关键词'}」命中的 `Swarm Orchestrator`，做的是给 AI coding agents 加验证层")
+            facts.append("它把 Copilot CLI、Claude Code 和 Codex 都纳入同一层 verification，重点是让 agent 产出的代码先过检查再交付")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1))
+
+        if "agentcall.dev" in lowered or ("google meet" in lowered and "zoom" in lowered and "same session" in lowered):
+            facts.append(f"搜索词「{cleaned_query or '相关关键词'}」命中的 `agentcall.dev`，想让正在终端里跑的 coding agent 加入会议")
+            facts.append("它支持把同一个 `Claude Code`、`Codex`、`OpenClaw` 或 `Cursor` session 拉进 Google Meet、Teams 或 Zoom")
+            facts.append("原帖强调 agent 进会后仍保留同一份上下文和文件访问权，可以听说、共享 localhost 页面，并边开会边改代码")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+        if "grafana cloud" in lowered and "gcx" in lowered:
+            facts.append(f"搜索词「{cleaned_query or '相关关键词'}」命中的 `gcx`，是 Grafana Cloud 官方 CLI")
+            facts.append("作者把背景说得很清楚：Claude Code、Codex 这类 agent 写代码很快，但经常看不到生产环境实际发生了什么")
+            facts.append("`gcx` 把查询 production、排查 alerts、让 Assistant root-cause 问题这些 observability 动作放回终端，方便边修边看指标")
+            return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
         focus = format_hacker_news_topics(topics[:4])
         if cleaned_query and focus:
             facts.append(f"搜索词「{cleaned_query}」命中的这条 HN 讨论把焦点放在 {focus}")
-        elif cleaned_query:
-            facts.append(f"搜索词「{cleaned_query}」命中的这条 HN 讨论不是泛聊概念，而是在讲更具体的工程做法")
+        elif cleaned_query and cleaned_title:
+            facts.append(f"搜索词「{cleaned_query}」命中的 HN 标题是 `{trim_text_to_safe_boundary(cleaned_title, limit=96)}`")
         elif cleaned_title and focus:
             facts.append(f"这条 HN 搜索命中把焦点放在 {focus}")
+        elif cleaned_title:
+            facts.append(f"这条 HN 搜索命中的标题是 `{trim_text_to_safe_boundary(cleaned_title, limit=96)}`")
 
         if any(topic in topics for topic in {"tmux", "git worktree", "review checklist", "agent 交接"}):
             facts.append("它把会话切分、代码隔离和评审交接串成了同一条 workflow")
-        elif cleaned_title:
-            facts.append("这条命中给出了可复述的工程细节，不只是一个标题")
+        elif stripped_source:
+            facts.append(f"摘要里能看到的具体信息是：{trim_text_to_safe_boundary(localize_common_reader_phrases(simple_sentences(stripped_source)[0] if simple_sentences(stripped_source) else stripped_source), limit=140)}")
 
     return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 

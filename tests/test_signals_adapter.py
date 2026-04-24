@@ -11,6 +11,7 @@ from helpers.signals_adapter import (
     build_codex_detail,
     build_collect_result,
     build_editor_copy,
+    build_github_trending_detail,
     build_hacker_news_detail,
     build_polymarket_detail,
     build_product_hunt_detail,
@@ -6116,6 +6117,55 @@ matched_query: Claude Code
         self.assertIn("工作目录", lazyagent_detail)
         self.assertNotIn("不是泛聊概念", lazyagent_detail)
 
+    def test_build_hacker_news_detail_covers_live_2026_04_24_cases(self) -> None:
+        cases = [
+            (
+                "hacker-news-watch",
+                "Show HN: How LLMs Work – Interactive visual guide based on Karpathy''s lecture",
+                (
+                    "All content is based on Andrej Karpathy's Intro to Large Language Models lecture. "
+                    "I downloaded the transcript and used Claude Code to generate the entire interactive site from it — single HTML file."
+                ),
+                "",
+                ("Karpathy", "Claude Code", "单个 HTML"),
+            ),
+            (
+                "hacker-news-search-watch",
+                "Show HN: We built a way for Claude Code to join meetings like a real teammate",
+                (
+                    "Hi HN — we built agentcall.dev because the coding agent you're already running in your terminal shouldn't be trapped there. "
+                    "Your existing Claude Code, Codex, OpenClaw, or Cursor session joins a Google Meet, Teams, or Zoom call as itself. "
+                    "Same session, same context, same file access."
+                ),
+                "terminal coding agent",
+                ("agentcall.dev", "Google Meet", "同一份上下文"),
+            ),
+            (
+                "hacker-news-search-watch",
+                "Show HN: gcx – The Official Grafana Cloud CLI",
+                (
+                    "gcx is a new CLI for Grafana Cloud. With the rise of agentic coding tools like Claude Code and Codex "
+                    "these agents are often blind to what's actually happening in production. Query production. Investigate alerts."
+                ),
+                "terminal coding agent",
+                ("gcx", "Grafana Cloud", "production"),
+            ),
+        ]
+
+        for lane_name, title, source_text, matched_query, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_hacker_news_detail(
+                    lane_name=lane_name,
+                    title=title,
+                    source_text=source_text,
+                    matched_query=matched_query,
+                )
+                self.assertTrue(detail)
+                self.assertNotIn("不是泛聊概念", detail)
+                self.assertNotIn("更具体的工程做法", detail)
+                for term in expected_terms:
+                    self.assertIn(term, detail)
+
     def test_build_product_hunt_detail_localizes_live_2026_04_21_taglines(self) -> None:
         cases = [
             (
@@ -6283,6 +6333,17 @@ matched_query: Claude Code
         self.assertNotIn("Swarm Orchestrator v4.1.0, verification layer for AI coding agents", body_markdown)
         self.assertNotIn("VS Code extension with Agent Memory that wraps Claude Code and Codex with a Powerful GUI", body_markdown)
 
+    def test_build_github_trending_detail_localizes_claude_context(self) -> None:
+        detail = build_github_trending_detail(
+            title="claude-context",
+            source_text="Code search MCP for Claude Code. Make entire codebase the context for any coding agent. **Author:** @zilliztech/claude-context",
+        )
+
+        self.assertIn("code search MCP", detail)
+        self.assertIn("整个 codebase", detail)
+        self.assertIn("MCP 工具", detail)
+        self.assertNotIn("项目说明主要", detail)
+
     def test_build_claude_code_release_detail_localizes_sparse_release_fix(self) -> None:
         detail = build_claude_code_release_detail(
             title="v2.1.112",
@@ -6308,6 +6369,23 @@ matched_query: Claude Code
         self.assertIn("已修补版本", detail)
         self.assertIn("pnpm-lock.yaml", detail)
         self.assertNotIn("Pin vulnerable npm dependencies", detail)
+
+    def test_build_codex_detail_localizes_release_0_124_summary(self) -> None:
+        detail = build_codex_detail(
+            title="0.124.0",
+            source_text=(
+                "The TUI now has quick reasoning controls: `Alt+,` lowers reasoning, `Alt+.` raises it, and accepted model upgrades now reset reasoning to the new model’s default instead of carrying over stale settings. "
+                "(#18866, #19085) App-server sessions can now manage multiple environments and choose an environment and working directory per turn. "
+                "Added first-class Amazon Bedrock support for OpenAI-compatible providers, including AWS SigV4 signing."
+            ),
+            source_url="https://github.com/openai/codex/releases/tag/rust-v0.124.0",
+        )
+
+        self.assertIn("Alt+,", detail)
+        self.assertIn("Alt+.", detail)
+        self.assertIn("多个 environments", detail)
+        self.assertIn("Amazon Bedrock", detail)
+        self.assertNotIn("The TUI now has quick reasoning controls", detail)
 
     def test_build_codex_detail_localizes_sparse_commit_and_realtime_summary(self) -> None:
         fixture_detail = build_codex_detail(
