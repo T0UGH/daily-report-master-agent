@@ -14,6 +14,7 @@ from helpers.signals_adapter import (
     build_hacker_news_detail,
     build_polymarket_detail,
     build_product_hunt_detail,
+    build_reader_excerpt,
     build_reddit_detail,
     build_report_artifact,
     build_selected_items,
@@ -5891,6 +5892,78 @@ matched_query: Claude Code
         self.assertNotIn("这条帖子围绕", body_markdown)
         # Should have Chinese facts about the release
         self.assertIn("OpenClaw 2026.4.15", body_markdown)
+
+    def test_build_x_post_detail_human_retells_live_2026_04_24_chinese_posts(self) -> None:
+        cases = [
+            (
+                "@op7418 #57",
+                (
+                    "我去，新的 Codex 太适合我这个 PPT Skills 了！ GPT 5.5 的前端能力大幅提升，"
+                    "所以排版不是问题。然后它内置了浏览器，你可以直接在里面预览生成的 PPT。"
+                    "还有就是它能够调用 GPT-Image 2 为你的 P"
+                ),
+                ("@op7418", "PPT Skills", "内置浏览器", "预览"),
+            ),
+            (
+                "@turingou",
+                (
+                    "codex computer use 好用是好用，但是慢的就像 80 岁老头拿放大镜第一次用电脑一样，"
+                    "让它自己操作浏览器配置 Apple IAP 和注册新应用，做了一个多小时还没弄完…"
+                ),
+                ("@turingou", "Apple IAP", "一个多小时", "卡点"),
+            ),
+            (
+                "@HiTw93",
+                (
+                    "这个分享文稿非常有意思，是 Kami 的前身。Kami 最开始是我在 CC 里面的一个投资报告生成小玩意，"
+                    "然后刚好有一个分享要讲你不知道的Agent，很懒感觉写一个这么长的PPT多费时间啊，"
+                    "然后就直接把原来能力边生成边调试几个版本到满意"
+                ),
+                ("@HiTw93", "Kami", "投资报告", "边生成、边调试"),
+            ),
+            (
+                "@AI_jacksaku",
+                (
+                    "我最近在给一家电商公司设计业务工作流 Agent。帮他们算了一笔账："
+                    "日均 50 万 tokens 输入，20 万 tokens 输出的情况下 用 Claude Opus 4.6"
+                    "（输入 $5/M，输出 $25/M），一个月账单 $52"
+                ),
+                ("@AI_jacksaku", "50 万", "20 万", "$52"),
+            ),
+        ]
+
+        for title, source_text, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_x_post_detail(lane_name="x-following", title=title, source_text=source_text)
+
+                self.assertTrue(detail)
+                self.assertNotIn("值得关注", detail)
+                self.assertNotIn("这说明", detail)
+                self.assertNotIn("生态继续演进", detail)
+                for term in expected_terms:
+                    self.assertIn(term, detail)
+
+    def test_reader_excerpt_uses_x_human_retell_before_raw_chinese_snippet(self) -> None:
+        excerpt = build_reader_excerpt(
+            lane_name="x-following",
+            raw_title="@turingou",
+            source_text=(
+                "codex computer use 好用是好用，但是慢的就像 80 岁老头拿放大镜第一次用电脑一样，"
+                "让它自己操作浏览器配置 Apple IAP 和注册新应用，做了一个多小时还没弄完…"
+            ),
+            source_url="https://x.com/turingou/status/2047695663367086521",
+            fallback_excerpt="codex computer use 好用是好用，但是慢的就像 80 岁老头拿放大镜第一次用电脑一样。",
+            useful_item_count=1,
+        )
+
+        self.assertIn("@turingou", excerpt)
+        self.assertIn("Apple IAP", excerpt)
+        self.assertIn("一个多小时", excerpt)
+        self.assertIn("卡点", excerpt)
+        self.assertNotEqual(
+            excerpt,
+            "codex computer use 好用是好用，但是慢的就像 80 岁老头拿放大镜第一次用电脑一样，让它自己操作浏览器配置 Apple IAP 和注册新应用，做了一个多小时还没弄完…。",
+        )
 
     def test_build_x_post_detail_rewrites_claude_design_launch_into_chinese(self) -> None:
         detail = build_x_post_detail(

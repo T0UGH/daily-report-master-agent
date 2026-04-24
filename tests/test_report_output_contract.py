@@ -122,6 +122,22 @@ class ReportOutputContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "兜底句"):
             validate_single_section_report(bad_markdown)
 
+    def test_validator_rejects_empty_community_judgment_line(self) -> None:
+        bad_markdown = build_report(
+            f"## {SECTION_TITLE}\n- **Codex Computer Use** 这说明 coding agent 正在进入真实工作流，值得关注。[原帖]({SOURCE_URL})"
+        )
+        with self.assertRaisesRegex(ValueError, "空泛判断"):
+            validate_single_section_report(bad_markdown)
+
+    def test_validator_rejects_empty_judgment_tail_after_bold_title_prefix(self) -> None:
+        bad_markdown = build_report(
+            "## {section_title}\n"
+            "- **@op7418 #57：Codex + PPT Skills** 读者可以把它当作 coding agent 外溢到办公场景的信号。"
+            "[原帖]({source_url})".format(section_title=SECTION_TITLE, source_url=SOURCE_URL)
+        )
+        with self.assertRaisesRegex(ValueError, "空泛判断"):
+            validate_single_section_report(bad_markdown)
+
     def test_validator_rejects_hn_generic_filler_after_title_prefix(self) -> None:
         bad_markdown = build_report(
             "## {section_title}\n"

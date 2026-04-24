@@ -68,6 +68,9 @@ GENERIC_HN_FILLER_RE = re.compile(
     r"(?:这条 HN 热榜讨论|搜索词「[^」]+」命中的这条 HN 讨论|这条 HN 搜索命中)"
     r"[^。]*(?:不是泛聊概念，而是在(?:追|讲)更具体的工程做法)(?:[。！!？?]|$)"
 )
+EMPTY_COMMUNITY_JUDGMENT_RE = re.compile(
+    r"(?:这说明|值得关注|这条有用是因为|读者可以把它当作|生态继续演进|更像真实工作流|值得保留)"
+)
 HYBRID_ENGLISH_TAIL_PREFIX_RE = re.compile(
     r"(?:提到|写明了|记录里写到|主打的是|定位很直接[:：]?|摘要里写到|改动主要是|主要更新是|更新是)\s*",
     re.IGNORECASE,
@@ -273,6 +276,10 @@ def validate_body_line_content_quality(title: str, raw_line: str) -> None:
     require(
         GENERIC_HN_FILLER_RE.search(normalized_line) is None,
         f"{title} 的正文条目不得使用 HN 泛化 filler",
+    )
+    require(
+        EMPTY_COMMUNITY_JUDGMENT_RE.search(normalized_line) is None,
+        f"{title} 的正文条目不得使用空泛判断句，必须复述原帖事实链",
     )
     require(
         not is_product_hunt_raw_english_tagline_leakage(normalized_line),

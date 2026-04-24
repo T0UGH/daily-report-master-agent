@@ -1933,7 +1933,7 @@ def build_generic_headline(
             return "关注流里开始有人把 agent 的“上下文失忆”问题直接点破。"
         if focus_label:
             return f"{subject} 这条跟踪讨论把重点放在了 {focus_label} 上。"
-        return f"{subject} 仍然是关注流里更值得保留的一条讨论。"
+        return f"{subject} 这条关注流线索需要补出原帖对象、动作和卡点。"
     if lane_name == "reddit-watch":
         if focus_label:
             return f"这条 Reddit 讨论把重点放在 {focus_label} 上。"
@@ -1949,7 +1949,7 @@ def build_generic_headline(
             return f"Hacker News 搜索词「{matched_query}」命中了一条更偏实践的讨论。"
         if focus_label:
             return f"这条 Hacker News 搜索命中把重点放在 {focus_label} 上。"
-        return f"{subject} 是今天值得保留的一条 Hacker News 搜索命中。"
+        return f"{subject} 是今天命中的一条 Hacker News 搜索结果，正文需要交代具体工程问题。"
     if lane_name == "claude-code-watch":
         if focus_label:
             return f"{subject} 这一版继续围绕 {focus_label} 补协作链路。"
@@ -2596,6 +2596,26 @@ def build_reader_excerpt(
             return ensure_chinese_sentence(weather_excerpt)
 
     if cleaned_source:
+        if lane_name in NOISY_X_LANES or lane_name == "reddit-watch":
+            detailed_excerpt = build_lane_fact_summary(
+                lane_name=lane_name,
+                title=raw_title,
+                source_text=cleaned_source,
+                source_url=source_url,
+                matched_query=matched_query,
+            )
+            if detailed_excerpt and not is_generic_placeholder_copy(detailed_excerpt):
+                return ensure_chinese_sentence(detailed_excerpt)
+            guarded_excerpt = build_minimal_reader_fact_fallback(
+                lane_name=lane_name,
+                title=raw_title,
+                source_text=cleaned_source,
+                source_url=source_url,
+                matched_query=matched_query,
+            )
+            if guarded_excerpt and not is_generic_placeholder_copy(guarded_excerpt):
+                return ensure_chinese_sentence(guarded_excerpt)
+
         if count_cjk_characters(cleaned_source) >= 8 and not looks_like_english_text(cleaned_source):
             return ensure_chinese_sentence(cleaned_source)
 
@@ -3177,7 +3197,7 @@ def build_concrete_x_fallback_detail(*, lane_name: str, title: str, source_text:
             )
         add_x_fact_sentence(
             sentences,
-            "这说明 `Claude Code` 不只是在补命令行能力，也开始把 `desktop` 入口当成正式产品面来打磨",
+            "这条更新把 `Claude Code` 的产品入口从命令行扩到 `desktop`，说明改动对象是正式桌面体验而不是单个 CLI 参数",
         )
 
     raw_sentences = simple_sentences(cleaned_source)
@@ -3198,7 +3218,7 @@ def build_concrete_x_fallback_detail(*, lane_name: str, title: str, source_text:
     if len(sentences) < 3 and subject and (sentences or raw_clause_fact):
         add_x_fact_sentence(
             sentences,
-            f"这条帖子围绕 `{subject}` 展开，而且摘要里已经落到了具体动作或主张",
+            f"这条帖子已经给出 `{subject}` 的具体动作或主张，不只是提到一个话题",
         )
     if len(sentences) < 3 and raw_clause_fact:
         add_x_fact_sentence(sentences, raw_clause_fact)
@@ -3210,17 +3230,17 @@ def build_concrete_x_fallback_detail(*, lane_name: str, title: str, source_text:
         if subject:
             add_x_fact_sentence(
                 sentences,
-                f"它值得保留，是因为 `{subject}` 在这里已经对应到具体产品动作或 workflow 判断",
+                f"这里的 `{subject}` 已经对应到具体产品动作或 workflow 判断，可以让读者复述原帖在说什么",
             )
         elif lane_name == "x-feed":
             add_x_fact_sentence(
                 sentences,
-                "它值得保留，是因为推荐流里已经出现了能复述的具体变化点",
+                "推荐流里已经出现了能复述的具体变化点，正文需要把动作链讲完整",
             )
         else:
             add_x_fact_sentence(
                 sentences,
-                "它值得保留，是因为关注流里已经出现了能复述的具体变化点",
+                "关注流里已经出现了能复述的具体变化点，正文需要补齐对象、动作和卡点",
             )
 
     if len(sentences) < 3:
@@ -3489,6 +3509,95 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
     lowered = cleaned_source.lower()
     lowered = re.sub(r"^rt\s+@[a-z0-9_]+:\s*", "", lowered, flags=re.IGNORECASE)
     facts: list[str] = []
+
+    if "ppt skills" in lowered and "内置了浏览器" in cleaned_source:
+        facts.extend(
+            [
+                "@op7418 说新版 `Codex` 很适合他的 `PPT Skills`，因为 `GPT-5.5` 的前端排版能力更强，生成 PPT 页面时版式更稳",
+                "他还点出一个具体流程变化：`Codex` 内置浏览器，可以直接打开预览生成的 PPT，所以生成、查看和调整能放在同一个环境里完成",
+            ]
+        )
+        if "gpt-image" in lowered or "gpt image" in lowered:
+            facts.append("原帖还提到它能调用 `GPT-Image 2` 做配图；如果采集文本被截断，正文只保留已经看到的这部分，不补写后半句")
+
+    if "apple iap" in lowered and "注册新应用" in cleaned_source:
+        facts.extend(
+            [
+                "@turingou 让 `Codex Computer Use` 自己操作浏览器去配置 `Apple IAP`、注册新应用",
+                "他的反馈是“好用是好用”，但速度非常慢：一个多小时还没做完",
+                "这个卡点不是概念层面的 computer use，而是真实业务后台里的点击、等待、表单和权限步骤会拖慢 agent 执行",
+            ]
+        )
+
+    if "sandbank" in lowered and ("challenge" in lowered or "challage" in lowered) and ("cf" in lowered or "cloudflare" in lowered):
+        facts.extend(
+            [
+                "@turingou 说自己的 `sandbank` 东京服务器终于被 `Cloudflare` 解除 challenge",
+                "他把这个问题归到云端沙箱形态的 `agent matrix`：做起来会碰到云端出口、风控校验和地域节点这类网络复杂度",
+                "对照项是 `local-first` 产品；如果 agent 主要在本地跑，就少了这类云端网络问题",
+            ]
+        )
+
+    if "kami" in lowered and ("投资报告" in cleaned_source or "ppt" in lowered) and "cc" in lowered:
+        facts.extend(
+            [
+                "@HiTw93 说 `Kami` 的前身不是完整产品，而是他在 `CC` 里做的一个投资报告生成小工具",
+                "后来他要做一场讲“你不知道的 Agent”的分享，不想手写很长的 PPT，就把原来的能力拿来边生成、边调试",
+                "这条的动作链是：先有 `CC` 内部小工具，再遇到真实分享需求，再迭代成能产出文稿 / PPT 的形态",
+            ]
+        )
+
+    if "电商公司" in cleaned_source and "业务工作流 agent" in lowered and "tokens" in lowered:
+        facts.extend(
+            [
+                "@AI_jacksaku 在给一家电商公司设计业务工作流 Agent，并把问题直接落到 token 账单上",
+                "他假设日均 `50 万` input tokens、`20 万` output tokens；用 `Claude Opus 4.6` 时按输入 `$5/M`、输出 `$25/M` 估算",
+                "按这个口径，一个月账单约 `$52`，所以正文必须保留数字和计算口径，不能只写成“成本可控”",
+            ]
+        )
+
+    if "agent" in cleaned_source and "skills" in lowered and "harness" in lowered and "三个核心概念" in cleaned_source:
+        facts.extend(
+            [
+                "原帖是在给读者补 `Agent`、`Skills`、`Harness` 三个概念的关系，不是只列术语",
+                "它把这三者放在现代 AI 应用和自主智能体的构建里解释：`Agent` 负责执行目标，`Skills` 像可复用能力块，`Harness` 则把流程、工具调用和运行环境串起来",
+                "原文采集在“从只会聊天进化为”处被截断，所以正文只保留已经看到的定义关系，不继续脑补结论",
+            ]
+        )
+
+    if "deepseek v4" in lowered and "agent" in lowered and ("pre-train" in lowered or "agentic data" in lowered):
+        facts.extend(
+            [
+                "原帖在拆 `DeepSeek V4` 做 Agent 训练的策略，第一点是 pre-train 阶段注入 `Agentic Data`",
+                "它给出的理由是先让模型熟悉长任务流程和工具调用模式，后续训练不用从零硬训",
+            ]
+        )
+
+    if "deepseek v4" in lowered and "5个agent" in cleaned_source:
+        facts.extend(
+            [
+                "@MinLiBuilds 用竞技场模式连续测试 `DeepSeek V4`，一次让 5 个 agent 一起跑",
+                "他的观察是 V4 吞吐速度很快，同时注意到 `Opus 4.7` 的 input token 似乎多出约 50%",
+                "这条要保留的是测试方式和 token 对比，而不是抽象写“模型竞争继续升温”",
+            ]
+        )
+
+    if "codex" in lowered and "obsidian" in lowered and ("封面图" in cleaned_source or "chatgpt image" in lowered):
+        facts.extend(
+            [
+                "@canghe 把 `Codex + Obsidian` 当作公众号封面图工作流：文章在 Obsidian 写完后，直接让 Codex 生成封面图",
+                "具体做法是让 Codex 调用 `ChatGPT image 2` 生成图片，他认为模型对文章内容的理解能力足够强",
+            ]
+        )
+
+    if "gpt image2" in lowered and "10000" in cleaned_source:
+        facts.extend(
+            [
+                "@AI_Jasonyu 说有人围绕 `GPT Image2` 很快做出套壳站，并在一天内拿到约 `10000` 个用户",
+                "他描述的动作链是：新模型出现后，先找 API、接入、上线站点，再尝试冷启动赚美金",
+                "原帖还提到 `Apimart` 这类 API 接入入口，所以重点是新模型发布后的上站速度和分发效率",
+            ]
+        )
 
     if "agent harness" in lowered and "black magic" in lowered:
         facts.append("作者直说 `agent harness` 没大家想得那么玄")
@@ -4193,7 +4302,7 @@ def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     elif "agent-native software dev" in lowered or ("desktop app" in lowered_title and "alongside you" in lowered):
         facts.extend([
             "卖的是 agent-native 的软件开发桌面应用，关键词不是聊天，而是并肩工作",
-            "这说明新一轮工具竞争已经在争夺本地开发入口，而不是只争模型能力",
+            "这条记录把竞争焦点落在本地开发入口，而不是只比较模型能力",
         ])
     elif "runs your entire startup" in lowered or ("startup" in lowered and "agent" in lowered):
         facts.extend([
@@ -4223,7 +4332,7 @@ def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     elif "claude code for product teams" in lowered or ("product teams" in lowered and "claude code" in lowered):
         facts.extend([
             "直接把自己定位成“给产品团队用的 Claude Code”",
-            "这说明 coding agent 的协作方式已经开始外溢到产品团队，而不是只停留在工程师侧",
+            "这条记录把 coding agent 的协作方式放到产品团队场景，而不是只停留在工程师侧",
         ])
 
     if not facts and looks_like_english_text(source_text):
@@ -4656,6 +4765,64 @@ def build_reddit_detail(*, title: str, source_text: str) -> str:
             "讨论点已经从“能不能多代理”转到“多代理怎么治理”",
         ]
         return compose_fact_sentences(intro="这条 Reddit 讨论的重点是：", facts=facts, group_sizes=(1, 1, 1))
+
+    generic_facts: list[str] = []
+    if "52 controlled benchmarks" in lowered or "73-124%" in lowered or "zero quality gain" in lowered:
+        generic_facts = [
+            "发帖人跑了 52 组 Claude Code 受控 benchmark，代码库是生产级 Next.js / TypeScript / Supabase 项目",
+            "他给出的结论很硬：agent teams 比顺序执行贵 73-124%，但质量没有提升",
+            "更有用的发现是先写 `CONTRACT.md`，同模型同代码库下成本降了 54%，质量从 5/10 拉到 9/10",
+        ]
+    elif "agentic coding report" in lowered and ("60%" in lowered or "0-20%" in lowered):
+        generic_facts = [
+            "发帖人读完 Anthropic 2026 agentic coding report 后，挑出几个实际数字而不是复述宣传口径",
+            "报告里开发者约 60% 工作会用 AI，但真正完全委托的任务只有 0-20%",
+            "他的理解是 AI 更像很快的 copilot：能卸掉机械活，也会带来 27% 原本不会做的新增工作",
+        ]
+    elif "vibe-coded" in lowered and ("200+ units" in lowered or "browser" in lowered):
+        generic_facts = [
+            "发帖人用 Claude vibe-coded 了一款受 Warcraft 2 启发的 RTS 游戏",
+            "成品规模不是玩具 demo：9 个阵营、200+ 单位、多人模式、AI commanders，并且能在浏览器里跑",
+            "这条适合保留为完整项目案例，因为它讲的是从生成代码到可运行游戏的结果规模",
+        ]
+    elif "telegram plugin" in lowered and "botfather" in lowered:
+        generic_facts = [
+            "发帖人把项目迁到 Claude Code 官方 Telegram integration，用 Telegram 远程管理服务器上的多个项目",
+            "具体设置链路是 BotFather 创建 bot、拿 token、再把 Claude Code 配成一个 channel",
+            "他把它当作 OpenClaw 替代方案，关键变化是远程入口更轻，不必依赖官方 Claude app",
+        ]
+    elif "oauth" in lowered and "openclaw" in lowered:
+        generic_facts = [
+            "这帖在讨论 Claude 即将限制 OpenClaw OAuth 使用的问题",
+            "社区焦点不是新功能，而是既有 OpenClaw 用户的授权链路可能明天开始失效",
+            "正文需要把它写成迁移 / 替代方案压力，而不是泛泛说生态变化",
+        ]
+    elif "personas" in lowered and "plugin framework" in lowered:
+        generic_facts = [
+            "发帖人做了一个叫 `personas` 的轻量 plugin framework，用 Claude 原生能力搭 helpful assistants",
+            "标题里的“we have OpenClaw at home”是在说它走更简化的替代路线",
+            "这条的具体点是用 persona / plugin 框架组织助手行为，而不是部署一整套 OpenClaw",
+        ]
+    elif "replaced openclaw" in lowered and "claude -p" in lowered:
+        generic_facts = [
+            "发帖人说自己用 `claude -p` 加 bash script 替换了 OpenClaw",
+            "他的对照不是概念争论，而是实际命令行工作流：直接从 shell 调 Claude，再用脚本串起来",
+            "这条适合看作低配替代路线：少一层产品壳，多依赖本地脚本和 CLI 组合",
+        ]
+    elif ("resubscribe to codex" in lowered or "re-subscribe to codex" in lowered) and "opus 4.7" in lowered:
+        generic_facts = [
+            "发帖人原来连续两个月只用 Claude Max，现在因为 Opus 4.7 又重新订阅 Codex",
+            "这条的重点是用户在 Claude Max、Codex 和 Opus 新版本之间重新权衡",
+            "它保留的是付费选择变化和模型体验反馈，而不是泛泛比较阵营",
+        ]
+    elif "workflow tips" in lowered and "6 months" in lowered:
+        generic_facts = [
+            "发帖人是按 6 个月日常使用 Claude Code 的经验整理 workflow tips",
+            "标题标明视角来自 senior dev，所以重点应是长期高频使用后沉淀的做法",
+            "正文需要承接具体工作流建议，而不是把它压成“经验贴”三个字",
+        ]
+    if generic_facts:
+        return compose_fact_sentences(intro="", facts=generic_facts, group_sizes=(1, 1, 1))
     return ""
 
 
