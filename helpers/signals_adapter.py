@@ -1949,7 +1949,7 @@ def build_generic_headline(
             return f"Hacker News 搜索词「{matched_query}」命中了一条更偏实践的讨论。"
         if focus_label:
             return f"这条 Hacker News 搜索命中把重点放在 {focus_label} 上。"
-        return f"{subject} 是今天命中的一条 Hacker News 搜索结果，正文需要交代具体工程问题。"
+        return f"{subject} 是今天命中的一条 Hacker News 搜索结果，读者能先看到它指向的具体工程问题。"
     if lane_name == "claude-code-watch":
         if focus_label:
             return f"{subject} 这一版继续围绕 {focus_label} 补协作链路。"
@@ -2522,7 +2522,12 @@ def decorate_lane_display_title(*, lane_name: str, title: str, matched_query: st
 def build_reader_title(*, lane_name: str, raw_title: str, source_text: str) -> str:
     cleaned_title = normalize_whitespace(raw_title)
     if lane_name == "weather-watch":
-        return cleaned_title or "今日天气"
+        return build_weather_reader_title(title=cleaned_title, source_text=source_text) or "今日天气"
+    if lane_name == "polymarket-watch":
+        localized_question = localize_polymarket_question(cleaned_title)
+        if localized_question and localized_question != cleaned_title:
+            return f"市场在押注：{localized_question}"
+        return cleaned_title
     if lane_name in NOISY_X_LANES and re.fullmatch(r"@[A-Za-z0-9_]+(?:\s+#\d+)?", cleaned_title):
         descriptor, _ = build_known_signal_copy(lane_name=lane_name, title=cleaned_title, source_text=source_text)
         if not descriptor:
@@ -3000,6 +3005,7 @@ def sanitize_subject_label(value: str) -> str:
     cleaned = re.sub(r"[`\"“”'‘’]+", "", cleaned)
     cleaned = re.sub(r"[\u2600-\u27BF\U0001F300-\U0001FAFF]+", "", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned)
+    cleaned = re.sub(r"^(?:the|a|an)\s+", "", cleaned, flags=re.IGNORECASE)
     return cleaned.strip(" ,;:()[]{}.-")
 
 
@@ -3043,6 +3049,15 @@ def extract_x_subject_label(*, title: str, source_text: str) -> str:
 
 def build_agent_capability_phrase(value: str) -> str:
     lowered = value.lower()
+    if "open a browser" in lowered and "read a page" in lowered:
+        if "click" in lowered and "report" in lowered:
+            return "打开浏览器、读取页面、点击流程并回报变化"
+        return "打开浏览器并读取页面内容"
+    if "shared canvas" in lowered and all(token in lowered for token in ("plan", "edit", "review")):
+        return "在共享 canvas 上规划、编辑并审阅 workflow"
+    if "visual workflow" in lowered and "agent" in lowered:
+        return "搭建可视化 workflow 并交给 agent 执行"
+
     actions: list[str] = []
     if "find" in lowered:
         actions.append("查找")
@@ -3235,12 +3250,12 @@ def build_concrete_x_fallback_detail(*, lane_name: str, title: str, source_text:
         elif lane_name == "x-feed":
             add_x_fact_sentence(
                 sentences,
-                "推荐流里已经出现了能复述的具体变化点，正文需要把动作链讲完整",
+                "推荐流里已经出现了能复述的具体变化点，可以直接把对象、动作和结果讲清楚",
             )
         else:
             add_x_fact_sentence(
                 sentences,
-                "关注流里已经出现了能复述的具体变化点，正文需要补齐对象、动作和卡点",
+                "关注流里已经出现了能复述的具体变化点，可以直接交代对象、动作和卡点",
             )
 
     if len(sentences) < 3:
@@ -3356,9 +3371,11 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
         introduced_subject = sanitize_subject_label(restored_subject) or subject or "这个工具"
         capability_match = re.search(r"\bYour agent now\s+(?P<capability>[^.!?]+)", cleaned_source, re.IGNORECASE)
         capability = build_agent_capability_phrase(capability_match.group("capability")) if capability_match else ""
+        if not capability:
+            capability = build_agent_capability_phrase(cleaned_source)
         if capability:
             return f"帖子在介绍 `{introduced_subject}`，说 agent 现在可以{capability}"
-        return f"帖子在介绍 `{introduced_subject}`，重点是把一段具体流程直接交给 agent"
+        return f"帖子在介绍 `{introduced_subject}`，采集文本只给到名称和 agent 更新，保守看是一个让 agent 接管具体操作的工具或 workflow"
 
     setup_match = re.search(
         r"\bSomeone built the most complete\s+(?P<subject>.+?)\s+setup\s+(?P<context>.+?)\s+on GitHub\b",
@@ -3422,7 +3439,9 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
         if "github" in lowered and "setup" in lowered:
             return f"帖子在讨论 `{subject}` 的 setup，用 GitHub 上公开的配置去复刻一套现成用法"
         if "agent" in lowered and "skills" in lowered:
-            return f"帖子把焦点放在 `{subject}`，继续讨论 agents 和 skills 的取舍"
+            if "harness" in lowered:
+                return f"帖子把焦点放在 `{subject}`，说 harness 负责把 tools、state、memory 和 evaluation 串起来，让 skills 变成可运行的工作流"
+            return f"帖子把焦点放在 `{subject}`，把 skills 讲成 agent 可复用的能力块，并提醒还需要外层运行框架承接工具和状态"
         if "cloud" in lowered and "computer" in lowered:
             return f"帖子把焦点放在 `{subject}`，说 agent 开始拿到更完整的云端运行环境"
         return ""
@@ -3437,6 +3456,23 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
     if fallback_object:
         return ""
     return ""
+
+
+def build_thin_x_reaction_detail(*, title: str, source_text: str) -> str:
+    cleaned_source = normalize_whitespace(source_text)
+    lowered = normalize_whitespace(f"{title} {cleaned_source}").lower()
+    if "codex" not in lowered:
+        return ""
+    if count_cjk_characters(cleaned_source) < 4:
+        return ""
+
+    if "computer use" in lowered or "超级智能体" in cleaned_source or "coding" in lowered:
+        return (
+            "这是一条围绕 `Codex` 和 `Computer Use` 的简短反应：原帖认为 Codex 已经从单纯 coding "
+            "扩到更强的 agent / computer-use 形态，但没有展开完整 workflow 案例"
+        )
+
+    return "这是一条围绕 `Codex` 的简短反应：原帖只表达即时反馈，没有给出可复述的 workflow 细节"
 
 
 def build_minimal_release_rewrite(*, product_name: str, title: str, source_text: str) -> str:
@@ -3504,7 +3540,7 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
             facts.append("摘要里写到 " + "、".join(f"`{change}`" for change in structured_changes[:2]))
         if len(structured_changes) > 2:
             facts.append(f"还提到 `{structured_changes[2]}`")
-        return compose_fact_sentences(intro="这条帖子的核心信息是：", facts=facts, group_sizes=(2, 1))
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(2, 1))
 
     lowered = cleaned_source.lower()
     lowered = re.sub(r"^rt\s+@[a-z0-9_]+:\s*", "", lowered, flags=re.IGNORECASE)
@@ -3552,7 +3588,7 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
             [
                 "@AI_jacksaku 在给一家电商公司设计业务工作流 Agent，并把问题直接落到 token 账单上",
                 "他假设日均 `50 万` input tokens、`20 万` output tokens；用 `Claude Opus 4.6` 时按输入 `$5/M`、输出 `$25/M` 估算",
-                "按这个口径，一个月账单约 `$52`，所以正文必须保留数字和计算口径，不能只写成“成本可控”",
+                "按这个口径，一个月账单约 `$52`，token 账单从抽象风险变成了可核算的月成本",
             ]
         )
 
@@ -3578,7 +3614,7 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
             [
                 "@MinLiBuilds 用竞技场模式连续测试 `DeepSeek V4`，一次让 5 个 agent 一起跑",
                 "他的观察是 V4 吞吐速度很快，同时注意到 `Opus 4.7` 的 input token 似乎多出约 50%",
-                "这条要保留的是测试方式和 token 对比，而不是抽象写“模型竞争继续升温”",
+                "具体信息集中在测试方式和 token 对比上，不是单纯的模型阵营口号",
             ]
         )
 
@@ -3672,7 +3708,10 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
         facts.append("`Codex computer use` 已实现用 AI 操作手机 App")
 
     if facts:
-        return compose_fact_sentences(intro="这条帖子的核心信息是：", facts=facts, group_sizes=(2, 1))
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(2, 1))
+    thin_reaction = build_thin_x_reaction_detail(title=title, source_text=cleaned_source)
+    if thin_reaction:
+        return thin_reaction
     return build_generic_x_post_detail(lane_name=lane_name, title=title, source_text=cleaned_source)
 
 
@@ -4116,6 +4155,39 @@ def build_weather_detail(*, title: str, source_text: str) -> str:
     return lead + "，" + "，".join(tail)
 
 
+def build_weather_reader_title(*, title: str, source_text: str) -> str:
+    cleaned_title = normalize_whitespace(title)
+    if not cleaned_title:
+        return ""
+
+    title_match = re.match(
+        r"^(?P<location>.+?)\s+\d{4}-\d{2}-\d{2}\s+weather\s*[:：]\s*"
+        r"(?P<condition>[^,，]+)(?:[,，]\s*(?P<temperature>.+))?$",
+        cleaned_title,
+        re.IGNORECASE,
+    )
+    if not title_match:
+        return cleaned_title
+
+    fields = extract_weather_fields(source_text)
+    location = normalize_whitespace(title_match.group("location")).strip(" ,，")
+    condition = localize_weather_condition(title_match.group("condition") or fields.get("condition", ""))
+    temperature = compact_weather_temperature_range(title_match.group("temperature") or fields.get("temperature", ""))
+    fragments = [fragment for fragment in (condition, temperature) if fragment]
+    if location and fragments:
+        return f"{location}：" + "，".join(fragments)
+    if location:
+        return location
+    return "今日天气"
+
+
+def compact_weather_temperature_range(value: str) -> str:
+    cleaned = normalize_weather_temperature(value)
+    if not cleaned:
+        return ""
+    return re.sub(r"\s+-\s+", "–", cleaned)
+
+
 def extract_weather_fields(source_text: str) -> dict[str, str]:
     fields: dict[str, str] = {}
     known_patterns = {
@@ -4208,6 +4280,8 @@ def localize_weather_condition(value: str) -> str:
         ("cloudy to clear", "多云转晴"),
         ("partly cloudy", "多云"),
         ("mostly cloudy", "多云"),
+        ("light drizzle", "小雨"),
+        ("drizzle", "小雨"),
         ("light rain", "小雨"),
         ("moderate rain", "中雨"),
         ("heavy rain", "大雨"),
@@ -4291,6 +4365,8 @@ def localize_product_hunt_tagline(value: str) -> str:
         return "给 AI agents 提供设计上下文"
     if lowered == "watch agents spend money in real time":
         return "实时看 agent 在花钱买什么"
+    if "build visual workflows" in lowered and "ai agents" in lowered:
+        return "为 AI agents 构建可视化工作流"
     if lowered == "watches your workflows":
         return "盯住团队工作流"
     if lowered == "builds your agents":
@@ -4331,11 +4407,11 @@ def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     if "microvm" in lowered and "sandbox" in lowered:
         facts.append("主打让 AI coding agents 跑在真实 `microVM` 沙箱里，强调真实隔离环境")
     elif tagline and not looks_like_english_text(tagline):
-        facts.append(f"定位很直接，就是 {tagline}")
+        facts.append(f"产品说明写的是：{tagline}")
     elif translated_tagline:
-        facts.append(f"定位很直接：{translated_tagline}")
+        facts.append(f"产品说明写的是：{translated_tagline}")
     elif source_sentence:
-        facts.append(f"主打的是：{source_sentence}")
+        facts.append(f"产品说明写的是：{source_sentence}")
     elif "design context" in lowered:
         facts.append("主打给 AI agents 提供 `Design context`")
 
@@ -4409,6 +4485,55 @@ def build_product_hunt_detail(*, title: str, source_text: str) -> str:
     return compose_fact_sentences(intro=f"`{name}` 这条 Product Hunt 记录里写到：", facts=facts, group_sizes=(1, 1, 1))
 
 
+def localize_polymarket_question(question: str) -> str:
+    cleaned = normalize_whitespace(question).strip(" ?？")
+    if not cleaned:
+        return ""
+
+    if re.fullmatch(
+        r"Will\s+any\s+Anthropic\s+Claude\s+model\s+score\s+at\s+least\s+50%\s+on\s+the\s+FrontierMath\s+Exam",
+        cleaned,
+        re.IGNORECASE,
+    ):
+        return "到 6 月 30 日前，是否会有任一 Claude 模型在 FrontierMath 拿到至少 50%"
+
+    month_map = {
+        "january": "1",
+        "february": "2",
+        "march": "3",
+        "april": "4",
+        "may": "5",
+        "june": "6",
+        "july": "7",
+        "august": "8",
+        "september": "9",
+        "october": "10",
+        "november": "11",
+        "december": "12",
+    }
+    second_best_match = re.match(
+        r"Will\s+(.+?)\s+have the second-best Coding AI model at the end of ([A-Za-z]+)\s+(\d{4})",
+        cleaned,
+        re.IGNORECASE,
+    )
+    best_match = re.match(
+        r"Will\s+(.+?)\s+have the best Coding AI model at the end of ([A-Za-z]+)\s+(\d{4})",
+        cleaned,
+        re.IGNORECASE,
+    )
+    if second_best_match or best_match:
+        matched = second_best_match or best_match
+        subject = normalize_whitespace(matched.group(1))
+        month_name = matched.group(2).strip().lower()
+        year = matched.group(3)
+        month = month_map.get(month_name)
+        if month:
+            rank_text = "第二强" if second_best_match else "最强"
+            return f"{subject} 到 {year} 年 {month} 月底时会不会拥有{rank_text}的 Coding AI 模型"
+
+    return cleaned
+
+
 def build_polymarket_detail(*, title: str, source_text: str) -> str:
     question_match = re.search(
         r"Question:\s*(.+?)(?=Current leader:|24h volume:|30d volume:|Liquidity:|Price movement:|$)",
@@ -4430,41 +4555,8 @@ def build_polymarket_detail(*, title: str, source_text: str) -> str:
     facts: list[str] = []
     if question_match:
         question = normalize_whitespace(question_match.group(1))
-        rewritten_question = question
-        month_map = {
-            "january": "1",
-            "february": "2",
-            "march": "3",
-            "april": "4",
-            "may": "5",
-            "june": "6",
-            "july": "7",
-            "august": "8",
-            "september": "9",
-            "october": "10",
-            "november": "11",
-            "december": "12",
-        }
-        second_best_match = re.match(
-            r"Will\s+(.+?)\s+have the second-best Coding AI model at the end of ([A-Za-z]+)\s+(\d{4})\??",
-            question,
-            re.IGNORECASE,
-        )
-        best_match = re.match(
-            r"Will\s+(.+?)\s+have the best Coding AI model at the end of ([A-Za-z]+)\s+(\d{4})\??",
-            question,
-            re.IGNORECASE,
-        )
-        if second_best_match or best_match:
-            matched = second_best_match or best_match
-            subject = normalize_whitespace(matched.group(1))
-            month_name = matched.group(2).strip().lower()
-            year = matched.group(3)
-            month = month_map.get(month_name)
-            if month:
-                rank_text = "第二强" if second_best_match else "最强"
-                rewritten_question = f"{subject} 到 {year} 年 {month} 月底时会不会拥有{rank_text}的 Coding AI 模型"
-        facts.append(f"这份合约在问：{rewritten_question}")
+        rewritten_question = localize_polymarket_question(question)
+        facts.append(f"市场在押注：{rewritten_question}")
     else:
         facts.append(f"这份合约围绕 `{title}` 交易")
 
@@ -4493,6 +4585,10 @@ def build_polymarket_detail(*, title: str, source_text: str) -> str:
         movement = normalize_whitespace(movement_match.group(1))
         movement = re.sub(r"\bdown\s+([0-9.]+%?)\s+this week\b", r"本周下跌 \1", movement, flags=re.IGNORECASE)
         movement = re.sub(r"\bup\s+([0-9.]+%?)\s+this week\b", r"本周上涨 \1", movement, flags=re.IGNORECASE)
+        movement = re.sub(r"\bdown\s+([0-9.]+%?)\s+this month\b", r"本月下跌 \1", movement, flags=re.IGNORECASE)
+        movement = re.sub(r"\bup\s+([0-9.]+%?)\s+this month\b", r"本月上涨 \1", movement, flags=re.IGNORECASE)
+        movement = re.sub(r"\bdown\s+([0-9.]+%?)\s+today\b", r"今日下跌 \1", movement, flags=re.IGNORECASE)
+        movement = re.sub(r"\bup\s+([0-9.]+%?)\s+today\b", r"今日上涨 \1", movement, flags=re.IGNORECASE)
         market_strength.append(f"价格 {movement}")
     if market_strength:
         facts.append("市场强度也写得很明白，" + "，".join(market_strength))
@@ -4686,6 +4782,18 @@ def build_reddit_detail(*, title: str, source_text: str) -> str:
         ]
         return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 
+    if "anthropic response to claude code change" in lowered_title or (
+        "small test" in lowered
+        and "prosumer signups" in lowered
+        and "existing pro and max subscribers" in lowered
+    ):
+        facts = [
+            "这帖转述的是 Anthropic 对 Claude Code 订阅变化的说明：测试只覆盖约 `2%` 的新 prosumer signups",
+            "原文明确说 `Existing Pro and Max` subscribers 不受影响，避免把测试解读成存量用户马上被改规则",
+            "背景是 Max 刚推出时还没有 Claude Code、Cowork 和长时间运行的 async agents，现在这些已经变成日常 workflow",
+        ]
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
     if "channels launched today" in lowered or ("telegram" in lowered and "discord" in lowered and "--channels" in lowered):
         facts = [
             "帖子讲的是刚上线的 `Claude Code Channels`，现在可以从 `Telegram` 或 `Discord` 直接 DM 你的 Claude Code session",
@@ -4867,7 +4975,7 @@ def build_reddit_detail(*, title: str, source_text: str) -> str:
         generic_facts = [
             "这帖在讨论 Claude 即将限制 OpenClaw OAuth 使用的问题",
             "社区焦点不是新功能，而是既有 OpenClaw 用户的授权链路可能明天开始失效",
-            "正文需要把它写成迁移 / 替代方案压力，而不是泛泛说生态变化",
+            "这会给既有 OpenClaw 用户带来迁移 / 替代方案压力，焦点是授权链路怎么延续",
         ]
     elif "personas" in lowered and "plugin framework" in lowered:
         generic_facts = [
@@ -4891,7 +4999,7 @@ def build_reddit_detail(*, title: str, source_text: str) -> str:
         generic_facts = [
             "发帖人是按 6 个月日常使用 Claude Code 的经验整理 workflow tips",
             "标题标明视角来自 senior dev，所以重点应是长期高频使用后沉淀的做法",
-            "正文需要承接具体工作流建议，而不是把它压成“经验贴”三个字",
+            "可承接的事实是 planning、checklists 和独立 review 这些具体工作流建议",
         ]
     if generic_facts:
         return compose_fact_sentences(intro="", facts=generic_facts, group_sizes=(1, 1, 1))

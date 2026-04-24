@@ -3083,7 +3083,7 @@ matched_query: Claude Code
         self.assertIn("Artificial Intelligence", product_line)
         self.assertGreaterEqual(len(product_line), 120)
 
-        market_line = body_line_for("Will Anthropic have the second-best Coding AI model at the end of April 2026?")
+        market_line = body_line_for("市场在押注：Anthropic 到 2026 年 4 月底时会不会拥有第二强的 Coding AI 模型")
         self.assertIn("Anthropic", market_line)
         self.assertIn("90.0%", market_line)
         self.assertIn("OpenAI", market_line)
@@ -3627,7 +3627,7 @@ matched_query: Claude Code
         market_line = next(
             line
             for line in body_markdown.splitlines()
-            if "**Will Anthropic have the second-best Coding AI model at the end of April 2026?**" in line
+            if "**市场在押注：Anthropic 到 2026 年 4 月底时会不会拥有第二强的 Coding AI 模型**" in line
         )
         self.assertIn("Anthropic", market_line)
         self.assertIn("90.0%", market_line)
@@ -6220,6 +6220,232 @@ matched_query: Claude Code
         self.assertIn("流动性 107,019.2", detail)
         self.assertIn("本周下跌 1.6%", detail)
         self.assertNotIn("Will DeepSeek have the best Coding AI model", detail)
+
+    def test_build_report_artifact_live_2026_04_24_weather_is_chinese_in_title_and_body(self) -> None:
+        report_date = "2026-04-24"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "weather-watch", "status": "ok", "useful_item_count": 2},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "weather-watch",
+                    "title": "上海·杨浦 2026-04-24 weather: Light drizzle, 11.4°C to 20.2°C",
+                    "source_url": "https://weather.example.com/shanghai-yangpu/2026-04-24",
+                    "signal_path": "weather-watch/2026-04-24/signals/shanghai-yangpu.md",
+                    "fetched_at": "2026-04-24T05:30:00+0000",
+                    "source_snippet": "Condition: Light drizzle Temperature: 11.4°C to 20.2°C",
+                    "excerpt": "Condition: Light drizzle Temperature: 11.4°C to 20.2°C",
+                },
+                {
+                    "lane": "weather-watch",
+                    "title": "北京·海淀 2026-04-24 weather: Overcast, 12.8°C to 24.5°C",
+                    "source_url": "https://weather.example.com/beijing-haidian/2026-04-24",
+                    "signal_path": "weather-watch/2026-04-24/signals/beijing-haidian.md",
+                    "fetched_at": "2026-04-24T05:20:00+0000",
+                    "source_snippet": "Condition: Overcast Temperature: 12.8°C to 24.5°C",
+                    "excerpt": "Condition: Overcast Temperature: 12.8°C to 24.5°C",
+                },
+            ],
+            "summary": {
+                "selected_item_count": 2,
+                "lane_counts": [{"lane": "weather-watch", "selected_item_count": 2}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_markdown = artifact["body_markdown"]
+
+        self.assertIn("上海·杨浦：小雨，11.4°C–20.2°C", body_markdown)
+        self.assertIn("北京·海淀：阴，12.8°C–24.5°C", body_markdown)
+        self.assertIn("今天小雨", body_markdown)
+        self.assertIn("今天阴", body_markdown)
+        self.assertNotIn("weather:", body_markdown)
+        self.assertNotIn("Light drizzle", body_markdown)
+        self.assertNotIn("Overcast", body_markdown)
+        self.assertNotIn("今天Light drizzle", body_markdown)
+
+    def test_build_x_post_detail_live_2026_04_24_removes_template_fillers_and_hype_only_copy(self) -> None:
+        cases = [
+            (
+                "Introducing the /autobrowse skill",
+                "Introducing the /autobrowse skill. Your agent can now open a browser, read a page, click through a flow, and report what changed.",
+                ("/autobrowse", "浏览器", "点击"),
+            ),
+            (
+                "Open Swarm One Canvas",
+                "Introducing Open Swarm One Canvas. Your agent can now plan, edit, and review a workflow with other agents on one shared canvas.",
+                ("Open Swarm One Canvas", "共享 canvas", "规划"),
+            ),
+            (
+                "Harness vs skills",
+                "Agent skills vs harness: the harness wires tools, state, memory, and evaluation around reusable skills.",
+                ("harness", "tools", "skills"),
+            ),
+            (
+                "@AI_jacksaku",
+                (
+                    "我最近在给一家电商公司设计业务工作流 Agent。帮他们算了一笔账："
+                    "日均 50 万 tokens 输入，20 万 tokens 输出的情况下 用 Claude Opus 4.6"
+                    "（输入 $5/M，输出 $25/M），一个月账单 $52"
+                ),
+                ("50 万", "20 万", "$52"),
+            ),
+            (
+                "@xxxjzuo #93",
+                "CodeX正式进化为超级智能体 摆脱了单纯的coding Computer Use也大幅增强 OpenAI这波要翻身了。",
+                ("Codex", "Computer Use", "简短反应"),
+            ),
+            (
+                "@longdechen12 #68",
+                "不愧是你，对得起我这么晚还在 CodeX。",
+                ("Codex", "简短反应"),
+            ),
+        ]
+        banned_phrases = (
+            "重点是把一段具体流程直接交给 agent",
+            "继续讨论 agents 和 skills 的取舍",
+            "这条帖子的核心信息是",
+            "这条要保留的是",
+            "正文必须保留",
+            "不能只写成",
+            "OpenAI这波要翻身了",
+        )
+
+        for title, source_text, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_x_post_detail(lane_name="x-following", title=title, source_text=source_text)
+
+                self.assertTrue(detail)
+                for banned_phrase in banned_phrases:
+                    self.assertNotIn(banned_phrase, detail)
+                for expected_term in expected_terms:
+                    self.assertIn(expected_term, detail)
+
+    def test_build_reddit_detail_live_2026_04_24_removes_editor_notes(self) -> None:
+        cases = [
+            (
+                "OpenClaw OAuth stopped working; what should we migrate to?",
+                "Claude is about to restrict OpenClaw OAuth tomorrow, so existing users need to migrate or find alternatives.",
+                ("OpenClaw OAuth", "迁移", "替代"),
+            ),
+            (
+                "Workflow tips after 6 months of Claude Code",
+                "After 6 months of daily Claude Code use, here are workflow tips: start with planning, use checklists, and keep review separate.",
+                ("6 个月", "workflow tips", "planning"),
+            ),
+        ]
+        banned_phrases = ("正文需要", "不能只写成", "这条要保留的是")
+
+        for title, source_text, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_reddit_detail(title=title, source_text=source_text)
+
+                self.assertTrue(detail)
+                for banned_phrase in banned_phrases:
+                    self.assertNotIn(banned_phrase, detail)
+                for expected_term in expected_terms:
+                    self.assertIn(expected_term, detail)
+
+    def test_build_reddit_detail_live_2026_04_24_anthropic_subscription_response_is_not_placeholder(self) -> None:
+        detail = build_reddit_detail(
+            title="Anthropic response to Claude Code change",
+            source_text=(
+                "For clarity, we're running a small test on ~2% of new prosumer signups. "
+                "Existing Pro and Max subscribers aren't affected. When we launched Max a year ago, "
+                "it didn't include Claude Code, Cowork didn't exist, and agents that run for hours weren't a thing. "
+                "Since then, we bundled Claude Code into Max and it took off after Opus 4. Cowork landed. "
+                "Long-running async agents are now everyday workflows. The way people actually use a Claude subscription has changed fundamentally."
+            ),
+        )
+
+        self.assertIn("2%", detail)
+        self.assertIn("Existing Pro and Max", detail)
+        self.assertIn("Claude Code", detail)
+        self.assertIn("Cowork", detail)
+        self.assertIn("订阅", detail)
+        self.assertNotIn("该栏目收录", detail)
+        self.assertNotIn("原文围绕", detail)
+
+    def test_build_product_hunt_detail_live_2026_04_24_avoids_positioning_template_phrase(self) -> None:
+        detail = build_product_hunt_detail(
+            title="Open Swarm One Canvas — Build visual workflows with AI agents",
+            source_text=(
+                "Build visual workflows with AI agents "
+                "**Votes:** 123 **Comments:** 9 **Topic:** Artificial Intelligence"
+            ),
+        )
+
+        self.assertIn("Open Swarm One Canvas", detail)
+        self.assertIn("AI agents", detail)
+        self.assertIn("可视化工作流", detail)
+        self.assertNotIn("定位很直接", detail)
+        self.assertNotIn("Build visual workflows with AI agents", detail)
+
+    def test_build_polymarket_detail_live_2026_04_24_frontiermath_question_is_chinese(self) -> None:
+        detail = build_polymarket_detail(
+            title="Will any Anthropic Claude model score at least 50% on the FrontierMath Exam?",
+            source_text=(
+                "Question: Will any Anthropic Claude model score at least 50% on the FrontierMath Exam? "
+                "Current leader: No (83.0%) No: 83.0% Yes: 17.0% "
+                "24h volume: 1,234.5 Liquidity: 6,789.0 Price movement: down 24.5% this month"
+            ),
+        )
+
+        self.assertIn("到 6 月 30 日前，是否会有任一 Claude 模型在 FrontierMath 拿到至少 50%", detail)
+        self.assertIn("当前 `No` 以 83.0% 领先", detail)
+        self.assertIn("本月下跌 24.5%", detail)
+        self.assertNotIn("Will any Anthropic Claude model score", detail)
+        self.assertNotIn("down 24.5% this month", detail)
+
+        report_date = "2026-04-24"
+        collect_result = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "lanes": [
+                {"name": "polymarket-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+        selected_items = {
+            "report_date": report_date,
+            "source": "signals-engine",
+            "selected_items": [
+                {
+                    "lane": "polymarket-watch",
+                    "title": "Will any Anthropic Claude model score at least 50% on the FrontierMath Exam?",
+                    "source_url": "https://polymarket.com/event/anthropic-claude-frontiermath-50-percent",
+                    "signal_path": "polymarket-watch/2026-04-24/signals/frontiermath.md",
+                    "fetched_at": "2026-04-24T10:00:00+0000",
+                    "source_snippet": (
+                        "Question: Will any Anthropic Claude model score at least 50% on the FrontierMath Exam? "
+                        "Current leader: No (83.0%) No: 83.0% Yes: 17.0% "
+                        "24h volume: 1,234.5 Liquidity: 6,789.0 Price movement: down 24.5% this month"
+                    ),
+                    "excerpt": "Will any Anthropic Claude model score at least 50% on the FrontierMath Exam?",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "polymarket-watch", "selected_item_count": 1}],
+            },
+        }
+
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+        body_line = next(
+            line
+            for line in artifact["body_markdown"].splitlines()
+            if "https://polymarket.com/event/anthropic-claude-frontiermath-50-percent" in line
+        )
+        self.assertIn("Claude 模型在 FrontierMath 拿到至少 50%", body_line)
+        self.assertNotIn("Will any Anthropic Claude model score", body_line)
 
     def test_build_report_artifact_rewrites_long_english_titles_for_reader_facing_lanes(self) -> None:
         collect_result = {
