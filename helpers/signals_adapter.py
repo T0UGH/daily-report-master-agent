@@ -16,6 +16,7 @@ from helpers.validate_report_output_contract import FIXED_SECTION_ORDER, FIXED_S
 DEFAULT_SOURCE = "signals-engine"
 DEFAULT_SIGNALS_ROOT = Path.home() / ".daily-lane-data" / "signals"
 DEFAULT_SELECTED_ITEMS_RUNTIME_ROOT = Path.home() / ".daily-lane-data" / "runtime" / "daily-report-master"
+DEFAULT_SELECTED_ITEMS_LOOKBACK_DAYS = 3
 EXCERPT_LIMIT = 280
 SOURCE_SNIPPET_LIMIT = 560
 REPORT_TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "report-body-template.md"
@@ -468,12 +469,12 @@ def build_selected_items(
     lane_counts: list[dict[str, Any]] = []
     previous_reddit_identity_keys: set[str] | None = None
     previous_selected_source_urls: set[str] | None = None
-    resolved_previous_selected_items_path = previous_selected_items_path
-    if resolved_previous_selected_items_path is None:
-        resolved_previous_selected_items_path = resolve_previous_selected_items_path(
-            runtime_root=previous_selected_items_runtime_root or DEFAULT_SELECTED_ITEMS_RUNTIME_ROOT,
-            report_date=report_date,
-        )
+    resolved_previous_selected_items_paths = resolve_recent_selected_items_paths_from_inputs(
+        report_date=report_date,
+        previous_selected_items_path=previous_selected_items_path,
+        runtime_root=previous_selected_items_runtime_root
+        or DEFAULT_SELECTED_ITEMS_RUNTIME_ROOT,
+    )
 
     for lane_name in resolve_lane_names(signals_root=signals_root, report_date=report_date, lane_names=lane_names):
         lane_snapshot = inspect_lane(signals_root=signals_root, report_date=report_date, lane_name=lane_name)
@@ -484,7 +485,7 @@ def build_selected_items(
         if lane_name not in CROSS_DAY_SOURCE_URL_DEDUPE_EXEMPT_LANES:
             if previous_selected_source_urls is None:
                 previous_selected_source_urls = load_previous_selected_source_urls(
-                    previous_selected_items_path=resolved_previous_selected_items_path
+                    previous_selected_items_path=resolved_previous_selected_items_paths
                 )
             if previous_selected_source_urls:
                 lane_candidates = [
@@ -495,7 +496,7 @@ def build_selected_items(
         if lane_name == "reddit-watch":
             if previous_reddit_identity_keys is None:
                 previous_reddit_identity_keys = load_previous_reddit_identity_keys(
-                    previous_selected_items_path=resolved_previous_selected_items_path
+                    previous_selected_items_path=resolved_previous_selected_items_paths
                 )
             if previous_reddit_identity_keys:
                 lane_candidates = [
@@ -533,32 +534,84 @@ def build_selected_items(
     }
 
 
-def resolve_previous_selected_items_path(*, runtime_root: Path, report_date: str) -> Path | None:
+def resolve_recent_selected_items_paths_from_inputs(
+    *,
+    report_date: str,
+    previous_selected_items_path: Path | None,
+    runtime_root: Path,
+) -> list[Path]:
+    if previous_selected_items_path is not None:
+        inferred_runtime_root = infer_selected_items_runtime_root(previous_selected_items_path)
+        if inferred_runtime_root is not None:
+            return resolve_recent_selected_items_paths(runtime_root=inferred_runtime_root, report_date=report_date)
+        return [previous_selected_items_path]
+    return resolve_recent_selected_items_paths(
+        runtime_root=runtime_root,
+        report_date=report_date,
+    )
+
+
+def infer_selected_items_runtime_root(selected_items_path: Path) -> Path | None:
+    if selected_items_path.name != "selected-items.json":
+        return None
     try:
-        previous_report_date = date.fromisoformat(report_date) - timedelta(days=1)
+        date.fromisoformat(selected_items_path.parent.name)
     except ValueError:
         return None
-    return runtime_root / previous_report_date.isoformat() / "selected-items.json"
+    return selected_items_path.parent.parent
 
 
-def load_previous_selected_items_list(*, previous_selected_items_path: Path | None) -> list[dict[str, Any]]:
+def resolve_recent_selected_items_paths(
+    *,
+    runtime_root: Path,
+    report_date: str,
+    lookback_days: int = DEFAULT_SELECTED_ITEMS_LOOKBACK_DAYS,
+) -> list[Path]:
+    try:
+        report_day = date.fromisoformat(report_date)
+    except ValueError:
+        return []
+    return [
+        runtime_root / (report_day - timedelta(days=days_ago)).isoformat() / "selected-items.json"
+        for days_ago in range(1, lookback_days + 1)
+    ]
+
+
+def resolve_previous_selected_items_path(*, runtime_root: Path, report_date: str) -> Path | None:
+    recent_paths = resolve_recent_selected_items_paths(runtime_root=runtime_root, report_date=report_date, lookback_days=1)
+    if not recent_paths:
+        return None
+    return recent_paths[0]
+
+
+def iter_previous_selected_items_paths(
+    previous_selected_items_path: Path | Sequence[Path] | None,
+) -> list[Path]:
     if previous_selected_items_path is None:
         return []
-
-    try:
-        payload = json.loads(previous_selected_items_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return []
-
-    if not isinstance(payload, dict):
-        return []
-    raw_selected_items = payload.get("selected_items")
-    if not isinstance(raw_selected_items, list):
-        return []
-    return [item for item in raw_selected_items if isinstance(item, dict)]
+    if isinstance(previous_selected_items_path, Path):
+        return [previous_selected_items_path]
+    return [path for path in previous_selected_items_path if isinstance(path, Path)]
 
 
-def load_previous_selected_source_urls(*, previous_selected_items_path: Path | None) -> set[str]:
+def load_previous_selected_items_list(*, previous_selected_items_path: Path | Sequence[Path] | None) -> list[dict[str, Any]]:
+    selected_items: list[dict[str, Any]] = []
+    for selected_items_path in iter_previous_selected_items_paths(previous_selected_items_path):
+        try:
+            payload = json.loads(selected_items_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            continue
+
+        if not isinstance(payload, dict):
+            continue
+        raw_selected_items = payload.get("selected_items")
+        if not isinstance(raw_selected_items, list):
+            continue
+        selected_items.extend(item for item in raw_selected_items if isinstance(item, dict))
+    return selected_items
+
+
+def load_previous_selected_source_urls(*, previous_selected_items_path: Path | Sequence[Path] | None) -> set[str]:
     source_urls: set[str] = set()
     for item in load_previous_selected_items_list(previous_selected_items_path=previous_selected_items_path):
         source_url = normalize_whitespace(str(item.get("source_url", "")))
@@ -567,7 +620,7 @@ def load_previous_selected_source_urls(*, previous_selected_items_path: Path | N
     return source_urls
 
 
-def load_previous_reddit_identity_keys(*, previous_selected_items_path: Path | None) -> set[str]:
+def load_previous_reddit_identity_keys(*, previous_selected_items_path: Path | Sequence[Path] | None) -> set[str]:
     identity_keys: set[str] = set()
     for item in load_previous_selected_items_list(previous_selected_items_path=previous_selected_items_path):
         if item.get("lane") != "reddit-watch":

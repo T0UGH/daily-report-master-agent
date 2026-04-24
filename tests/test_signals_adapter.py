@@ -603,6 +603,234 @@ After trying several setups, I settled on a simple architect-builder-reviewer lo
             [item["source_url"] for item in baseline_selected_items["selected_items"]],
         )
 
+    def test_build_selected_items_dedupes_non_reddit_lanes_by_recent_three_day_source_url(self) -> None:
+        duplicate_report_date = "2026-04-10"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="product-hunt-watch",
+                signal_text_by_name={
+                    "nicelydone.md": """---
+type: producthunt_topic_hit
+lane: product-hunt-watch
+source: producthunt
+entity_type: product
+entity_id: nicelydone-mcp
+title: Nicelydone MCP — Design context for AI agents
+url: https://www.producthunt.com/products/nicely-done
+fetched_at: 2026-04-12T10:58:49+0000
+created_at: '2026-04-12T10:58:00Z'
+---
+
+## Preview
+
+Design context for AI agents
+
+## Snapshot
+
+- **Votes**: 316
+- **Comments**: 4
+- **Topic**: Artificial Intelligence
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=duplicate_report_date,
+                items=[
+                    {
+                        "lane": "product-hunt-watch",
+                        "title": "Nicelydone MCP — Design context for AI agents",
+                        "source_url": "https://www.producthunt.com/products/nicely-done",
+                        "signal_path": f"product-hunt-watch/{duplicate_report_date}/signals/nicelydone.md",
+                        "fetched_at": f"{duplicate_report_date}T10:58:49+0000",
+                        "excerpt": "Already selected two days ago.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["product-hunt-watch"],
+                per_lane_limit=1,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 0)
+        self.assertEqual(selected_items["selected_items"], [])
+
+    def test_build_selected_items_reddit_recent_three_day_selections_are_skipped_and_fill_with_remaining_candidates(
+        self,
+    ) -> None:
+        duplicate_report_date = "2026-04-10"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="reddit-watch",
+                signal_text_by_name={
+                    f"r__ClaudeAI__aaa111__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="aaa111",
+                        slug="two-days-ago-url",
+                        score=900,
+                        comments=150,
+                        title="Two days ago URL duplicate",
+                        post_text="Claude Code architect builder reviewer markdown handoff workflow.",
+                    ),
+                    f"r__ClaudeAI__bbb222__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="bbb222",
+                        slug="two-days-ago-id",
+                        score=880,
+                        comments=140,
+                        title="Two days ago ID duplicate",
+                        post_text="Codex OpenAI agent matrix harness testing BDD E2E.",
+                    ),
+                    f"r__ClaudeAI__ccc333__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ccc333",
+                        slug="fresh-third",
+                        score=860,
+                        comments=130,
+                        title="Fresh third candidate",
+                        post_text="Anthropic MCP design context workflow for shared memory.",
+                    ),
+                    f"r__ClaudeAI__ddd444__reddit_thread__{REPORT_DATE}.md": self.build_reddit_signal_text(
+                        post_id="ddd444",
+                        slug="fresh-fourth",
+                        score=840,
+                        comments=120,
+                        title="Fresh fourth candidate",
+                        post_text="Gemini Plan -> Build -> Review loop with testing and coding AI notes.",
+                    ),
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=duplicate_report_date,
+                items=[
+                    {
+                        "lane": "reddit-watch",
+                        "title": "Two days ago URL duplicate",
+                        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/aaa111/two-days-ago-url/",
+                        "signal_path": f"reddit-watch/{duplicate_report_date}/signals/two-days-ago-url.md",
+                        "fetched_at": f"{duplicate_report_date}T10:58:49+0000",
+                        "excerpt": "Already selected two days ago.",
+                    },
+                    {
+                        "lane": "reddit-watch",
+                        "title": "Two days ago ID duplicate",
+                        "source_url": "",
+                        "signal_path": (
+                            f"reddit-watch/{duplicate_report_date}/signals/"
+                            f"r__ClaudeAI__bbb222__reddit_thread__{duplicate_report_date}.md"
+                        ),
+                        "fetched_at": f"{duplicate_report_date}T10:58:49+0000",
+                        "excerpt": "Already selected two days ago.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["reddit-watch"],
+                per_lane_limit=2,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 2)
+        self.assertCountEqual(
+            [item["source_url"] for item in selected_items["selected_items"]],
+            [
+                "https://www.reddit.com/r/ClaudeAI/comments/ccc333/fresh-third/",
+                "https://www.reddit.com/r/ClaudeAI/comments/ddd444/fresh-fourth/",
+            ],
+        )
+
+    def test_build_selected_items_recent_three_day_lookup_tolerates_missing_artifacts(self) -> None:
+        duplicate_report_date = "2026-04-09"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="product-hunt-watch",
+                signal_text_by_name={
+                    "nicelydone.md": """---
+type: producthunt_topic_hit
+lane: product-hunt-watch
+source: producthunt
+entity_type: product
+entity_id: nicelydone-mcp
+title: Nicelydone MCP — Design context for AI agents
+url: https://www.producthunt.com/products/nicely-done
+fetched_at: 2026-04-12T10:58:49+0000
+created_at: '2026-04-12T10:58:00Z'
+---
+
+## Preview
+
+Design context for AI agents
+
+## Snapshot
+
+- **Votes**: 316
+- **Comments**: 4
+- **Topic**: Artificial Intelligence
+""",
+                    "fresh.md": """---
+type: producthunt_topic_hit
+lane: product-hunt-watch
+source: producthunt
+entity_type: product
+entity_id: crisp-agent
+title: Crisp Agent
+url: https://www.producthunt.com/products/crisp-agent
+fetched_at: 2026-04-12T11:01:00+0000
+created_at: '2026-04-12T11:00:00Z'
+---
+
+## Preview
+
+Focused report automation for daily agent workflows
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=duplicate_report_date,
+                items=[
+                    {
+                        "lane": "product-hunt-watch",
+                        "title": "Nicelydone MCP — Design context for AI agents",
+                        "source_url": "https://www.producthunt.com/products/nicely-done",
+                        "signal_path": f"product-hunt-watch/{duplicate_report_date}/signals/nicelydone.md",
+                        "fetched_at": f"{duplicate_report_date}T10:58:49+0000",
+                        "excerpt": "Already selected three days ago.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["product-hunt-watch"],
+                per_lane_limit=2,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
+        self.assertEqual(
+            [item["source_url"] for item in selected_items["selected_items"]],
+            ["https://www.producthunt.com/products/crisp-agent"],
+        )
+
     def test_build_selected_items_dedupes_non_reddit_lanes_by_previous_day_source_url(self) -> None:
         previous_report_date = "2026-04-11"
         with tempfile.TemporaryDirectory() as temp_dir:
