@@ -492,15 +492,25 @@ def test_build_curated_card_payload_puts_doc_link_first_and_caps_product_hunt_it
     div_contents = [element["text"]["content"] for element in payload["elements"] if element.get("tag") == "div"]
 
     assert payload["header"]["title"]["content"] == "AI Agent 日报（2026-04-16）"
-    assert div_contents[0] == "[查看完整文档](https://feishu.example/doc)"
-    assert div_contents[1].startswith("**天气**\n")
-    assert "**北京海淀天气**" in div_contents[1]
-    assert "**上海杨浦天气**" in div_contents[1]
-    assert any(content.startswith("**Claude Code**\n") for content in div_contents)
-    assert any(content.startswith("**Codex**\n") for content in div_contents)
-    assert not any(content.startswith("**OpenClaw**\n") for content in div_contents)
+    assert payload["header"]["subtitle"]["content"] == "[查看完整文档](https://feishu.example/doc)"
+    assert payload["config"]["style"]["text_size"]["section_title"]["default"] == "heading-2"
+    assert div_contents[0] == "我不是贵平，我是 Rook。 [查看完整文档](https://feishu.example/doc)"
+    section_titles = [
+        element["text"]["content"]
+        for element in payload["elements"]
+        if element.get("tag") == "div" and element.get("text", {}).get("tag") == "plain_text"
+    ]
+    assert section_titles[0] == "天气"
+    assert "Claude Code" in section_titles
+    assert "Codex" in section_titles
+    assert "OpenClaw" not in section_titles
+    assert "来源" not in section_titles
+    weather_block = div_contents[2]
+    assert "**北京海淀天气**" in weather_block
+    assert "**上海杨浦天气**" in weather_block
 
-    product_hunt_block = next(content for content in div_contents if content.startswith("**Product Hunt 新品**\n"))
+    product_hunt_index = div_contents.index("Product Hunt 新品")
+    product_hunt_block = div_contents[product_hunt_index + 1]
     assert "**新品 A**" in product_hunt_block
     assert "**新品 B**" in product_hunt_block
     assert "**新品 C**" in product_hunt_block

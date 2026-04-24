@@ -660,27 +660,41 @@ def _order_card_sections(sections: list[tuple[str, list[str]]]) -> list[tuple[st
     return [section for _, section in indexed_sections]
 
 
-def _build_card_section_element(*, heading: str, items: list[str]) -> dict[str, Any]:
+def _build_card_section_elements(*, heading: str, items: list[str]) -> list[dict[str, Any]]:
     limited_items = items[: _card_section_item_limit(heading)]
-    content_lines = [f"**{heading}**", *[f"- {item}" for item in limited_items]]
-    return {
-        "tag": "div",
-        "text": {
-            "tag": "lark_md",
-            "content": "\n".join(content_lines),
+    content_lines = [f"- {item}" for item in limited_items]
+    return [
+        {
+            "tag": "div",
+            "text": {
+                "tag": "plain_text",
+                "content": heading,
+                "text_size": "section_title",
+            },
         },
-    }
+        {
+            "tag": "div",
+            "text": {
+                "tag": "lark_md",
+                "content": "\n".join(content_lines),
+                "text_size": "normal",
+            },
+        },
+    ]
 
 
 def build_curated_card_payload(*, report_markdown: str, doc_url: str) -> dict[str, Any]:
     report_title, sections = parse_report_markdown_sections(report_markdown)
-    ordered_sections = _order_card_sections(sections)
+    ordered_sections = _order_card_sections(
+        [(heading, items) for heading, items in sections if heading != "来源"]
+    )
     elements: list[dict[str, Any]] = [
         {
             "tag": "div",
             "text": {
                 "tag": "lark_md",
-                "content": f"[{CURATED_CARD_LINK_LABEL}]({doc_url})",
+                "content": f"我不是贵平，我是 Rook。 [{CURATED_CARD_LINK_LABEL}]({doc_url})",
+                "text_size": "normal",
             },
         }
     ]
@@ -689,17 +703,32 @@ def build_curated_card_payload(*, report_markdown: str, doc_url: str) -> dict[st
     if rendered_sections:
         elements.append({"tag": "hr"})
     for index, (heading, items) in enumerate(rendered_sections):
-        elements.append(_build_card_section_element(heading=heading, items=items))
+        elements.extend(_build_card_section_elements(heading=heading, items=items))
         if index != len(rendered_sections) - 1:
             elements.append({"tag": "hr"})
 
     return {
-        "config": {"wide_screen_mode": True},
+        "config": {
+            "wide_screen_mode": True,
+            "style": {
+                "text_size": {
+                    "section_title": {
+                        "default": "heading-2",
+                        "pc": "heading-2",
+                        "mobile": "heading-2",
+                    }
+                }
+            },
+        },
         "header": {
             "title": {
                 "tag": "plain_text",
                 "content": report_title or "AI Agent 日报精选",
-            }
+            },
+            "subtitle": {
+                "tag": "lark_md",
+                "content": f"[{CURATED_CARD_LINK_LABEL}]({doc_url})",
+            },
         },
         "elements": elements,
     }
