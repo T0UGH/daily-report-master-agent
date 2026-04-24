@@ -891,6 +891,267 @@ Design context for AI agents
         self.assertEqual(selected_items["summary"]["selected_item_count"], 0)
         self.assertEqual(selected_items["selected_items"], [])
 
+    def test_build_selected_items_semantically_dedupes_github_trending_against_recent_three_day_history(self) -> None:
+        duplicate_report_date = "2026-04-10"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="github-trending-weekly",
+                signal_text_by_name={
+                    "openai-agents-python.md": """---
+type: github_repo
+lane: github-trending-weekly
+source: github
+entity_type: repo
+entity_id: openai/openai-agents-python
+title: openai-agents-python
+url: https://github.com/openai/openai-agents-python
+fetched_at: 2026-04-12T11:00:00+0000
+created_at: '2026-04-12T10:50:00Z'
+---
+
+## Summary
+
+OpenAI agent SDK for multi-agent workflows, tool handoffs, and MCP-based orchestration.
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=duplicate_report_date,
+                items=[
+                    {
+                        "lane": "github-trending-weekly",
+                        "title": "openai-agents-python",
+                        "source_url": "https://github.com/openai/openai-agents-python/tree/main/examples",
+                        "signal_path": f"github-trending-weekly/{duplicate_report_date}/signals/openai-agents-python.md",
+                        "fetched_at": f"{duplicate_report_date}T11:00:00+0000",
+                        "excerpt": "OpenAI agent SDK for multi-agent workflows, tool handoffs, and MCP-based orchestration.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["github-trending-weekly"],
+                per_lane_limit=1,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 0)
+        self.assertEqual(selected_items["selected_items"], [])
+
+    def test_build_selected_items_semantically_dedupes_product_hunt_against_recent_three_day_history(self) -> None:
+        duplicate_report_date = "2026-04-10"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="product-hunt-watch",
+                signal_text_by_name={
+                    "contextvault-ai.md": """---
+type: producthunt_topic_hit
+lane: product-hunt-watch
+source: producthunt
+entity_type: product
+entity_id: contextvault-ai
+title: ContextVault AI — Shared memory for coding agents
+url: https://www.producthunt.com/products/contextvault-ai
+fetched_at: 2026-04-12T11:05:00+0000
+created_at: '2026-04-12T11:00:00Z'
+---
+
+## Preview
+
+Persistent project memory and design context for AI coding agents.
+
+## Snapshot
+
+- **Votes**: 188
+- **Comments**: 12
+- **Topic**: Developer Tools
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=duplicate_report_date,
+                items=[
+                    {
+                        "lane": "product-hunt-watch",
+                        "title": "ContextVault — Shared memory for coding agents",
+                        "source_url": "https://www.producthunt.com/posts/contextvault",
+                        "signal_path": f"product-hunt-watch/{duplicate_report_date}/signals/contextvault.md",
+                        "fetched_at": f"{duplicate_report_date}T11:05:00+0000",
+                        "excerpt": "Persistent project memory and design context for AI coding agents.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["product-hunt-watch"],
+                per_lane_limit=1,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 0)
+        self.assertEqual(selected_items["selected_items"], [])
+
+    def test_build_selected_items_keeps_weather_watch_when_recent_history_only_overlaps_on_daily_weather_language(self) -> None:
+        duplicate_report_date = "2026-04-10"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="weather-watch",
+                signal_text_by_name={
+                    "beijing-haidian.md": """---
+type: weather_snapshot
+lane: weather-watch
+source: weather
+entity_type: district
+entity_id: beijing-haidian
+title: 北京海淀天气
+url: https://weather.example.com/beijing-haidian/2026-04-12
+fetched_at: 2026-04-12T05:30:00+0000
+created_at: '2026-04-12T05:00:00Z'
+---
+
+## Weather
+
+- Condition: 多云
+- Temperature: 9°C - 21°C
+- Precipitation: 20%
+- Wind: 西北风 3-4级
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=duplicate_report_date,
+                items=[
+                    {
+                        "lane": "weather-watch",
+                        "title": "北京海淀天气",
+                        "source_url": f"https://weather.example.com/beijing-haidian/{duplicate_report_date}",
+                        "signal_path": f"weather-watch/{duplicate_report_date}/signals/beijing-haidian.md",
+                        "fetched_at": f"{duplicate_report_date}T05:30:00+0000",
+                        "excerpt": "Condition: 多云 Temperature: 9°C - 21°C Precipitation: 20% Wind: 西北风 3-4级",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["weather-watch"],
+                per_lane_limit=1,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
+        self.assertEqual(
+            [item["source_url"] for item in selected_items["selected_items"]],
+            ["https://weather.example.com/beijing-haidian/2026-04-12"],
+        )
+
+    def test_build_selected_items_keeps_versioned_release_lanes_when_versions_differ(self) -> None:
+        duplicate_report_date = "2026-04-10"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="claude-code-watch",
+                signal_text_by_name={
+                    "v2.1.106.md": """---
+type: release
+lane: claude-code-watch
+source: github
+entity_type: repo
+entity_id: anthropics/claude-code
+title: v2.1.106
+url: https://github.com/anthropics/claude-code/releases/tag/v2.1.106
+fetched_at: 2026-04-12T12:00:00+0000
+created_at: '2026-04-12T11:40:00Z'
+---
+
+## Summary
+
+Added worktree cleanup diagnostics and improved MCP reconnect for managed sessions.
+""",
+                },
+            )
+            self.write_signal_bundle(
+                signals_root,
+                lane="codex-watch",
+                signal_text_by_name={
+                    "v0.34.0.md": """---
+type: release
+lane: codex-watch
+source: github
+entity_type: repo
+entity_id: openai/codex
+title: Codex CLI v0.34.0
+url: https://github.com/openai/codex/releases/tag/v0.34.0
+fetched_at: 2026-04-12T12:10:00+0000
+created_at: '2026-04-12T11:50:00Z'
+---
+
+## Summary
+
+Adds native approvals timeline and improves MCP reconnect handling for managed sessions.
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=duplicate_report_date,
+                items=[
+                    {
+                        "lane": "claude-code-watch",
+                        "title": "v2.1.105",
+                        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.105",
+                        "signal_path": f"claude-code-watch/{duplicate_report_date}/signals/v2.1.105.md",
+                        "fetched_at": f"{duplicate_report_date}T12:00:00+0000",
+                        "excerpt": "Added worktree cleanup diagnostics and improved MCP reconnect for managed sessions.",
+                    },
+                    {
+                        "lane": "codex-watch",
+                        "title": "Codex CLI v0.33.0",
+                        "source_url": "https://github.com/openai/codex/releases/tag/v0.33.0",
+                        "signal_path": f"codex-watch/{duplicate_report_date}/signals/v0.33.0.md",
+                        "fetched_at": f"{duplicate_report_date}T12:10:00+0000",
+                        "excerpt": "Adds native approvals timeline and improves MCP reconnect handling for managed sessions.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["claude-code-watch", "codex-watch"],
+                per_lane_limit=1,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 2)
+        self.assertCountEqual(
+            [item["title"] for item in selected_items["selected_items"]],
+            ["v2.1.106", "Codex CLI v0.34.0"],
+        )
+
     def test_build_selected_items_drops_noisy_x_candidates_when_only_generic_placeholder_is_available(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             signals_root = Path(temp_dir) / "signals"

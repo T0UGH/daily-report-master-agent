@@ -33,6 +33,7 @@ REDDIT_SIGNAL_PATH_POST_ID_PATTERN = re.compile(
     re.IGNORECASE,
 )
 REDDIT_POST_ID_PATTERN = re.compile(r"^[0-9a-z]{5,12}$", re.IGNORECASE)
+VERSION_TOKEN_PATTERN = re.compile(r"\bv?\d+(?:\.\d+){1,3}(?:-[a-z0-9]+(?:\.\d+)*)?\b", re.IGNORECASE)
 FALLBACK_SOURCE_URL_TEMPLATES = {
     "x-feed": "https://x.com/example/status/{date_compact}01",
     "x-following": "https://x.com/example/status/{date_compact}02",
@@ -130,6 +131,10 @@ RESIDUAL_NOISY_X_CLAUSE_PATTERNS = (
     r"^gives you everything\b",
 )
 CROSS_DAY_SOURCE_URL_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset()
+CROSS_DAY_TOPIC_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset({"weather-watch"})
+VERSION_DISTINGUISHING_TOPIC_DEDUPE_LANES: frozenset[str] = frozenset(
+    {"claude-code-watch", "codex-watch", "openclaw-watch"}
+)
 CONTENT_SECTION_PREFERENCES = {
     "x-feed": ("post",),
     "x-following": ("post",),
@@ -469,6 +474,7 @@ def build_selected_items(
     lane_counts: list[dict[str, Any]] = []
     previous_reddit_identity_keys: set[str] | None = None
     previous_selected_source_urls: set[str] | None = None
+    previous_selected_items_by_lane: dict[str, list[dict[str, Any]]] | None = None
     resolved_previous_selected_items_paths = resolve_recent_selected_items_paths_from_inputs(
         report_date=report_date,
         previous_selected_items_path=previous_selected_items_path,
@@ -503,6 +509,22 @@ def build_selected_items(
                     candidate
                     for candidate in lane_candidates
                     if not extract_reddit_identity_keys(candidate) & previous_reddit_identity_keys
+                ]
+        if lane_name not in CROSS_DAY_TOPIC_DEDUPE_EXEMPT_LANES:
+            if previous_selected_items_by_lane is None:
+                previous_selected_items_by_lane = load_previous_selected_items_by_lane(
+                    previous_selected_items_path=resolved_previous_selected_items_paths
+                )
+            recent_lane_selected_items = previous_selected_items_by_lane.get(lane_name, ())
+            if recent_lane_selected_items:
+                lane_candidates = [
+                    candidate
+                    for candidate in lane_candidates
+                    if not candidate_is_cross_day_topic_duplicate(
+                        lane_name=lane_name,
+                        candidate=candidate,
+                        previous_selected_items=recent_lane_selected_items,
+                    )
                 ]
         lane_limit = per_lane_limit
         if lane_limit is None and lane_item_limits is not None:
@@ -627,6 +649,19 @@ def load_previous_reddit_identity_keys(*, previous_selected_items_path: Path | S
             continue
         identity_keys.update(extract_reddit_identity_keys(item))
     return identity_keys
+
+
+def load_previous_selected_items_by_lane(
+    *,
+    previous_selected_items_path: Path | Sequence[Path] | None,
+) -> dict[str, list[dict[str, Any]]]:
+    items_by_lane: dict[str, list[dict[str, Any]]] = {}
+    for item in load_previous_selected_items_list(previous_selected_items_path=previous_selected_items_path):
+        lane_name = normalize_whitespace(str(item.get("lane", "")))
+        if not lane_name:
+            continue
+        items_by_lane.setdefault(lane_name, []).append(item)
+    return items_by_lane
 
 
 def extract_reddit_identity_keys(item: dict[str, Any]) -> set[str]:
@@ -1346,6 +1381,59 @@ def reddit_candidate_overlaps_topics(*, candidate: dict[str, Any], existing_cand
         if topic_tokens_overlap_too_much(topic_tokens, candidate_topic_tokens(existing)):
             return True
     return False
+
+
+def candidate_is_cross_day_topic_duplicate(
+    *,
+    lane_name: str,
+    candidate: dict[str, Any],
+    previous_selected_items: Sequence[dict[str, Any]],
+) -> bool:
+    topic_tokens = candidate_topic_tokens(candidate)
+    if not topic_tokens:
+        return False
+
+    for existing in previous_selected_items:
+        if candidate_has_distinct_version_from_existing(
+            lane_name=lane_name,
+            candidate=candidate,
+            existing=existing,
+        ):
+            continue
+        if topic_tokens_overlap_too_much(topic_tokens, candidate_topic_tokens(existing)):
+            return True
+    return False
+
+
+def candidate_has_distinct_version_from_existing(
+    *,
+    lane_name: str,
+    candidate: dict[str, Any],
+    existing: dict[str, Any],
+) -> bool:
+    if lane_name not in VERSION_DISTINGUISHING_TOPIC_DEDUPE_LANES:
+        return False
+
+    candidate_versions = candidate_version_tokens(candidate)
+    existing_versions = candidate_version_tokens(existing)
+    if not candidate_versions or not existing_versions:
+        return False
+    return candidate_versions.isdisjoint(existing_versions)
+
+
+def candidate_version_tokens(candidate: dict[str, Any]) -> set[str]:
+    prioritized_text = normalize_whitespace(f"{candidate.get('title', '')} {candidate.get('source_url', '')}")
+    version_tokens = extract_version_tokens(prioritized_text)
+    if version_tokens:
+        return version_tokens
+    return extract_version_tokens(str(candidate.get("excerpt", "")))
+
+
+def extract_version_tokens(text: str) -> set[str]:
+    normalized = normalize_whitespace(text)
+    if not normalized:
+        return set()
+    return {match.group(0).lower().lstrip("v") for match in VERSION_TOKEN_PATTERN.finditer(normalized)}
 
 
 def candidate_identity_key(candidate: dict[str, Any]) -> tuple[str, str, str]:
