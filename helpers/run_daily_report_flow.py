@@ -55,6 +55,8 @@ DEFAULT_ARCHIVE_DAILY_REPORT_DIR = "raw/inbound/ai-daily-report"
 CURATED_CARD_LINK_LABEL = "查看完整文档"
 CURATED_CARD_DEFAULT_SECTION_ITEM_LIMIT = 2
 CURATED_CARD_PRODUCT_HUNT_ITEM_LIMIT = 3
+CURATED_CARD_MAX_JSON_BYTES = 25_000
+CURATED_CARD_MAX_LARK_MD_TEXT_BYTES = 6_000
 READOUT_INTRO = "以下是今天的 AI Agent 日报语音简报。"
 READOUT_OUTRO = "以上就是今天的重点内容，感谢收听。"
 READOUT_PLACEHOLDER_SNIPPETS = ("原文围绕", "具体变化见来源", "值得关注")
@@ -734,9 +736,131 @@ def build_curated_card_payload(*, report_markdown: str, doc_url: str) -> dict[st
     }
 
 
+def _json_byte_size(payload: Any) -> int:
+    return len(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+
+
+def _safe_json_byte_size(payload: Any) -> int | None:
+    try:
+        return _json_byte_size(payload)
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_curated_card_doc_url(payload: dict[str, Any]) -> str | None:
+    markdown_link_pattern = re.compile(rf"\[{re.escape(CURATED_CARD_LINK_LABEL)}\]\(([^)]+)\)")
+    raw_url_pattern = re.compile(r"https?://[^\s)]+")
+    for _, value in _walk_json_scalars(payload):
+        if not isinstance(value, str):
+            continue
+        markdown_match = markdown_link_pattern.search(value)
+        if markdown_match:
+            return markdown_match.group(1).strip()
+        raw_match = raw_url_pattern.search(value)
+        if raw_match:
+            return raw_match.group(0).strip()
+    return None
+
+
+def validate_curated_card_payload(payload: dict[str, Any]) -> list[str]:
+    issues: list[str] = []
+    try:
+        card_json_bytes = _json_byte_size(payload)
+    except (TypeError, ValueError) as exc:
+        issues.append(f"Card payload is not JSON serializable: {exc}")
+        card_json_bytes = 0
+
+    if card_json_bytes > CURATED_CARD_MAX_JSON_BYTES:
+        issues.append(
+            "Card payload JSON is "
+            f"{card_json_bytes} bytes, exceeds {CURATED_CARD_MAX_JSON_BYTES} bytes"
+        )
+
+    if not isinstance(payload, dict):
+        issues.append("Card payload must be a JSON object")
+        return issues
+
+    header = payload.get("header")
+    if not isinstance(header, dict):
+        issues.append("Card payload missing required header object")
+    else:
+        title = header.get("title")
+        if not isinstance(title, dict):
+            issues.append("Card payload missing required header.title object")
+        elif not isinstance(title.get("content"), str) or not title.get("content", "").strip():
+            issues.append("Card payload missing required header.title.content text")
+
+    elements = payload.get("elements")
+    if not isinstance(elements, list) or not elements:
+        issues.append("Card payload missing required non-empty elements list")
+        return issues
+
+    for index, element in enumerate(elements):
+        element_path = f"elements[{index}]"
+        if not isinstance(element, dict):
+            issues.append(f"{element_path} must be an object")
+            continue
+        if element.get("tag") != "div":
+            continue
+        text = element.get("text")
+        if not isinstance(text, dict):
+            issues.append(f"{element_path} div missing required text object")
+            continue
+        content = text.get("content")
+        if not isinstance(content, str):
+            issues.append(f"{element_path} div text content must be a string")
+            continue
+        if text.get("tag") == "lark_md":
+            text_bytes = len(content.encode("utf-8"))
+            if text_bytes > CURATED_CARD_MAX_LARK_MD_TEXT_BYTES:
+                issues.append(
+                    f"{element_path} lark_md content is {text_bytes} bytes, "
+                    f"exceeds {CURATED_CARD_MAX_LARK_MD_TEXT_BYTES} bytes"
+                )
+
+    return issues
+
+
+def _has_valid_card_header(header: Any) -> bool:
+    if not isinstance(header, dict):
+        return False
+    title = header.get("title")
+    return isinstance(title, dict) and isinstance(title.get("content"), str) and bool(title["content"].strip())
+
+
+def compact_curated_card_payload(payload: dict[str, Any], doc_url: str) -> dict[str, Any]:
+    header = payload.get("header") if isinstance(payload, dict) else None
+    if not _has_valid_card_header(header):
+        header = {
+            "title": {
+                "tag": "plain_text",
+                "content": "AI Agent 日报精选",
+            }
+        }
+
+    doc_link = f"[{CURATED_CARD_LINK_LABEL}]({doc_url})" if doc_url else CURATED_CARD_LINK_LABEL
+    return {
+        "config": {"wide_screen_mode": True},
+        "header": header,
+        "elements": [
+            {
+                "tag": "div",
+                "text": {
+                    "tag": "lark_md",
+                    "content": f"精选卡片内容较长，已简化展示。如需完整内容，请查看完整文档：{doc_link}",
+                    "text_size": "normal",
+                },
+            }
+        ],
+    }
+
+
 def send_curated_card_to_feishu(*, card_payload: dict[str, Any], run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
     delivery = resolve_feishu_audio_delivery(config)
     log_path = run_dir / "logs" / "feishu-card.log"
+    preflight_log: str | None = None
+    preflight_issues: list[str] = []
+    degraded = False
     if delivery["receive_id_type"] != "chat_id":
         return {
             "status": "failed",
@@ -753,6 +877,38 @@ def send_curated_card_to_feishu(*, card_payload: dict[str, Any], run_dir: Path, 
             "error_summary": f"Missing {DEFAULT_FEISHU_RECEIVE_ID_ENV} for curated card delivery",
         }
 
+    validation_issues = validate_curated_card_payload(card_payload)
+    if validation_issues:
+        degraded = True
+        preflight_issues = validation_issues
+        doc_url = _extract_curated_card_doc_url(card_payload) or ""
+        compact_payload = compact_curated_card_payload(card_payload, doc_url)
+        compact_issues = validate_curated_card_payload(compact_payload)
+        preflight_log = write_json_log(
+            run_dir / "logs" / "feishu-card-preflight.json",
+            {
+                "degraded": True,
+                "issues": validation_issues,
+                "compact_issues": compact_issues,
+                "doc_url": doc_url,
+                "original_json_bytes": _safe_json_byte_size(card_payload),
+                "compact_json_bytes": _safe_json_byte_size(compact_payload),
+                "max_card_json_bytes": CURATED_CARD_MAX_JSON_BYTES,
+                "max_lark_md_text_bytes": CURATED_CARD_MAX_LARK_MD_TEXT_BYTES,
+            },
+        )
+        if compact_issues:
+            return {
+                "status": "failed",
+                "log": preflight_log,
+                "error_summary": "Feishu curated card preflight validation failed: " + " | ".join(compact_issues),
+                "degraded": True,
+                "preflight_log": preflight_log,
+                "preflight_issues": validation_issues,
+                "compact_preflight_issues": compact_issues,
+            }
+        card_payload = compact_payload
+
     command = [
         "lark-cli",
         "im",
@@ -768,11 +924,16 @@ def send_curated_card_to_feishu(*, card_payload: dict[str, Any], run_dir: Path, 
     ]
     result = run_and_capture(command, log_path)
     if result.exit_code != 0:
-        return {
+        failed_result: dict[str, Any] = {
             "status": "failed",
             "log": result.output_path,
             "error_summary": "Feishu curated card send failed",
         }
+        if degraded:
+            failed_result["degraded"] = True
+            failed_result["preflight_log"] = preflight_log
+            failed_result["preflight_issues"] = preflight_issues
+        return failed_result
 
     message_id: str | None = None
     stdout = result.stdout.strip()
@@ -785,11 +946,16 @@ def send_curated_card_to_feishu(*, card_payload: dict[str, Any], run_dir: Path, 
                 key_fragments=("message_id",),
             )
 
-    return {
+    send_result: dict[str, Any] = {
         "status": "succeeded",
         "log": result.output_path,
         "message_id": message_id,
     }
+    if degraded:
+        send_result["degraded"] = True
+        send_result["preflight_log"] = preflight_log
+        send_result["preflight_issues"] = preflight_issues
+    return send_result
 
 
 def resolve_audio_settings(config: dict[str, Any]) -> dict[str, Any]:
@@ -1527,6 +1693,12 @@ def publish_report_bundle(
     publish_result["card_status"] = card_result["status"]
     publish_result["card_message_log"] = card_result.get("log")
     publish_result["card_message_id"] = card_result.get("message_id")
+    if card_result.get("degraded"):
+        publish_result["card_degraded"] = True
+    if card_result.get("preflight_log"):
+        publish_result["card_preflight_log"] = card_result.get("preflight_log")
+    if card_result.get("preflight_issues"):
+        publish_result["card_preflight_issues"] = card_result.get("preflight_issues")
 
     audio_result = generate_audio_bundle(
         report_markdown=report_markdown,

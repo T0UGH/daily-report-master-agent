@@ -517,6 +517,25 @@ def test_build_curated_card_payload_puts_doc_link_first_and_caps_product_hunt_it
     assert "**新品 D**" not in product_hunt_block
 
 
+def test_validate_curated_card_payload_reports_oversized_lark_md_content() -> None:
+    payload = {
+        "header": {"title": {"tag": "plain_text", "content": "AI Agent 日报精选"}},
+        "elements": [
+            {
+                "tag": "div",
+                "text": {
+                    "tag": "lark_md",
+                    "content": "x" * 7000,
+                },
+            }
+        ],
+    }
+
+    issues = flow.validate_curated_card_payload(payload)
+
+    assert any("elements[0]" in issue and "lark_md" in issue and "exceeds" in issue for issue in issues)
+
+
 def test_send_curated_card_to_feishu_uses_lark_cli_with_user_chat_delivery(
     monkeypatch, tmp_path: Path
 ) -> None:
@@ -578,6 +597,72 @@ def test_send_curated_card_to_feishu_uses_lark_cli_with_user_chat_delivery(
         "log": str(tmp_path / "logs" / "feishu-card.log"),
         "message_id": "om_card_success",
     }
+
+
+def test_send_curated_card_to_feishu_compacts_oversized_payload_and_logs_preflight(
+    monkeypatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("FEISHU_HOME_CHANNEL", "oc_card_channel")
+    oversized_content = "x" * 7000
+    card_payload = {
+        "config": {"wide_screen_mode": True},
+        "header": {
+            "title": {"tag": "plain_text", "content": "AI Agent 日报（2026-04-16）"},
+            "subtitle": {"tag": "lark_md", "content": "[查看完整文档](https://feishu.example/doc)"},
+        },
+        "elements": [
+            {
+                "tag": "div",
+                "text": {
+                    "tag": "lark_md",
+                    "content": oversized_content,
+                },
+            }
+        ],
+    }
+    sent_payloads: list[dict] = []
+
+    def fake_run_and_capture(
+        command: list[str],
+        output_path: Path,
+        *,
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
+    ) -> flow.CommandResult:
+        del cwd, env
+        sent_payloads.append(json.loads(command[command.index("--content") + 1]))
+        return flow.CommandResult(
+            command=command,
+            exit_code=0,
+            output_path=str(output_path),
+            stdout=json.dumps({"data": {"message_id": "om_compacted_card"}}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(flow, "run_and_capture", fake_run_and_capture)
+
+    result = flow.send_curated_card_to_feishu(
+        card_payload=card_payload,
+        run_dir=tmp_path,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "succeeded"
+    assert result["degraded"] is True
+    assert result["preflight_log"] == str(tmp_path / "logs" / "feishu-card-preflight.json")
+    assert result["message_id"] == "om_compacted_card"
+    assert len(sent_payloads) == 1
+    sent_payload = sent_payloads[0]
+    assert sent_payload["header"] == card_payload["header"]
+    sent_content = sent_payload["elements"][0]["text"]["content"]
+    assert "精选卡片内容较长，已简化展示" in sent_content
+    assert "https://feishu.example/doc" in sent_content
+    assert oversized_content not in sent_content
+
+    preflight = json.loads((tmp_path / "logs" / "feishu-card-preflight.json").read_text(encoding="utf-8"))
+    assert preflight["degraded"] is True
+    assert preflight["issues"]
+    assert preflight["doc_url"] == "https://feishu.example/doc"
 
 
 def test_send_audio_to_feishu_uses_native_api_success(monkeypatch, tmp_path: Path) -> None:
@@ -751,6 +836,82 @@ def test_publish_report_bundle_succeeds(monkeypatch, tmp_path: Path) -> None:
         "opus_path": str(opus_path),
         "doc_url": "https://feishu.example/doc",
     }
+
+
+def test_publish_report_bundle_succeeds_when_card_send_degraded(monkeypatch, tmp_path: Path) -> None:
+    report_path = _write_report(tmp_path)
+    report_markdown = report_path.read_text(encoding="utf-8")
+    opus_path = tmp_path / "2026-04-16-feishu.opus"
+
+    monkeypatch.setattr(
+        flow,
+        "generate_audio_bundle",
+        lambda **_: {
+            "status": "succeeded",
+            "readout_path": str(tmp_path / "2026-04-16-readout.txt"),
+            "intermediate_path": str(tmp_path / "2026-04-16-tts.mp3"),
+            "intermediate_format": "mp3",
+            "opus_path": str(opus_path),
+            "tts_log": str(tmp_path / "logs" / "audio-tts.log"),
+            "convert_log": str(tmp_path / "logs" / "audio-opus.log"),
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "import_to_feishu",
+        lambda report_path, title, run_dir: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-import.log"),
+            "doc_url": "https://feishu.example/doc",
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_curated_card_payload",
+        lambda **_: {
+            "config": {"wide_screen_mode": True},
+            "header": {"title": {"tag": "plain_text", "content": "AI Agent 日报（2026-04-16）"}},
+            "elements": [
+                {"tag": "div", "text": {"tag": "lark_md", "content": "[查看完整文档](https://feishu.example/doc)"}}
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "send_curated_card_to_feishu",
+        lambda **_: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-card.log"),
+            "message_id": "om_card_success",
+            "degraded": True,
+            "preflight_log": str(tmp_path / "logs" / "feishu-card-preflight.json"),
+            "preflight_issues": ["elements[0] lark_md content exceeds limit"],
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "send_audio_to_feishu",
+        lambda **_: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-audio.log"),
+            "message_id": "om_audio_success",
+        },
+    )
+
+    result = flow.publish_report_bundle(
+        report_path=report_path,
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "succeeded"
+    assert result["card_status"] == "succeeded"
+    assert result["card_degraded"] is True
+    assert result["card_preflight_log"] == str(tmp_path / "logs" / "feishu-card-preflight.json")
+    assert result["card_preflight_issues"] == ["elements[0] lark_md content exceeds limit"]
 
 
 def test_publish_report_bundle_degrades_when_card_send_fails_but_audio_still_succeeds(
