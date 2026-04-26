@@ -348,10 +348,17 @@ def is_product_hunt_raw_english_tagline_leakage(line: str) -> bool:
 def extract_body_sources(sections: list[tuple[str, list[str]]]) -> dict[str, list[str]]:
     body_sources: dict[str, list[str]] = {}
     for section_title, section_lines in sections:
+        if section_is_explicit_no_info(section_lines):
+            continue
         urls = unique_preserving_order(MARKDOWN_LINK_RE.findall("\n".join(section_lines)))
         require(urls, f"{section_title} 的正文条目必须带段落尾外链引用")
         body_sources[section_title] = validate_url_list(urls, label=f"{section_title} 正文引用")
     return body_sources
+
+
+def section_is_explicit_no_info(section_lines: list[str]) -> bool:
+    content_lines = [line.strip() for line in section_lines if line.strip()]
+    return content_lines == ["- 无"]
 
 
 def parse_appendix_sources(lines: list[str]) -> dict[str, list[str]]:

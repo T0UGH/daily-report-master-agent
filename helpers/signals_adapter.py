@@ -132,6 +132,9 @@ RESIDUAL_NOISY_X_CLAUSE_PATTERNS = (
 )
 CROSS_DAY_SOURCE_URL_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset()
 CROSS_DAY_TOPIC_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset({"weather-watch"})
+NO_INFO_ON_EMPTY_SELECTED_LANES: frozenset[str] = frozenset(
+    lane_name for lane_name in FIXED_SECTION_ORDER if lane_name not in {"weather-watch", "x-feed", "x-following"}
+)
 VERSION_DISTINGUISHING_TOPIC_DEDUPE_LANES: frozenset[str] = frozenset(
     {"claude-code-watch", "codex-watch", "openclaw-watch"}
 )
@@ -804,10 +807,11 @@ def build_report_artifact(
         if not render_items:
             continue
 
-        source_lanes.append(lane_name)
         section_title = FIXED_SECTION_TITLES[lane_name]
         body_sections.append(render_body_section(section_title, render_items))
-        source_sections.append(render_source_section(section_title, render_items))
+        if any(item.source_url for item in render_items):
+            source_lanes.append(lane_name)
+            source_sections.append(render_source_section(section_title, render_items))
 
     if not body_sections:
         raise ValueError("没有可渲染的 reader-facing 正文栏目")
@@ -1521,7 +1525,9 @@ def can_add_secondary_candidate(
 
 
 def candidate_topic_tokens(candidate: dict[str, Any]) -> set[str]:
-    normalized = normalize_whitespace(f"{candidate.get('title', '')} {candidate.get('excerpt', '')}").lower()
+    normalized = normalize_whitespace(
+        f"{candidate.get('title', '')} {candidate.get('source_snippet', '')} {candidate.get('excerpt', '')}"
+    ).lower()
     if not normalized:
         return set()
 
@@ -1531,6 +1537,8 @@ def candidate_topic_tokens(candidate: dict[str, Any]) -> set[str]:
         if lowered in normalized:
             tokens.append(lowered)
 
+    tokens.extend(extract_reddit_theme_tokens(normalized))
+
     for token in re.findall(r"[a-z0-9][a-z0-9_./+-]{2,}", normalized):
         if token in TOPIC_TOKEN_STOPWORDS or token.isdigit():
             continue
@@ -1539,12 +1547,42 @@ def candidate_topic_tokens(candidate: dict[str, Any]) -> set[str]:
     return set(tokens)
 
 
+def extract_reddit_theme_tokens(normalized: str) -> set[str]:
+    """Coarse semantic fingerprints for Reddit topics that recur with new URLs/titles."""
+    theme_tokens: set[str] = set()
+    theme_patterns = {
+        "theme:multi-agent-orchestration": (
+            "multi-agent",
+            "multi agent",
+            "agent team",
+            "agent teams",
+            "swarm",
+            "orchestration",
+            "agent-council",
+            "maestro",
+            "parallel agents",
+        ),
+        "theme:openclaw-subscription-alternative": ("openclaw", "subscription", "ban", "restricted", "alternative"),
+        "theme:claude-code-workflow-tips": ("claude code", "workflow", "tips", "daily use", "setup", "cli", "mcp"),
+        "theme:agent-monetization": ("made money", "make money", "earn", "revenue", "monetiz", "60k"),
+        "theme:nontechnical-ai-gap": ("non-technical", "non technical", "technical people", "gap", "search box"),
+        "theme:autonomous-iteration": ("autonomous iteration", "failure memory", "measure", "modify", "verify", "rollback"),
+        "theme:agent-governance-verification": ("governance", "verification", "reviewer", "keeps", "safe"),
+    }
+    for theme, phrases in theme_patterns.items():
+        if sum(1 for phrase in phrases if phrase in normalized) >= 2:
+            theme_tokens.add(theme)
+    return theme_tokens
+
+
 def topic_tokens_overlap_too_much(current: set[str], existing: set[str]) -> bool:
     if not current or not existing:
         return False
     overlap = current & existing
     if not overlap:
         return False
+    if any(token.startswith("theme:") for token in overlap):
+        return True
     smaller_size = min(len(current), len(existing))
     return len(overlap) >= max(2, (smaller_size + 1) // 2)
 
@@ -2430,7 +2468,7 @@ def build_render_items_by_lane(
                 useful_item_count=lane_counts[lane_name],
                 report_date=collect_result["report_date"],
             )
-            if lane_name in NOISY_X_LANES and not noisy_x_excerpt_is_publishable(render_item.excerpt):
+            if not render_item_is_publishable(render_item):
                 continue
             items_by_lane[lane_name].append(render_item)
 
@@ -2439,7 +2477,9 @@ def build_render_items_by_lane(
         if lane_items:
             lane_items.sort(key=lambda item: item.sort_key, reverse=True)
             continue
-        if selected_items is not None and lane_name in NOISY_X_LANES:
+        if selected_items is not None:
+            if lane_name in NO_INFO_ON_EMPTY_SELECTED_LANES:
+                items_by_lane[lane_name] = [build_no_info_render_item(lane_name=lane_name)]
             continue
 
         items_by_lane[lane_name] = [
@@ -2718,6 +2758,32 @@ def build_candidate_reader_excerpt(*, candidate: dict[str, Any], useful_item_cou
         fallback_excerpt=fallback_excerpt,
         useful_item_count=useful_item_count,
     )
+
+
+def render_item_is_publishable(item: ReportRenderItem) -> bool:
+    if item.lane in NOISY_X_LANES:
+        return noisy_x_excerpt_is_publishable(item.excerpt)
+    cleaned_excerpt = normalize_whitespace(item.excerpt)
+    if item.lane in {"reddit-watch", "hacker-news-watch", "hacker-news-search-watch", "claude-code-watch", "codex-watch", "openclaw-watch", "github-trending-weekly", "polymarket-watch"}:
+        if not cleaned_excerpt or is_generic_placeholder_copy(cleaned_excerpt):
+            return False
+        if re.fullmatch(r"(?:该栏目|本栏)收录 \d+ 条有用内容。?", cleaned_excerpt):
+            return False
+    if item.lane == "codex-watch":
+        if "这次改动主要写明了" in cleaned_excerpt and re.search(r"\b(?:Title|Author|Merged at|Committed at):", cleaned_excerpt):
+            return False
+    if item.lane == "openclaw-watch":
+        if "Google Meet joins OpenClaw" in cleaned_excerpt:
+            return False
+    if item.lane in {"hacker-news-watch", "hacker-news-search-watch"}:
+        title = normalize_whitespace(item.title).strip("'\"")
+        title_lower = title.lower()
+        excerpt_lower = cleaned_excerpt.lower()
+        if "先按标题本身交代主题" in cleaned_excerpt:
+            return False
+        if title_lower and excerpt_lower.count(title_lower) >= 2:
+            return False
+    return True
 
 
 def noisy_x_excerpt_is_publishable(value: str) -> bool:
@@ -4226,6 +4292,11 @@ def build_github_trending_detail(*, title: str, source_text: str) -> str:
             f"`{title}` 把自己定位成开源的 AI coding harness builder，主打让 AI coding 流程变得 deterministic、repeatable。"
             " 它上榜的理由也很具体：卖点不是再包一层 agent，而是把测试和执行流程做成可重复的基础设施。"
         )
+    if "mcp workspace" in lowered and "design context" in lowered and "review handoffs" in lowered:
+        return (
+            f"`{title}` 是给 AI coding agents 用的 MCP workspace，重点是跨 session 保存设计上下文、任务历史和评审交接。"
+            " 它值得进榜，是因为解决的是 agent 断上下文和交接丢信息的问题，而不是再做一个聊天入口。"
+        )
     if "seo-optimized blog content" in lowered or ("seo" in lowered and "blog" in lowered and "content" in lowered):
         return (
             f"`{title}` 把自己定位成面向业务内容生产的 Claude Code workspace，重点是研究、撰写、分析并优化长篇 SEO 博客内容。"
@@ -4254,7 +4325,7 @@ def build_github_trending_detail(*, title: str, source_text: str) -> str:
     sentences = [sentence for sentence in simple_sentences(source_text) if not sentence.lower().startswith("author:")]
     if sentences:
         if looks_like_english_text(" ".join(sentences[:2])):
-            return f"`{title}` 这周能进趋势榜，至少因为：项目说明主要在讲它的定位、工作流和使用场景。"
+            return ""
         facts = [f"预览里把它写成 {sentences[0]}"]
         if len(sentences) > 1:
             facts.append(sentences[1])
@@ -5246,6 +5317,18 @@ def build_generic_x_descriptor(source_text: str) -> str:
     return ""
 
 
+def build_no_info_render_item(*, lane_name: str) -> ReportRenderItem:
+    return ReportRenderItem(
+        lane=lane_name,
+        title="无",
+        excerpt="",
+        source_url="",
+        link_label="",
+        source_title="无",
+        sort_key=("", ""),
+    )
+
+
 def build_fallback_render_item(*, lane_name: str, useful_item_count: int, report_date: str) -> ReportRenderItem:
     section_title = FIXED_SECTION_TITLES[lane_name]
     title = f"{section_title} 最小场景"
@@ -5276,14 +5359,16 @@ def build_fallback_source_url(*, lane_name: str, report_date: str) -> str:
 
 
 def render_body_section(section_title: str, render_items: Sequence[ReportRenderItem]) -> str:
-    bullet_lines = [
-        (
+    bullet_lines = []
+    for item in render_items:
+        if item.title == "无" and not item.source_url:
+            bullet_lines.append("- 无")
+            continue
+        bullet_lines.append(
             f"- **{sanitize_body_text(item.title, fallback='条目')}** "
             f"{sanitize_body_text(item.excerpt, fallback='详情见来源。')} "
             f"[{item.link_label}]({item.source_url})"
         )
-        for item in render_items
-    ]
     return f"## {section_title}\n" + "\n".join(bullet_lines)
 
 
@@ -5291,6 +5376,8 @@ def render_source_section(section_title: str, render_items: Sequence[ReportRende
     unique_entries: list[tuple[str, str]] = []
     seen_urls: set[str] = set()
     for item in render_items:
+        if not item.source_url:
+            continue
         if item.source_url in seen_urls:
             continue
         seen_urls.add(item.source_url)
