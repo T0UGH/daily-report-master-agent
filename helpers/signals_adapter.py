@@ -2997,6 +2997,24 @@ def noisy_x_candidate_has_specific_summary(candidate: dict[str, Any]) -> bool:
     source_text = normalize_whitespace(str(candidate.get("source_snippet") or candidate.get("excerpt", "")))
     if not source_text:
         return False
+
+    title = normalize_whitespace(str(candidate.get("title", "")))
+    source_url = normalize_whitespace(str(candidate.get("source_url", "")))
+
+    # First ask the actual reader renderer whether the post can become concrete copy.
+    # The previous gate rejected many x-following posts before this step because they
+    # were short or Chinese-first; that made the whole 关注流 disappear.
+    detailed_excerpt = build_x_post_detail(lane_name=lane_name, title=title, source_text=source_text)
+    if (
+        detailed_excerpt
+        and noisy_x_excerpt_is_publishable(detailed_excerpt)
+        and not is_generic_placeholder_copy(detailed_excerpt)
+        and "简短反应" not in detailed_excerpt
+        and "没有给出可复述" not in detailed_excerpt
+        and "最新教程" not in source_text
+    ):
+        return True
+
     if not noisy_x_source_has_operational_detail(source_text):
         return False
     editor_summary = normalize_whitespace(str(candidate.get("editor_summary", "")))
@@ -3007,8 +3025,6 @@ def noisy_x_candidate_has_specific_summary(candidate: dict[str, Any]) -> bool:
     if not looks_like_english_text(source_text):
         return True
 
-    title = normalize_whitespace(str(candidate.get("title", "")))
-    source_url = normalize_whitespace(str(candidate.get("source_url", "")))
     detailed_excerpt = build_lane_fact_summary(
         lane_name=lane_name,
         title=title,
@@ -3825,6 +3841,102 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
             [
                 "@canghe 把 `Codex + Obsidian` 当作公众号封面图工作流：文章在 Obsidian 写完后，直接让 Codex 生成封面图",
                 "具体做法是让 Codex 调用 `ChatGPT image 2` 生成图片，他认为模型对文章内容的理解能力足够强",
+            ]
+        )
+
+    if "claude-code-setup" in lowered:
+        facts.extend(
+            [
+                "原帖说 `Claude Code` 刚上手会显得很乱，重点推荐 Anthropic 官方的 `claude-code-setup` 插件",
+                "这个插件会把可配置项列出来，包括 hooks、skills、MCP servers 和 subagents，并引导用户一步步配置自动化能力",
+            ]
+        )
+
+    if "deepseek v4" in lowered and "claude code" in lowered and "1m" in lowered:
+        facts.extend(
+            [
+                "@manateelazycat 在补充一个 `DeepSeek V4 + Claude Code` 的配置坑：有人接入后只看到 `200K` 上下文，不是预期的 `1M`",
+                "他的修法是把环境变量里的模型名补上 `[1M]`，例如在 `ANTHROPIC_MODEL` 后面显式写出 1M 版本",
+            ]
+        )
+
+    if "claude.md" in lowered and "karpathy" in lowered:
+        facts.extend(
+            [
+                "这条是在分享一个 `CLAUDE.md` 写法，用它约束 `Claude Code` 不要过度自信地乱跑",
+                "规则重点包括：不明白就问、简单优先、不要把困惑藏起来，目标是把 Karpathy 提到的 AI 编程缺陷提前写进项目约束",
+            ]
+        )
+
+    if "claude managed agents" in lowered and "memory" in lowered:
+        facts.extend(
+            [
+                "@shao__meng 转述 `Claude Managed Agents` 的 memory 设计思路：不要急着造专用记忆架构，而是让 agent 自己用文件系统这类通用工具管理记忆",
+                "这个观点的前提是模型能力会继续提升，所以通用工具接口可能比固定 memory 模块更耐用",
+            ]
+        )
+
+    if "hackerRank ceo".lower() in lowered and "agent operator" in lowered:
+        facts.extend(
+            [
+                "帖子转述 HackerRank CEO 的判断：未来几年会出现 `Agent Operator` 这类岗位",
+                "它强调的不是纯工程师职位，而是营销、法律、生命科学等行业专家学会部署 AI agents，用它们重塑具体业务流程",
+            ]
+        )
+
+    if "easy-vibe" in lowered and "github trending" in lowered:
+        facts.extend(
+            [
+                "@IndieDevHailey 推荐 DataWhale 的 `Easy-Vibe`，说它是面向零基础的 Vibe Coding 免费教程",
+                "原帖给出的具体信号是项目已经上 GitHub Trending，并拿到约 `6.2k` stars，定位是帮新手从 0 到 1 做真实产品",
+            ]
+        )
+
+    if "github" in lowered and "ml-intern" in lowered and "agent" in lowered:
+        facts.extend(
+            [
+                "@GitTrend0x 在列 GitHub 上涨最快的 agent 项目，其中点名 `huggingface/ml-intern`",
+                "它把这个项目解释成开源的自主 ML 工程师 agent，目标是减少人工读论文、训模型、部署这一串重复工作",
+            ]
+        )
+
+    if "context" in cleaned_source and "组织记忆系统" in cleaned_source:
+        facts.extend(
+            [
+                "@Barret_China 在讲企业 AI Agent 的 context，不是单指提示词长度",
+                "他把好的 context 定义成组织记忆系统：让 AI 知道此刻该如何行动，并包含角色、目标、业务规则和历史记录等信息",
+            ]
+        )
+
+    if "lldb-mcp" in lowered or ("mcp" in lowered and "非交互" in cleaned_source):
+        facts.extend(
+            [
+                "@geniusvczh 讨论的是 `MCP` 和 CLI 的边界：有些工具天然需要交互，比如他常用的 `lldb-mcp`",
+                "他的意思是，这类工具即使改成命令行形态，也往往是在命令行里重做一套交互界面，并不会因为换语法就变成普通 CLI",
+            ]
+        )
+
+    if "codex app as a game editor" in lowered:
+        facts.extend(
+            [
+                "@Dimillian 把 `Codex App` 当游戏编辑器用：让它生成 sprite 和音乐，再直接运行、试玩和调试游戏",
+                "原帖还点名素材由 `GPT-5.5` 生成，所以重点是 Codex 从写代码扩到一体化小游戏制作环境",
+            ]
+        )
+
+    if "gbrain" in lowered and "code graph" in lowered:
+        facts.extend(
+            [
+                "@garrytan 说 `GBrain v0.21` 新增 code graph，补到原来面向非代码内容的检索能力上",
+                "它现在把 graph、vector、hybrid RRF 和代码图谱合在一起，用来改善代码库检索和 agent 上下文获取",
+            ]
+        )
+
+    if "wacrawl" in lowered and "whatsapp" in lowered:
+        facts.extend(
+            [
+                "@steipete 发布 `wacrawl 0.1.0`，这是一个只读 CLI，用来归档和搜索本地 macOS WhatsApp Desktop 数据",
+                "它会对本地数据做 snapshot，适合把聊天历史变成可检索资料，而不是去接外部聊天 API",
             ]
         )
 
