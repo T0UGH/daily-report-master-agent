@@ -83,6 +83,11 @@
   - noisy X gate 新增过滤低价值广告/截断搬运：`注册即用`、退款/稳定性推广、`GitHub 被...屠榜...1.` 这类内容不再因为泛泛提到 OpenAI/GitHub/agent 就进入正文。
   - `tests/test_signals_adapter.py` 新增 X 回归测试：正例要求保留 4/26 风格的事实槽位，负例要求拒绝 4/27 的低信号推广和截断榜单帖。
   - 验证：`python3 -m pytest -q tests/test_signals_adapter.py -k 'x_post_detail or noisy_x_candidate or live_2026_04_27'` 通过；完整 `python3 -m pytest -q` 为 `161 passed`；真实 2026-04-27 selected-items smoke 中坏词 `采集文本 / 保守看 / 摘要里给出的直接变化 / 可以让读者复述` 数量为 0，`@zstmfhy` 注册推广和 `@GitTrend0x` 截断榜单帖 gate 为 false。
+- 2026-04-27：修复 Claude Code freshness 选择逻辑：
+  - 根因：当天采集日志已经拿到 `v2.1.119 / v2.1.118 / v2.1.117`，但 `build_selected_items()` 先做跨日 source_url/topic dedupe；由于之前的回填/重跑产物里已经出现过 `v2.1.119` 和 `v2.1.118`，最新两个版本被过滤掉，lane_limit=1 时反而选中了旧的 `v2.1.117`。
+  - `helpers/signals_adapter.py` 对 `claude-code-watch` / `openclaw-watch` 这类版本 release lane 取消跨日 source_url 去重，并让带版本号的 release 不被跨日 topic dedupe 压掉，保证排序后优先选最新版本，而不是用旧版本补位。
+  - `tests/test_signals_adapter.py` 新增回归测试：当最新 Claude Code release 已在最近历史里出现、当天 raw signals 同时有新旧版本时，仍应选择最高版本 `v2.1.119`，不能退到 `v2.1.117`。
+  - 验证：`python3 -m pytest -q tests/test_signals_adapter.py -k 'claude_code or versioned_release or latest_versioned_release_even_if_seen_recently'` 通过；完整 `python3 -m pytest -q` 为 `162 passed`；真实 2026-04-27 selected-items smoke 中 Claude Code 从 `v2.1.117` 改为 `v2.1.119`。
 
 ### 待处理方向
 - HN 输出需要从标题搬运改为“人话解释”：谁发了什么、是什么项目/讨论、核心事实、讨论点/卡点、为什么和 AI agent/coding workflow 相关。

@@ -1067,6 +1067,76 @@ created_at: '2026-04-12T05:00:00Z'
             ["https://weather.example.com/beijing-haidian/2026-04-12"],
         )
 
+    def test_build_selected_items_keeps_latest_versioned_release_even_if_seen_recently(self) -> None:
+        previous_report_date = "2026-04-11"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir)
+            signals_root = temp_root / "signals"
+            runtime_root = temp_root / "runtime"
+            self.write_signal_bundle(
+                signals_root,
+                lane="claude-code-watch",
+                signal_text_by_name={
+                    "v2.1.119.md": """---
+type: release
+lane: claude-code-watch
+source: github
+entity_type: repo
+entity_id: anthropics/claude-code
+title: v2.1.119
+url: https://github.com/anthropics/claude-code/releases/tag/v2.1.119
+fetched_at: 2026-04-27T22:00:00+0000
+created_at: '2026-04-27T21:40:00Z'
+---
+
+## Release Notes
+
+Added settings.json persistence and support for custom PR URL templates.
+""",
+                    "v2.1.117.md": """---
+type: release
+lane: claude-code-watch
+source: github
+entity_type: repo
+entity_id: anthropics/claude-code
+title: v2.1.117
+url: https://github.com/anthropics/claude-code/releases/tag/v2.1.117
+fetched_at: 2026-04-27T21:00:00+0000
+created_at: '2026-04-27T20:40:00Z'
+---
+
+## Release Notes
+
+Added forked subagent support for external builds.
+""",
+                },
+            )
+            self.write_selected_items_artifact(
+                runtime_root,
+                report_date=previous_report_date,
+                items=[
+                    {
+                        "lane": "claude-code-watch",
+                        "title": "v2.1.119",
+                        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.119",
+                        "signal_path": f"claude-code-watch/{previous_report_date}/signals/v2.1.119.md",
+                        "fetched_at": f"{previous_report_date}T12:00:00+0000",
+                        "excerpt": "Added settings.json persistence and support for custom PR URL templates.",
+                    },
+                ],
+            )
+
+            selected_items = build_selected_items(
+                signals_root=signals_root,
+                report_date=REPORT_DATE,
+                lane_names=["claude-code-watch"],
+                per_lane_limit=1,
+                previous_selected_items_runtime_root=runtime_root,
+            )
+
+        self.assertEqual(selected_items["summary"]["selected_item_count"], 1)
+        self.assertEqual(selected_items["selected_items"][0]["title"], "v2.1.119")
+
     def test_build_selected_items_keeps_versioned_release_lanes_when_versions_differ(self) -> None:
         duplicate_report_date = "2026-04-10"
         with tempfile.TemporaryDirectory() as temp_dir:

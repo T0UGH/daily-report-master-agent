@@ -130,7 +130,9 @@ RESIDUAL_NOISY_X_CLAUSE_PATTERNS = (
     r"^seems less accurate\b",
     r"^gives you everything\b",
 )
-CROSS_DAY_SOURCE_URL_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset()
+CROSS_DAY_SOURCE_URL_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset(
+    {"claude-code-watch", "openclaw-watch"}
+)
 CROSS_DAY_TOPIC_DEDUPE_EXEMPT_LANES: frozenset[str] = frozenset({"weather-watch"})
 NO_INFO_ON_EMPTY_SELECTED_LANES: frozenset[str] = frozenset(
     lane_name for lane_name in FIXED_SECTION_ORDER if lane_name not in {"weather-watch", "x-feed", "x-following"}
@@ -1399,6 +1401,8 @@ def candidate_is_cross_day_topic_duplicate(
 ) -> bool:
     topic_tokens = candidate_topic_tokens(candidate)
     if not topic_tokens:
+        return False
+    if lane_name in {"claude-code-watch", "openclaw-watch"} and candidate_version_tokens(candidate):
         return False
 
     for existing in previous_selected_items:
