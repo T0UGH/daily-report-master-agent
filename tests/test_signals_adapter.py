@@ -6416,6 +6416,81 @@ matched_query: Claude Code
                 for term in expected_terms:
                     self.assertIn(term, detail)
 
+    def test_build_hacker_news_detail_covers_live_2026_04_27_cases(self) -> None:
+        cases = [
+            (
+                "hacker-news-watch",
+                "SWE-bench Verified no longer measures frontier coding capabilities",
+                (
+                    "SWE-bench Verified no longer measures frontier coding capabilities. "
+                    "I'm a co-creator of SWE-bench: 1. SWE-bench Verified is now saturated at 93.9% "
+                    "(congrats Anthropic), but anyone who hasn't reached that number yet still has more room for growth. "
+                    "2. SWE-bench Multilingual and SWE-bench Multimodal (which we'll open source in the next month) "
+                    "are still unsatured. 3. All benchmarks and benchmark paradigms eventually become saturated. "
+                    "That's why the SWE-bench team has worked hard on building the next stage of benchmarks, "
+                    "for example https://codeclash.ai/ or https://algotune.io/ ."
+                ),
+                "",
+                ("SWE-bench Verified", "不再", "93.9%", "Multilingual"),
+            ),
+            (
+                "hacker-news-watch",
+                "Show HN: AI memory with biological decay (52% recall)",
+                (
+                    "Most RAG setups fail because they treat memory like a static filing cabinet. "
+                    "This implementation experiments with a biological approach by using the Ebbinghaus forgetting curve "
+                    "to manage context as a living substrate. To solve the logical neighbor problem where semantic search misses "
+                    "relevant but non-similar nodes, a graph layer is layered over the vector store. Benchmarked against the "
+                    "LoCoMo dataset, this reached 52% Recall@5, nearly double the accuracy of stateless vector stores, "
+                    "while cutting token waste by roughly 84%. Built as a local first MCP server using DuckDB."
+                ),
+                "",
+                ("遗忘曲线", "MCP server", "Recall@5", "84%"),
+            ),
+            (
+                "hacker-news-search-watch",
+                "Ask HN: How to think in terms of parallel Claude agents",
+                (
+                    "Everytime I have a task, mainly adding features or refactoring something, updating UI etc, "
+                    "I can think of one task, and give it to Claude, and get it done. Now I can't imagine how are "
+                    "people using like 20 parallel Claude instances. I like to think in parallel Claude instances the same "
+                    "as software threads. I tend to go for parallel agents when the task can easily be split into non overlapping "
+                    "chunks. For a new feature requiring changes to both frontend and backend, I can first define a shared contract "
+                    "between them and then spin up one agent to work on each separate part. Each agent should have its own git work tree."
+                ),
+                "agent workflow",
+                ("并行", "Claude", "共享 contract", "git worktree"),
+            ),
+            (
+                "hacker-news-search-watch",
+                "Show HN: Agent MCP Studio – build multi-agent MCP systems in a browser tab",
+                (
+                    "I built a browser-only studio for designing and orchestrating MCP agent systems. The whole stack — "
+                    "tool authoring, multi-agent orchestration, RAG, code execution — runs from a single static HTML file via WebAssembly. "
+                    "No backend. WASM is a hard sandbox for free. SQL tools run in DuckDB-WASM in a Web Worker. "
+                    "When you're done, Export gives you a real Python MCP server: server.py, agentic.py, tools/*.py. "
+                    "Comments ask whether WASM is enough as a security boundary and whether export-to-Python parity stays faithful."
+                ),
+                "Claude Design",
+                ("browser-only", "WebAssembly", "Python MCP server", "WASM"),
+            ),
+        ]
+
+        for lane_name, title, source_text, matched_query, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_hacker_news_detail(
+                    lane_name=lane_name,
+                    title=title,
+                    source_text=source_text,
+                    matched_query=matched_query,
+                )
+                self.assertTrue(detail)
+                self.assertNotIn("搜索词", detail)
+                self.assertNotIn("摘要里能看到", detail)
+                self.assertNotIn("先按标题本身", detail)
+                for term in expected_terms:
+                    self.assertIn(term, detail)
+
     def test_build_product_hunt_detail_localizes_live_2026_04_21_taglines(self) -> None:
         cases = [
             (

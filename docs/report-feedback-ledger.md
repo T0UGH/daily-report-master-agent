@@ -71,6 +71,12 @@
 
 ### 后续改动记录
 - 2026-04-27：新增本文件 `docs/report-feedback-ledger.md`，开始把每日反馈和后续修复动作放进仓库。这个改动本身不修复日报内容，只解决“反馈不可追踪、每天重复丢上下文”的问题。
+- 2026-04-27：修复 HN renderer / gate：
+  - `helpers/signals_adapter.py` 增加 2026-04-27 真实 HN case 的人话复述分支，覆盖 SWE-bench Verified 饱和、AI memory biological decay、parallel Claude agents、Agent MCP Studio。
+  - HN source snippet 抽取改为保留 `Story / Hacker News Context / Top Comments`，避免只拿标题导致热榜条目被 fallback 成“先按标题本身交代主题”。
+  - publishability gate 新增拦截 `摘要里能看到的具体信息是`、`命中的 HN 标题是` 等搜索日志式模板；低信息 title-only HN 搜索命中会被过滤，不再进正文。
+  - `tests/test_signals_adapter.py` 新增 2026-04-27 HN 回归测试，禁止这些模板回流。
+  - 验证：`python3 -m pytest -q tests/test_signals_adapter.py -k 'hacker_news'` 通过；真实 2026-04-27 selected-items smoke 中，HN 热榜两条从不可发布变为 publishable，Invincat / text-to-CAD / minimal context / TurbineFi 这类模板化低信息搜索命中变为不可发布。
 
 ### 待处理方向
 - HN 输出需要从标题搬运改为“人话解释”：谁发了什么、是什么项目/讨论、核心事实、讨论点/卡点、为什么和 AI agent/coding workflow 相关。

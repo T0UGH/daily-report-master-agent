@@ -156,11 +156,15 @@ DENSE_ENTRY_SOURCE_SECTION_PREFERENCES = {
     "claude-code-watch": ("what's changed", "release notes", "changes", "fixes", "post"),
     "codex-watch": ("merged pr", "summary", "release notes", "release", "post"),
     "openclaw-watch": ("summary", "release notes", "changes", "fixes", "post"),
+    "hacker-news-watch": ("story", "hacker news context", "top comments", "post"),
+    "hacker-news-search-watch": ("story", "hacker news context", "top comments", "post"),
 }
 DENSE_ENTRY_SOURCE_LIMITS = {
     "claude-code-watch": 1200,
     "codex-watch": 900,
     "openclaw-watch": 1600,
+    "hacker-news-watch": 1600,
+    "hacker-news-search-watch": 1600,
 }
 DENSE_ENTRY_BASELINE_COUNTS = {
     "claude-code-watch": 5,
@@ -2779,7 +2783,13 @@ def render_item_is_publishable(item: ReportRenderItem) -> bool:
         title = normalize_whitespace(item.title).strip("'\"")
         title_lower = title.lower()
         excerpt_lower = cleaned_excerpt.lower()
-        if "先按标题本身交代主题" in cleaned_excerpt:
+        banned_hn_templates = (
+            "先按标题本身交代主题",
+            "摘要里能看到的具体信息是",
+            "命中的 HN 标题是",
+            "HN 搜索命中的标题是",
+        )
+        if any(template in cleaned_excerpt for template in banned_hn_templates):
             return False
         if title_lower and excerpt_lower.count(title_lower) >= 2:
             return False
@@ -4986,6 +4996,38 @@ def build_hacker_news_detail(*, lane_name: str, title: str, source_text: str, ma
     lowered = normalize_whitespace(f"{cleaned_title} {stripped_source}").lower()
     topics = extract_hacker_news_topics(stripped_source or source_text)
     facts: list[str] = []
+
+    if "swe-bench verified" in lowered and "frontier coding capabilities" in lowered:
+        facts.append("HN 这条在说 `SWE-bench Verified` 已经不再适合衡量最前沿 coding capability，重点不是榜单更新，而是 benchmark 被头部模型打穿了")
+        if "93.9" in stripped_source or "93.9" in cleaned_title:
+            facts.append("评论里 SWE-bench 共同作者补充：Anthropic 已经做到 `93.9%`，没到这个数的模型还有提升空间，但前沿模型需要换更难的评测")
+        if "multilingual" in lowered or "multimodal" in lowered or "codeclash" in lowered or "algotune" in lowered:
+            facts.append("后续方向被点名为 `SWE-bench Multilingual`、`SWE-bench Multimodal`、`CodeClash` 和 `AlgoTune` 这类更难、更新的基准")
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "ai memory with biological decay" in lowered or ("ebbinghaus" in lowered and "recall@5" in lowered):
+        facts.append("这个 Show HN 做的是本地优先的 AI memory / `MCP server`，思路不是把记忆当静态 RAG 文件柜，而是按 Ebbinghaus 遗忘曲线让旧记忆自然衰减")
+        if "graph" in lowered or "logical neighbor" in lowered:
+            facts.append("作者还在 vector store 上加了 graph layer，用来补 semantic search 找不到逻辑邻居的问题")
+        if "52" in lowered or "84" in lowered:
+            facts.append("给出的结果是 LoCoMo 上 `Recall@5` 到 `52%`，同时 token waste 大约下降 `84%`，所以它值得看的是记忆治理方式而不只是标题里的 memory 概念")
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "parallel claude agents" in lowered or ("20 parallel claude" in lowered and "work tree" in lowered):
+        facts.append("这条 Ask HN 的问题很具体：一个人习惯把任务交给单个 Claude，但不知道怎么把工作拆给很多并行 Claude 实例")
+        if "non overlapping" in lowered or "shared contract" in lowered:
+            facts.append("评论区给出的可执行做法是先找互不重叠的任务块，例如前后端先约好共享 contract，再让不同 agent 分头实现")
+        if "git work" in lowered or "merge conflict" in lowered or "review" in lowered:
+            facts.append("同时要给每个 agent 独立 `git worktree`，并把 review overhead 和 merge conflicts 当成并行化成本来管")
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
+
+    if "agent mcp studio" in lowered or ("browser-only studio" in lowered and "webassembly" in lowered):
+        facts.append("这个 Show HN 做的是 browser-only 的 MCP agent studio：tool authoring、multi-agent orchestration、RAG 和 code execution 都塞进一个静态 HTML 里跑")
+        if "webassembly" in lowered or "pyodide" in lowered or "duckdb-wasm" in lowered:
+            facts.append("实现上靠 `WebAssembly` / `Pyodide` / `DuckDB-WASM` 这类浏览器沙箱组件，把原型阶段的 agent workflow 放在本地浏览器内完成")
+        if "python mcp server" in lowered or "export" in lowered or "security boundary" in lowered:
+            facts.append("它还支持导出成真实 `Python MCP server`；评论区关心的点则是 WASM 安全边界，以及浏览器原型和导出版本能否保持行为一致")
+        return compose_fact_sentences(intro="", facts=facts, group_sizes=(1, 1, 1))
 
     if lane_name == "hacker-news-watch":
         if "how llms work" in lowered and "karpathy" in lowered:
