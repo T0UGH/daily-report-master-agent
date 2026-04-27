@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from helpers.github_ai_projects_worker import build_github_ai_projects_output
+from helpers.github_trending_worker import build_github_trending_output
 from helpers.lane_contracts import validate_lane_output_artifact
 from helpers.signals_adapter import FIXED_SECTION_TITLES, build_render_items_by_lane, render_body_section
 
@@ -106,6 +107,10 @@ def build_lane_output(
         if lane_input is None:
             raise ValueError("github-ai-projects requires lane_input")
         return build_github_ai_projects_output(lane_input)
+    if lane_name == "github-trending-weekly":
+        if lane_input is None:
+            raise ValueError("github-trending-weekly requires lane_input")
+        return build_github_trending_output(lane_input)
     return build_local_lane_output(
         report_date=report_date,
         lane_name=lane_name,

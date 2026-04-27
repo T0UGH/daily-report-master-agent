@@ -120,6 +120,12 @@
 - Correction after preview feedback: the intended migration is agent-cron's discovery logic, not its shared memory file. Removed the shared `memory_repo_dir` read/write compatibility path from report-master runtime behavior; `github-ai-projects` now carries the old agent-cron discovery queries inside `cross_lane_context.github_search_queries` (`GitHub trending AI {date}`, `GitHub new AI projects {date}`, `awesome AI GitHub {date}`), while runtime memory remains under `lane-memory/` only. Also tightened false-positive bare repo filtering for `tokens/s` and `user/assistant`.
 - Verification: targeted `python3 -m pytest -q tests/test_github_ai_projects_worker.py tests/test_run_daily_report_flow.py -k 'github_ai_projects'` -> `9 passed`; full `python3 -m pytest -q` -> `180 passed`; 2026-04-27 worker preview -> `decision=generated`, `validation.status=passed`, GitHub input queries present, `memory_repo_path` absent, `/Users/haha/workspace/memory/github-ai-projects/2026-04-27.md` not created.
 
+### 2026-04-28
+
+#### GitHub Trending lane worker grounding
+- Added an internal `github-trending-weekly` worker that reads `lane_input.signals` raw snippets, filters non-AI repos, and writes concrete Chinese bullets with GitHub sources instead of renderer template summaries.
+- Verification: `python3 -m pytest -q tests/test_github_trending_worker.py tests/test_lane_workers.py tests/test_run_daily_report_flow.py -k 'github_trending or lane_output or worker_mode'` -> `10 passed, 31 deselected`.
+
 ## 改动记录模板
 
 ### YYYY-MM-DD
