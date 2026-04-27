@@ -150,3 +150,23 @@
 
 #### Commit
 - 
+
+## 2026-04-28
+
+### 用户反馈 / 架构纠偏
+- MT 认为上一版 `agent-first` preview “感觉更差”，追问实现方式后确认根因：我把 lane 做成了 Python 规则/模板 agent，而不是真正 Hermes subagent。
+- MT 明确要求：忘掉 `.py agent`；日报应是每条 lane 一个 Hermes subagent，每条 lane 一个 skill，subagent 输出 markdown，最后主 agent 整合 markdown。
+- MT 进一步纠正边界：Python 脚本不能负责启动 subagent；只有 Hermes 主 agent 能启动 subagent。lane-specific 脚本可以放在 skill 本体里，但只能做整理/校验等辅助工作，不能控制判断和正文。
+
+### 已采取改动
+- 新建分支 `feat/hermes-skill-lane-subagents`，从 main 基线重新做，不继承错误的 `.py agent` 分支。
+- 新增设计文档 `docs/superpowers/specs/2026-04-28-hermes-skill-lane-subagents-design.md`，写入硬规则：Python 不启动 subagent，不选择/摘要/改写正文；只有 Hermes master agent 调 `delegate_task`；每条 lane 的判断和写作在 lane subagent + lane skill 中完成。
+- 新增实现计划 `docs/superpowers/plans/2026-04-28-hermes-skill-lane-subagents-implementation-plan.md`。
+- 新增 repo 内 skill 源目录 `skills/daily-report-*`，包括 master skill 和 13 条 lane skill。
+- 新增 deterministic scripts：skill sync、raw corpus lane package prepare、lane output validate、lane markdown assemble、publish wrapper。
+- 新增回归测试，保护边界：deterministic Python scripts 不得出现 `delegate_task(`、`build_lane_output(`、`run_lane_subagent(`、旧 GitHub worker 等 forbidden snippets。
+
+### 待验证
+- 需要用 Hermes main session 真正 delegate 每条 lane subagent，生成 2026-04-26 skill-preview。
+- 需要验证每条 lane 的 `lane.md` 是 subagent 按 skill 写出，而不是 Python renderer/worker 输出。
+- 生产默认不切换，直到 MT 看过 skill-preview 并确认方向更好。
