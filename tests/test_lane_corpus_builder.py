@@ -7,6 +7,7 @@ import pytest
 
 from helpers.lane_corpus_builder import (
     RAW_CORPUS_MISSING,
+    build_agent_lane_input_artifact,
     build_raw_candidates_from_signal_dir,
     fixed_section_order_from_config,
     missing_registry_entries,
@@ -127,3 +128,111 @@ def test_github_trending_fixture_contains_raw_candidates_for_selection() -> None
     assert all(len(candidate["source_snippet"]) >= 80 for candidate in candidates)
     assert any("agent" in candidate["source_snippet"].lower() for candidate in candidates)
     assert any("hacking" in candidate["source_snippet"].lower() for candidate in candidates)
+
+
+def _base_agent_first_config(signals_root: Path) -> dict:
+    return {
+        "paths": {"signals_root": str(signals_root)},
+        "runtime": {"timezone": "Asia/Shanghai"},
+        "selection": {"per_lane_limits": {"github-trending-weekly": 3, "github-ai-projects": 5}},
+        "lane_workers": {
+            "github_ai_projects": {
+                "discovery_queries": [
+                    "GitHub trending AI {date}",
+                    "GitHub new AI projects {report_date}",
+                ]
+            }
+        },
+    }
+
+
+def test_build_agent_lane_input_artifact_reads_raw_signal_files_not_selected_items(tmp_path: Path) -> None:
+    signals_root = tmp_path / "signals"
+    signal_dir = signals_root / "github-trending-weekly" / "2026-04-27" / "signals"
+    signal_dir.mkdir(parents=True)
+    (signal_dir / "owner__raw-agent.md").write_text(
+        """---
+lane: github-trending-weekly
+repo: owner/raw-agent
+url: https://github.com/owner/raw-agent
+description: Raw corpus agent toolkit
+---
+
+README text with Claude Code, MCP workflow examples, and agent runtime details.
+""",
+        encoding="utf-8",
+    )
+    selected_items = {
+        "selected_items": [
+            {
+                "id": "legacy-only",
+                "lane": "github-trending-weekly",
+                "title": "legacy/selected-only",
+                "source_url": "https://github.com/legacy/selected-only",
+                "summary": "This selected item must not become a raw candidate.",
+            }
+        ]
+    }
+
+    payload = build_agent_lane_input_artifact(
+        report_date="2026-04-27",
+        lane_name="github-trending-weekly",
+        collect_result={"summary": {"useful_item_count": 1}},
+        selected_items=selected_items,
+        config=_base_agent_first_config(signals_root),
+    )
+
+    assert payload["artifact_type"] == "lane_input"
+    assert payload["schema_version"] == 1
+    assert payload["agent_first"] is True
+    assert payload["raw_corpus_status"] == "ok"
+    assert payload["target_item_count"] == 3
+    assert [candidate["title"] for candidate in payload["raw_candidates"]] == ["owner/raw-agent"]
+    assert "Claude Code" in payload["raw_candidates"][0]["source_snippet"]
+    assert "legacy/selected-only" not in json.dumps(payload["raw_candidates"], ensure_ascii=False)
+    assert payload["compatibility"]["selected_items_snapshot"]["selected_items"][0]["title"] == "legacy/selected-only"
+
+
+def test_build_agent_lane_input_artifact_missing_own_corpus_blocks_without_selected_fallback(tmp_path: Path) -> None:
+    selected_items = {
+        "selected_items": [
+            {
+                "id": "legacy-x",
+                "lane": "x-feed",
+                "title": "legacy x post",
+                "source_url": "https://x.com/example/status/1",
+            }
+        ]
+    }
+
+    payload = build_agent_lane_input_artifact(
+        report_date="2026-04-27",
+        lane_name="x-feed",
+        collect_result={"summary": {"useful_item_count": 1}},
+        selected_items=selected_items,
+        config=_base_agent_first_config(tmp_path / "missing-signals"),
+    )
+
+    assert payload["raw_corpus_status"] == RAW_CORPUS_MISSING
+    assert payload["raw_candidates"] == []
+    assert "legacy x post" not in json.dumps(payload["raw_candidates"], ensure_ascii=False)
+
+
+def test_build_agent_lane_input_artifact_github_ai_projects_declares_no_own_corpus_degraded(
+    tmp_path: Path,
+) -> None:
+    signals_root = tmp_path / "signals"
+    payload = build_agent_lane_input_artifact(
+        report_date="2026-04-27",
+        lane_name="github-ai-projects",
+        collect_result={"summary": {"useful_item_count": 0}},
+        selected_items={"selected_items": []},
+        config=_base_agent_first_config(signals_root),
+    )
+
+    assert payload["raw_corpus_status"] == "degraded/no_own_raw_corpus"
+    assert payload["raw_candidates"] == []
+    assert payload["cross_lane_context"]["github_search_queries"] == [
+        "GitHub trending AI 2026-04-27",
+        "GitHub new AI projects 2026-04-27",
+    ]

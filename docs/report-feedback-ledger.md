@@ -131,6 +131,22 @@
 - Updated `helpers/run_daily_report_flow.py` to keep local mode in-process and route subagent mode through the process runner; the previous `ValueError("subagent lane worker mode is not implemented yet")` path is removed.
 - Verification: `python3 -m pytest -q tests/test_lane_subagent_runner.py tests/test_run_daily_report_flow.py -k 'subagent or worker_mode or github_trending'` -> `7 passed, 31 deselected`; `python3 -m pytest -q` -> `190 passed`.
 
+#### Agent-first lane subagent redesign
+- Corresponding feedback: MT said the previous architecture was still code-led, with poor agent autonomy; requirement changed to "每一条线有一个 subagent，最后主 agent 负责整合".
+- Changes:
+  - Added raw-corpus agent-first input building in `helpers/lane_corpus_builder.py`; when `lane_workers.agent_first=true`, lane inputs are built from `~/.daily-lane-data/signals/<lane>/<date>/signals/*.md`, not from `selected_items` as the primary content path.
+  - Added `helpers/lane_agent_registry.py` covering every fixed report lane. `github-trending-weekly` is a `specialized_agent`; all other lanes are explicit `migration_shim` entries and cannot pretend to be complete specialized agents.
+  - Added `helpers/lane_agents/github_trending_agent.py` and `helpers/lane_agents/generic_lane_agent.py`. GitHub Trending consumes `raw_candidates`, selects/rejects independently, writes `selected_items`/`rejected_items`/`reasoning_notes`/`agent_runtime`, and ignores compatibility selected-items snapshots.
+  - Updated `helpers/lane_subagent_worker.py` so `agent_first` inputs dispatch through the registry and never through legacy `lane_workers.build_lane_output()`. Failures produce blocked lane artifacts instead of silently falling back.
+  - Updated `helpers/run_daily_report_flow.py` so master writes agent-first lane inputs and only validates/assembles lane markdown in this mode.
+  - `github-ai-projects` is explicitly marked `degraded/no_own_raw_corpus` until it has its own discovery executor; old shared memory file integration remains forbidden.
+- Verification:
+  - Targeted: `python3 -m pytest -q tests/test_lane_corpus_builder.py tests/test_lane_agent_registry.py tests/test_github_trending_agent.py tests/test_lane_subagent_worker.py tests/test_agent_first_flow.py tests/test_runtime_config.py` -> `23 passed`.
+  - Regression after preview fix: `python3 -m pytest -q tests/test_github_trending_agent.py tests/test_agent_first_flow.py` -> `8 passed`.
+  - Full preview smoke: `python3 helpers/run_daily_report_flow.py --report-date 2026-04-26 --config /tmp/daily-report-agent-first-preview.yaml --skip-collect --title-suffix agent-first-preview --verbose` -> `decision=generated`, `validation.status=passed`.
+  - Feishu preview: `https://www.feishu.cn/docx/Qc02dPE87oI0GwxywoAcQ5can6b`; verified title, `GitHub 趋势项目`, `Alishahryar1/free-claude-code`, and no broken `；com/` link fragment.
+  - Preview facts: `lane_workers.mode=subagent`, `lane_workers.agent_first=true`; `github-trending-weekly.agent_runtime.kind=specialized_agent`; `github-ai-projects.status=degraded` with explicit `github_search_queries`; banned phrases `值得看的趋势项目 / 具体变化见来源 / 当前可作为 / 候选继续观察 / 至少因为 / 原始趋势片段写到 / 采集文本` absent from `report.md`.
+
 ## 改动记录模板
 
 ### YYYY-MM-DD

@@ -36,16 +36,28 @@ def resolve_lane_worker_config(config: dict[str, Any]) -> dict[str, Any]:
     mode = raw.get("mode", "local")
     if mode not in {"local", "subagent"}:
         raise ValueError("lane_workers.mode must be local or subagent")
+    agent_first = bool(raw.get("agent_first", False))
+    if agent_first and not enabled:
+        raise ValueError("lane_workers.agent_first requires lane_workers.enabled=true")
+    if agent_first and mode != "subagent":
+        raise ValueError("lane_workers.agent_first requires lane_workers.mode=subagent")
     enabled_lanes = raw.get("enabled_lanes") or []
     if not isinstance(enabled_lanes, list) or not all(isinstance(lane, str) for lane in enabled_lanes):
         raise ValueError("lane_workers.enabled_lanes must be list[str]")
+    forbid_legacy_fallback_for = raw.get("forbid_legacy_fallback_for") or []
+    if not isinstance(forbid_legacy_fallback_for, list) or not all(
+        isinstance(lane, str) for lane in forbid_legacy_fallback_for
+    ):
+        raise ValueError("lane_workers.forbid_legacy_fallback_for must be list[str]")
     github_ai_projects = raw.get("github_ai_projects") or {}
     if not isinstance(github_ai_projects, dict):
         raise ValueError("lane_workers.github_ai_projects must be object")
     return {
         "enabled": enabled,
         "mode": mode,
+        "agent_first": agent_first,
         "enabled_lanes": enabled_lanes,
+        "forbid_legacy_fallback_for": forbid_legacy_fallback_for,
         "github_ai_projects": github_ai_projects,
     }
 

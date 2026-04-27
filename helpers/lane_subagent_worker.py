@@ -9,6 +9,12 @@ from typing import Any
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from helpers.lane_agent_contracts import (
+    is_agent_first_lane_input,
+    validate_agent_lane_input,
+    validate_agent_lane_output,
+)
+from helpers.lane_agent_registry import build_agent_lane_output
 from helpers.lane_contracts import validate_lane_input_artifact, validate_lane_output_artifact
 from helpers.lane_workers import build_lane_output
 
@@ -33,6 +39,17 @@ def dump_json(payload: dict[str, Any], path: Path) -> None:
 
 
 def build_output_from_input(lane_input: dict[str, Any]) -> dict[str, Any]:
+    if is_agent_first_lane_input(lane_input):
+        validate_agent_lane_input(lane_input)
+        output = build_agent_lane_output(lane_input)
+        validate_agent_lane_output(output)
+        validate_lane_output_artifact(output)
+        if output["report_date"] != lane_input["report_date"]:
+            raise ValueError("lane output report_date does not match lane input")
+        if output["lane"] != lane_input["lane"]:
+            raise ValueError("lane output lane does not match lane input")
+        return output
+
     validate_lane_input_artifact(lane_input)
     report_date = lane_input["report_date"]
     lane_name = lane_input["lane"]
@@ -50,13 +67,68 @@ def build_output_from_input(lane_input: dict[str, Any]) -> dict[str, Any]:
     return output
 
 
+def build_blocked_agent_first_output(lane_input: dict[str, Any], error: Exception) -> dict[str, Any]:
+    report_date = lane_input.get("report_date")
+    lane_name = lane_input.get("lane")
+    if not isinstance(report_date, str) or not report_date.strip():
+        raise ValueError("cannot write blocked agent-first output without report_date")
+    if not isinstance(lane_name, str) or not lane_name.strip():
+        raise ValueError("cannot write blocked agent-first output without lane")
+    section_title = str(lane_input.get("lane_title") or lane_name)
+    output = {
+        "artifact_type": "lane_output",
+        "schema_version": 1,
+        "report_date": report_date,
+        "lane": lane_name,
+        "agent_first": True,
+        "status": "blocked",
+        "section_title": section_title,
+        "markdown": f"## {section_title}\n\n- 无",
+        "items": [],
+        "sources": [],
+        "selected_items": [],
+        "rejected_items": [],
+        "reasoning_notes": [f"blocked: agent_first_lane_failed: {error}"],
+        "agent_runtime": {
+            "kind": "blocked",
+            "implementation": "lane_subagent_worker",
+        },
+        "quality": {
+            "item_count": 0,
+            "rejected_count": 0,
+            "reason": "agent_first_lane_failed",
+            "error": str(error),
+            "warnings": ["agent_first_lane_failed"],
+        },
+        "validation": {"status": "blocked", "errors": [str(error)]},
+    }
+    validate_agent_lane_output(output)
+    validate_lane_output_artifact(output)
+    return output
+
+
 def main() -> int:
     args = parse_args()
+    lane_input: dict[str, Any] | None = None
     try:
         lane_input = load_json(args.input)
         lane_output = build_output_from_input(lane_input)
         dump_json(lane_output, args.output)
     except Exception as error:
+        if lane_input is not None and is_agent_first_lane_input(lane_input):
+            try:
+                lane_output = build_blocked_agent_first_output(lane_input, error)
+                dump_json(lane_output, args.output)
+            except Exception as blocked_error:
+                print(f"lane_subagent_worker failed: {error}", file=sys.stderr)
+                print(f"lane_subagent_worker also failed to write blocked output: {blocked_error}", file=sys.stderr)
+                return 1
+            print(
+                "lane_subagent_worker blocked: "
+                f"lane={lane_output['lane']} reason=agent_first_lane_failed output={args.output}",
+                file=sys.stderr,
+            )
+            return 0
         print(f"lane_subagent_worker failed: {error}", file=sys.stderr)
         return 1
 

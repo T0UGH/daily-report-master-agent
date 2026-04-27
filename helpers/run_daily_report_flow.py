@@ -18,6 +18,8 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from helpers.lane_contracts import validate_lane_input_artifact, validate_lane_output_artifact
+from helpers.lane_agent_contracts import validate_agent_lane_output
+from helpers.lane_corpus_builder import build_agent_lane_input_artifact
 from helpers.lane_report_assembler import build_report_artifact_from_lane_outputs
 from helpers.lane_subagent_runner import run_lane_subagent
 from helpers.lane_workers import build_lane_output
@@ -1931,6 +1933,8 @@ def main() -> int:
     summary["lane_workers"] = {
         "enabled": lane_worker_config["enabled"],
         "mode": lane_worker_config["mode"],
+        "agent_first": lane_worker_config["agent_first"],
+        "forbid_legacy_fallback_for": lane_worker_config["forbid_legacy_fallback_for"],
         "outputs": {},
     }
     lane_outputs: list[dict[str, Any]] = []
@@ -1964,17 +1968,30 @@ def main() -> int:
         lane_outputs_dir.mkdir(parents=True, exist_ok=True)
         lane_logs_dir.mkdir(parents=True, exist_ok=True)
         for lane_name in lane_order:
-            lane_input = build_lane_input_artifact(
-                report_date=args.report_date,
-                lane_name=lane_name,
-                selected_items=selected_items,
-                config=config,
-            )
+            if lane_worker_config["agent_first"]:
+                lane_input = build_agent_lane_input_artifact(
+                    report_date=args.report_date,
+                    lane_name=lane_name,
+                    collect_result=collect_result,
+                    selected_items=selected_items,
+                    config=config,
+                )
+            else:
+                lane_input = build_lane_input_artifact(
+                    report_date=args.report_date,
+                    lane_name=lane_name,
+                    selected_items=selected_items,
+                    config=config,
+                )
             input_path = lane_inputs_dir / f"{lane_name}.json"
             output_path = lane_outputs_dir / f"{lane_name}.json"
             log_path = lane_logs_dir / f"{lane_name}.md"
             dump_json(lane_input, input_path)
-            if lane_worker_config["mode"] == "local":
+            if lane_worker_config["agent_first"]:
+                lane_output = run_lane_subagent(input_path, output_path, log_path)
+                validate_agent_lane_output(lane_output)
+                validate_lane_output_artifact(lane_output)
+            elif lane_worker_config["mode"] == "local":
                 lane_output = build_lane_output(
                     report_date=args.report_date,
                     lane_name=lane_name,
@@ -1999,6 +2016,9 @@ def main() -> int:
                 "output_path": str(output_path),
                 "log_path": str(log_path),
             }
+            agent_runtime = lane_output.get("agent_runtime")
+            if isinstance(agent_runtime, dict):
+                summary["lane_workers"]["outputs"][lane_name]["agent_runtime"] = agent_runtime
             side_artifacts = lane_output.get("side_artifacts") or {}
             memory_markdown = side_artifacts.get("memory_markdown")
             if isinstance(memory_markdown, str) and memory_markdown.strip():

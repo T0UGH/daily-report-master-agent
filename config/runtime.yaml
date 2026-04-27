@@ -56,7 +56,10 @@ runtime:
 lane_workers:
   enabled: false
   mode: local
+  agent_first: false
   enabled_lanes: []
+  forbid_legacy_fallback_for:
+    - github-trending-weekly
   github_ai_projects:
     discovery_queries:
       - GitHub trending AI {date}

@@ -1,7 +1,14 @@
 import unittest
 from pathlib import Path
 
-from helpers.runtime_config import load_runtime_config, resolve_lane_item_limits, resolve_lane_paragraph_targets
+import pytest
+
+from helpers.runtime_config import (
+    load_runtime_config,
+    resolve_lane_item_limits,
+    resolve_lane_paragraph_targets,
+    resolve_lane_worker_config,
+)
 
 
 class RuntimeConfigTest(unittest.TestCase):
@@ -24,6 +31,41 @@ class RuntimeConfigTest(unittest.TestCase):
         targets = resolve_lane_paragraph_targets(config)
         self.assertEqual(targets["x-feed"], {"min_paragraphs": 6, "max_paragraphs": 10})
         self.assertEqual(targets["x-following"], {"min_paragraphs": 6, "max_paragraphs": 10})
+
+
+def test_resolve_lane_worker_config_exposes_agent_first_flags() -> None:
+    config = {
+        "lane_workers": {
+            "enabled": True,
+            "mode": "subagent",
+            "agent_first": True,
+            "enabled_lanes": ["github-trending-weekly"],
+            "forbid_legacy_fallback_for": ["github-trending-weekly"],
+        }
+    }
+
+    assert resolve_lane_worker_config(config) == {
+        "enabled": True,
+        "mode": "subagent",
+        "agent_first": True,
+        "enabled_lanes": ["github-trending-weekly"],
+        "forbid_legacy_fallback_for": ["github-trending-weekly"],
+        "github_ai_projects": {},
+    }
+
+
+def test_resolve_lane_worker_config_rejects_agent_first_local_mode() -> None:
+    with pytest.raises(ValueError, match="agent_first.*subagent"):
+        resolve_lane_worker_config(
+            {
+                "lane_workers": {
+                    "enabled": True,
+                    "mode": "local",
+                    "agent_first": True,
+                    "enabled_lanes": ["github-trending-weekly"],
+                }
+            }
+        )
 
 
 if __name__ == "__main__":

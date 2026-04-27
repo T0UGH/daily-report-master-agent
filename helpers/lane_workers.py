@@ -103,6 +103,8 @@ def build_lane_output(
     selected_items: dict[str, Any],
     lane_input: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    if lane_input is not None and lane_input.get("agent_first") is True:
+        raise ValueError("agent-first lane input cannot use legacy lane_workers")
     if lane_name == "github-ai-projects":
         if lane_input is None:
             raise ValueError("github-ai-projects requires lane_input")
