@@ -1,0 +1,332 @@
+{
+  "artifact_type": "agent_first_raw_candidates_fixture",
+  "fallback_status": "raw_corpus_available",
+  "lane": "github-trending-weekly",
+  "raw_candidates": [
+    {
+      "candidate_source": "Alishahryar1__free-claude-code__trending-weekly.md",
+      "id": "repo:Alishahryar1/free-claude-code",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #1 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 5160\n\n## Description\n\nUse claude-code for free in the terminal, VSCode extension or via discord like openclaw\n\n## README\n\n<div align=\"center\">\n\n# 🤖 Free Claude Code\n\n### Use Claude Code CLI & VSCode for free. No Anthropic API key required.\n\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)\n[![Python 3.14](https://img.shields.io/badge/python-3.14-3776ab.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)\n[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json&style=for-the-badge)](https://github.com/astral-sh/uv)\n[![Tested with Pytest](https://img.shields.io/badge/testing-Pytest-00c0ff.svg?style=for-the-badge)](https://github.com/Alishahryar1/free-claude-code/actions/workflows/tests.yml)\n[![Type checking: Ty](https://img.shields.io/badge/type%20checking-ty-ffcc00.svg?style=for-the-badge)](https://pypi.org/project/ty/)\n[![Code style: Ruff](https://img.shields.io/badge/code%20formatting-ruff-f5a623.svg?style=for-the-badge)](https://github.com/astral-sh/ruff)\n[![Logging: Loguru](https://img.shields.io/badge/logging-loguru-4ecdc4.svg?style=for-the-badge)](https://github.com/Delgan/loguru)\n\nA lightweight proxy that routes Claude Code's Anthropic API calls to **NVIDIA NIM** (40 req/min free), **OpenRouter** (hundreds of models), **DeepSeek** (direct API), **LM Studio** (fully local), or **llama.cpp** (local with Anthropic endpoints).\n\n[Quick Start](#quick-start) · [Providers](#providers) · [Discord Bot](#discord-bot) · [Configuration](#configuration) · [Development](#development) · [Contributing](#contributing)\n\n---\n\n</div>\n\n<div align=\"center\">\n  <img src=\"pic.png\" alt=\"Free Claude Code in action\" width=\"700\">\n  <p><em>Claude Code running via NVIDIA NIM, completely free</em></p>\n</div>\n\n## Features\n\n| Fea...",
+        "metadata": {
+          "description": "Use claude-code for free in the terminal, VSCode extension or via discord like openclaw",
+          "fetched_at": "2026-04-26T07:26:02+0800",
+          "lane": "github-trending-weekly",
+          "language": "Python",
+          "rank": 1,
+          "repo": "Alishahryar1/free-claude-code",
+          "source": "github-trending",
+          "stars_this_week": 5160,
+          "title": "free-claude-code",
+          "type": "trending-weekly",
+          "url": "https://github.com/Alishahryar1/free-claude-code"
+        }
+      },
+      "source_snippet": "Use claude-code for free in the terminal, VSCode extension or via discord like openclaw\n\n## Trending Context\n\n- Rank: #1 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 5160\n\n## Description\n\nUse claude-code for free in the terminal, VSCode extension or via discord like openclaw\n\n## README\n\n<div align=\"center\">\n\n# 🤖 Free Claude Code\n\n### Use Claude Code CLI & VSCode for free. No Anthropic API key required.\n\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)\n[![Python 3.14](https://img.shields.io/badge/python-3.14-3776ab.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)\n[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json&style=for-the-badge)](https://github.com/astral-sh/uv)\n[![Tested with Pytest](https://img.shields.io/badge/testing-Pytest-00c0ff.svg?style=for-the-badge)](https://github.com/Alishahryar1/free-claude-code/actions/workflows/tests.yml)\n[![Type checking: Ty](https://img.shields.io/badge/type%20checking-ty-ffcc00.svg?style=for-the-badge)](https://pypi.org/project/ty/)\n[![Code st...",
+      "source_url": "https://github.com/Alishahryar1/free-claude-code",
+      "title": "Alishahryar1/free-claude-code"
+    },
+    {
+      "candidate_source": "Anil-matcha__Open-Generative-AI__trending-weekly.md",
+      "id": "repo:Anil-matcha/Open-Generative-AI",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #14 on GitHub Trending Weekly\n- Language: JavaScript\n- Stars this week: 2417\n\n## Description\n\nUncensored, open-source alternative to Higgsfield AI, Freepik AI, Krea AI, Openart AI — Free, unrestricted AI image &amp; video generation studio with 200+ models (Flux, Midjourney, Kling, Sora, Veo). No content filters. Self-hosted, MIT licensed.\n\n## README\n\n# Open Generative AI — Uncensored Open-Source Alternative to Higgsfield AI, Freepik AI, Krea AI, Openart AI\n\n> **The free, open-source, unrestricted alternative to Higgsfield AI, Freepik, Krea, Openart AI.** Generate AI images and videos using 200+ state-of-the-art models — no content filters, no closed ecosystem, no subscription fees.\n\n> 🐎 **Early access to Happy Horse 1.0** — Alibaba's #1 ranked AI video model. Check out [Awesome HappyHorse 1.0 API & Prompts](https://github.com/Anil-matcha/Awesome-HappyHorse-1.0-API-and-Prompt) — a Python wrapper plus a curated library of high-performing community prompts for native 1080p text-to-video and image-to-video generation with jointly generated audio.\n\n> 🤖 **Automate Higgsfield, Freepik, Krea, Openart & more with AI coding agents:** [Generative-Media-Skills](https://github.com/SamurAIGPT/Generative-Media-Skills) — a library of skills that let agents like **Claude Code**, **Codex**, and other coding assistants drive 200+ image/video models end-to-end (prompt → generate → edit → stitch) directly from your terminal. Perfect for building automated media pipelines without touching a UI.\n\n### Related projects\n\n> **Open-source Weavy, Flora Fauna Freepik Spaces, Krea nodes alternative** -> https://github.com/SamurAIGPT/Vibe-Workflow\n\n> **Open-source multi-modal chatbot and Poe alternative** -> https://github.com/Anil-matcha/Open-Poe-AI \n\n## 🌐 Try it Online — No Install Required\n\n**Hosted version:** [https://dev.muapi.ai/open-generative-ai](https://dev.muapi.ai/open-generative-ai)\n\nUse all four studios (Image, Video, Lip Sync, Cinema) directly in your b...",
+        "metadata": {
+          "description": "Uncensored, open-source alternative to Higgsfield AI, Freepik AI, Krea AI, Openart AI — Free, unrestricted AI image &amp; video generation studio with 200+ models (Flux, Midjourney, Kling, Sora, Veo). No content filters. Self-hosted, MIT licensed.",
+          "fetched_at": "2026-04-26T07:26:16+0800",
+          "lane": "github-trending-weekly",
+          "language": "JavaScript",
+          "rank": 14,
+          "repo": "Anil-matcha/Open-Generative-AI",
+          "source": "github-trending",
+          "stars_this_week": 2417,
+          "title": "Open-Generative-AI",
+          "type": "trending-weekly",
+          "url": "https://github.com/Anil-matcha/Open-Generative-AI"
+        }
+      },
+      "source_snippet": "Uncensored, open-source alternative to Higgsfield AI, Freepik AI, Krea AI, Openart AI — Free, unrestricted AI image &amp; video generation studio with 200+ models (Flux, Midjourney, Kling, Sora, Veo). No content filters. Self-hosted, MIT licensed.\n\n## Trending Context\n\n- Rank: #14 on GitHub Trending Weekly\n- Language: JavaScript\n- Stars this week: 2417\n\n## Description\n\nUncensored, open-source alternative to Higgsfield AI, Freepik AI, Krea AI, Openart AI — Free, unrestricted AI image &amp; video generation studio with 200+ models (Flux, Midjourney, Kling, Sora, Veo). No content filters. Self-hosted, MIT licensed.\n\n## README\n\n# Open Generative AI — Uncensored Open-Source Alternative to Higgsfield AI, Freepik AI, Krea AI, Openart AI\n\n> **The free, open-source, unrestricted alternative to Higgsfield AI, Freepik, Krea, Openart AI.** Generate AI images and videos using 200+ state-of-the-art models — no content filters, no closed ecosystem, no subscription fees.\n\n> 🐎 **Early access to Happy Horse 1.0** — Alibaba's #1 ranked AI video model. Check out [Awesome HappyHorse 1.0 API & Prompts](https://github.com/Anil-matcha/Awesome-HappyHorse-1.0-API-and-Prompt) — a Python wrapper plus a curat...",
+      "source_url": "https://github.com/Anil-matcha/Open-Generative-AI",
+      "title": "Anil-matcha/Open-Generative-AI"
+    },
+    {
+      "candidate_source": "NousResearch__hermes-agent__trending-weekly.md",
+      "id": "repo:NousResearch/hermes-agent",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #13 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 19019\n\n## Description\n\nThe agent that grows with you\n\n## README\n\n<p align=\"center\">\n  <img src=\"assets/banner.png\" alt=\"Hermes Agent\" width=\"100%\">\n</p>\n\n# Hermes Agent ☤\n\n<p align=\"center\">\n  <a href=\"https://hermes-agent.nousresearch.com/docs/\"><img src=\"https://img.shields.io/badge/Docs-hermes--agent.nousresearch.com-FFD700?style=for-the-badge\" alt=\"Documentation\"></a>\n  <a href=\"https://discord.gg/NousResearch\"><img src=\"https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white\" alt=\"Discord\"></a>\n  <a href=\"https://github.com/NousResearch/hermes-agent/blob/main/LICENSE\"><img src=\"https://img.shields.io/badge/License-MIT-green?style=for-the-badge\" alt=\"License: MIT\"></a>\n  <a href=\"https://nousresearch.com\"><img src=\"https://img.shields.io/badge/Built%20by-Nous%20Research-blueviolet?style=for-the-badge\" alt=\"Built by Nous Research\"></a>\n</p>\n\n**The self-improving AI agent built by [Nous Research](https://nousresearch.com).** It's the only agent with a built-in learning loop — it creates skills from experience, improves them during use, nudges itself to persist knowledge, searches its own past conversations, and builds a deepening model of who you are across sessions. Run it on a $5 VPS, a GPU cluster, or serverless infrastructure that costs nearly nothing when idle. It's not tied to your laptop — talk to it from Telegram while it works on a cloud VM.\n\nUse any model you want — [Nous Portal](https://portal.nousresearch.com), [OpenRouter](https://openrouter.ai) (200+ models), [NVIDIA NIM](https://build.nvidia.com) (Nemotron), [Xiaomi MiMo](https://platform.xiaomimimo.com), [z.ai/GLM](https://z.ai), [Kimi/Moonshot](https://platform.moonshot.ai), [MiniMax](https://www.minimax.io), [Hugging Face](https://huggingface.co), OpenAI, or your own endpoint. Switch with `hermes model` — no code changes, no lock-in.\n\n<table>\n<tr><td><b>A real ter...",
+        "metadata": {
+          "description": "The agent that grows with you",
+          "fetched_at": "2026-04-26T07:26:15+0800",
+          "lane": "github-trending-weekly",
+          "language": "Python",
+          "rank": 13,
+          "repo": "NousResearch/hermes-agent",
+          "source": "github-trending",
+          "stars_this_week": 19019,
+          "title": "hermes-agent",
+          "type": "trending-weekly",
+          "url": "https://github.com/NousResearch/hermes-agent"
+        }
+      },
+      "source_snippet": "The agent that grows with you\n\n## Trending Context\n\n- Rank: #13 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 19019\n\n## Description\n\nThe agent that grows with you\n\n## README\n\n<p align=\"center\">\n  <img src=\"assets/banner.png\" alt=\"Hermes Agent\" width=\"100%\">\n</p>\n\n# Hermes Agent ☤\n\n<p align=\"center\">\n  <a href=\"https://hermes-agent.nousresearch.com/docs/\"><img src=\"https://img.shields.io/badge/Docs-hermes--agent.nousresearch.com-FFD700?style=for-the-badge\" alt=\"Documentation\"></a>\n  <a href=\"https://discord.gg/NousResearch\"><img src=\"https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white\" alt=\"Discord\"></a>\n  <a href=\"https://github.com/NousResearch/hermes-agent/blob/main/LICENSE\"><img src=\"https://img.shields.io/badge/License-MIT-green?style=for-the-badge\" alt=\"License: MIT\"></a>\n  <a href=\"https://nousresearch.com\"><img src=\"https://img.shields.io/badge/Built%20by-Nous%20Research-blueviolet?style=for-the-badge\" alt=\"Built by Nous Research\"></a>\n</p>\n\n**The self-improving AI agent built by [Nous Research](https://nousresearch.com).** It's the only agent with a built-in learning loop — it creates skills from experience, improv...",
+      "source_url": "https://github.com/NousResearch/hermes-agent",
+      "title": "NousResearch/hermes-agent"
+    },
+    {
+      "candidate_source": "SimoneAvogadro__android-reverse-engineering-skill__trending-weekly.md",
+      "id": "repo:SimoneAvogadro/android-reverse-engineering-skill",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #6 on GitHub Trending Weekly\n- Language: Shell\n- Stars this week: 2258\n\n## Description\n\nClaude Code skill to support Android app's reverse engineering\n\n## README\n\n# Android Reverse Engineering & API Extraction — Claude Code skill\n\nA Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files and **extracts the HTTP APIs** used by the app — Retrofit endpoints, OkHttp calls, hardcoded URLs, authentication patterns — so you can document and reproduce them without the original source code.\n\n## What it does\n\n- **Decompiles** APK, XAPK, JAR, and AAR files using jadx and Fernflower/Vineflower (single engine or side-by-side comparison)\n- **Extracts and documents APIs**: Retrofit endpoints, OkHttp calls, hardcoded URLs, auth headers and tokens\n- **Traces call flows** from Activities/Fragments through ViewModels and repositories down to HTTP calls\n- **Analyzes** app structure: manifest, packages, architecture patterns\n- **Handles obfuscated code**: strategies for navigating ProGuard/R8 output\n\n## Requirements\n\n**Required:**\n- Java JDK 17+\n- [jadx](https://github.com/skylot/jadx) (CLI)\n\n**Optional (recommended):**\n- [Vineflower](https://github.com/Vineflower/vineflower) or [Fernflower](https://github.com/JetBrains/fernflower) — better output on complex Java code\n- [dex2jar](https://github.com/pxb1988/dex2jar) — needed to use Fernflower on APK/DEX files\n\nSee `plugins/android-reverse-engineering/skills/android-reverse-engineering/references/setup-guide.md` for detailed installation instructions.\n\n## Installation\n\n### From GitHub (recommended)\n\nInside Claude Code, run:\n\n```\n/plugin marketplace add SimoneAvogadro/android-reverse-engineering-skill\n/plugin install android-reverse-engineering@android-reverse-engineering-skill\n```\n\nThe skill will be permanently available in all future sessions.\n\n### From a local clone\n\n```bash\ngit clone https://github.com/SimoneAvogadro/android-reverse-engineering-skill.git\n```\n\nThen in Claude Code:\n\n```\n/plugin mark...",
+        "metadata": {
+          "description": "Claude Code skill to support Android app's reverse engineering",
+          "fetched_at": "2026-04-26T07:26:07+0800",
+          "lane": "github-trending-weekly",
+          "language": "Shell",
+          "rank": 6,
+          "repo": "SimoneAvogadro/android-reverse-engineering-skill",
+          "source": "github-trending",
+          "stars_this_week": 2258,
+          "title": "android-reverse-engineering-skill",
+          "type": "trending-weekly",
+          "url": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill"
+        }
+      },
+      "source_snippet": "Claude Code skill to support Android app's reverse engineering\n\n## Trending Context\n\n- Rank: #6 on GitHub Trending Weekly\n- Language: Shell\n- Stars this week: 2258\n\n## Description\n\nClaude Code skill to support Android app's reverse engineering\n\n## README\n\n# Android Reverse Engineering & API Extraction — Claude Code skill\n\nA Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files and **extracts the HTTP APIs** used by the app — Retrofit endpoints, OkHttp calls, hardcoded URLs, authentication patterns — so you can document and reproduce them without the original source code.\n\n## What it does\n\n- **Decompiles** APK, XAPK, JAR, and AAR files using jadx and Fernflower/Vineflower (single engine or side-by-side comparison)\n- **Extracts and documents APIs**: Retrofit endpoints, OkHttp calls, hardcoded URLs, auth headers and tokens\n- **Traces call flows** from Activities/Fragments through ViewModels and repositories down to HTTP calls\n- **Analyzes** app structure: manifest, packages, architecture patterns\n- **Handles obfuscated code**: strategies for navigating ProGuard/R8 output\n\n## Requirements\n\n**Required:**\n- Java JDK 17+\n- [jadx](https://github.com/skylot/jadx) (CLI)\n\n**Option...",
+      "source_url": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill",
+      "title": "SimoneAvogadro/android-reverse-engineering-skill"
+    },
+    {
+      "candidate_source": "Tracer-Cloud__opensre__trending-weekly.md",
+      "id": "repo:Tracer-Cloud/opensre",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #8 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 1623\n\n## Description\n\nBuild your own AI SRE agents. The open source toolkit for the AI era ✨\n\n## README\n\n<div align=\"center\">\n\n<p align=\"center\">\n  <img src=\"docs/logo/opensre-logomark-full.svg\" alt=\"OpenSRE\" width=\"360\" />\n</p>\n\n<h1>OpenSRE: Build Your Own AI SRE Agents</h1>\n\n\n<p>The open-source framework for AI SRE agents, and the training and evaluation environment they need to improve. Connect the 60+ tools you already run, define your own workflows, and investigate incidents on your own infrastructure.</p>\n\n<p>\n  <a href=\"https://github.com/Tracer-Cloud/opensre/stargazers\"><img src=\"https://img.shields.io/github/stars/Tracer-Cloud/opensre?style=flat-square&color=FF6B00\" alt=\"Stars\"></a>\n  <a href=\"https://github.com/Tracer-Cloud/opensre/blob/main/LICENSE\"><img src=\"https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square\" alt=\"License\"></a>\n  <a href=\"https://github.com/Tracer-Cloud/opensre/blob/main/.github/workflows/ci.yml\"><img src=\"https://img.shields.io/github/actions/workflow/status/Tracer-Cloud/opensre/ci.yml?style=flat-square&label=CI\" alt=\"CI\"></a>\n  <img src=\"https://img.shields.io/badge/open%20source-forever-brightgreen?style=flat-square\" alt=\"Open Source\">\n  <a href=\"https://discord.gg/7NTpevXf7w\"><img src=\"https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=flat-square&logo=discord&logoColor=white\" alt=\"Discord\"></a>\n \n</p>\n<a href=\"https://trendshift.io/repositories/25889\" target=\"_blank\">\n  <img\n    src=\"https://trendshift.io/api/badge/repositories/25889\"\n    alt=\"Tracer-Cloud%2Fopensre | Trendshift\"\n    style=\"height: 30px; width: auto;\"\n    height=\"30\"\n  />\n</a>\n\n<p align=\"center\">\n  <strong>\n    <a href=\"https://www.opensre.com/docs/quickstart\">Quickstart</a> ·\n    <a href=\"https://www.opensre.com/docs\">Docs</a> ·\n    <a href=\"https://tracer.mintlify.app/faq\">FAQ</a> ·\n    <a href=\"https://trust.tracer.cloud/\">Security</a>...",
+        "metadata": {
+          "description": "Build your own AI SRE agents. The open source toolkit for the AI era ✨",
+          "fetched_at": "2026-04-26T07:26:10+0800",
+          "lane": "github-trending-weekly",
+          "language": "Python",
+          "rank": 8,
+          "repo": "Tracer-Cloud/opensre",
+          "source": "github-trending",
+          "stars_this_week": 1623,
+          "title": "opensre",
+          "type": "trending-weekly",
+          "url": "https://github.com/Tracer-Cloud/opensre"
+        }
+      },
+      "source_snippet": "Build your own AI SRE agents. The open source toolkit for the AI era ✨\n\n## Trending Context\n\n- Rank: #8 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 1623\n\n## Description\n\nBuild your own AI SRE agents. The open source toolkit for the AI era ✨\n\n## README\n\n<div align=\"center\">\n\n<p align=\"center\">\n  <img src=\"docs/logo/opensre-logomark-full.svg\" alt=\"OpenSRE\" width=\"360\" />\n</p>\n\n<h1>OpenSRE: Build Your Own AI SRE Agents</h1>\n\n\n<p>The open-source framework for AI SRE agents, and the training and evaluation environment they need to improve. Connect the 60+ tools you already run, define your own workflows, and investigate incidents on your own infrastructure.</p>\n\n<p>\n  <a href=\"https://github.com/Tracer-Cloud/opensre/stargazers\"><img src=\"https://img.shields.io/github/stars/Tracer-Cloud/opensre?style=flat-square&color=FF6B00\" alt=\"Stars\"></a>\n  <a href=\"https://github.com/Tracer-Cloud/opensre/blob/main/LICENSE\"><img src=\"https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square\" alt=\"License\"></a>\n  <a href=\"https://github.com/Tracer-Cloud/opensre/blob/main/.github/workflows/ci.yml\"><img src=\"https://img.shields.io/github/actions/workflow/status/Tracer...",
+      "source_url": "https://github.com/Tracer-Cloud/opensre",
+      "title": "Tracer-Cloud/opensre"
+    },
+    {
+      "candidate_source": "Z4nzu__hackingtool__trending-weekly.md",
+      "id": "repo:Z4nzu/hackingtool",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #12 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 3779\n\n## Description\n\nALL IN ONE Hacking Tool For Hackers\n\n## README\n\n<div align=\"center\">\n\n<img src=\"images/logo.svg\" alt=\"HackingTool\" width=\"600\">\n\n<p><b>All-in-One Hacking Tool for Security Researchers & Pentesters</b></p>\n\n[![License](https://img.shields.io/github/license/Z4nzu/hackingtool)](LICENSE)&nbsp;\n[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)&nbsp;\n[![Version](https://img.shields.io/badge/v2.0.0-00FF88?style=flat-square)](#)&nbsp;\n[![Stars](https://img.shields.io/github/stars/Z4nzu/hackingtool?style=flat-square&color=yellow)](https://github.com/Z4nzu/hackingtool/stargazers)&nbsp;\n[![Forks](https://img.shields.io/github/forks/Z4nzu/hackingtool?style=flat-square&color=blue)](https://github.com/Z4nzu/hackingtool/network/members)&nbsp;\n[![Issues](https://img.shields.io/github/issues/Z4nzu/hackingtool?style=flat-square&color=red)](https://github.com/Z4nzu/hackingtool/issues)&nbsp;\n[![Last Commit](https://img.shields.io/github/last-commit/Z4nzu/hackingtool?style=flat-square&color=00FF88)](https://github.com/Z4nzu/hackingtool/commits/master)\n\n![](https://img.shields.io/badge/20_Categories-7B61FF?style=for-the-badge)\n![](https://img.shields.io/badge/185+_Tools-00FF88?style=for-the-badge)\n![](https://img.shields.io/badge/19_Tags-FF61DC?style=for-the-badge)\n![](https://img.shields.io/badge/Linux_%7C_Kali_%7C_Parrot_%7C_macOS-FFA116?style=for-the-badge&logo=linux&logoColor=white)\n\n<a href=\"#installation\"><img src=\"https://img.shields.io/badge/Install_Now-00FF88?style=for-the-badge&logo=rocket&logoColor=black\" alt=\"Install Now\"></a>&nbsp;\n<a href=\"#quick-commands\"><img src=\"https://img.shields.io/badge/Quick_Commands-7B61FF?style=for-the-badge&logo=terminal&logoColor=white\" alt=\"Quick Commands\"></a>&nbsp;\n<a href=\"https://github.com/Z4nzu/hackingtool/issues/new?template=tool_request...",
+        "metadata": {
+          "description": "ALL IN ONE Hacking Tool For Hackers",
+          "fetched_at": "2026-04-26T07:26:14+0800",
+          "lane": "github-trending-weekly",
+          "language": "Python",
+          "rank": 12,
+          "repo": "Z4nzu/hackingtool",
+          "source": "github-trending",
+          "stars_this_week": 3779,
+          "title": "hackingtool",
+          "type": "trending-weekly",
+          "url": "https://github.com/Z4nzu/hackingtool"
+        }
+      },
+      "source_snippet": "ALL IN ONE Hacking Tool For Hackers\n\n## Trending Context\n\n- Rank: #12 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 3779\n\n## Description\n\nALL IN ONE Hacking Tool For Hackers\n\n## README\n\n<div align=\"center\">\n\n<img src=\"images/logo.svg\" alt=\"HackingTool\" width=\"600\">\n\n<p><b>All-in-One Hacking Tool for Security Researchers & Pentesters</b></p>\n\n[![License](https://img.shields.io/github/license/Z4nzu/hackingtool)](LICENSE)&nbsp;\n[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)&nbsp;\n[![Version](https://img.shields.io/badge/v2.0.0-00FF88?style=flat-square)](#)&nbsp;\n[![Stars](https://img.shields.io/github/stars/Z4nzu/hackingtool?style=flat-square&color=yellow)](https://github.com/Z4nzu/hackingtool/stargazers)&nbsp;\n[![Forks](https://img.shields.io/github/forks/Z4nzu/hackingtool?style=flat-square&color=blue)](https://github.com/Z4nzu/hackingtool/network/members)&nbsp;\n[![Issues](https://img.shields.io/github/issues/Z4nzu/hackingtool?style=flat-square&color=red)](https://github.com/Z4nzu/hackingtool/issues)&nbsp;\n[![Last Commit](https://img.shields.io/github/last-commit/Z4nzu/hackingtool...",
+      "source_url": "https://github.com/Z4nzu/hackingtool",
+      "title": "Z4nzu/hackingtool"
+    },
+    {
+      "candidate_source": "deepseek-ai__DeepGEMM__trending-weekly.md",
+      "id": "repo:deepseek-ai/DeepGEMM",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #10 on GitHub Trending Weekly\n- Language: Cuda\n- Stars this week: 605\n\n## Description\n\nDeepGEMM: clean and efficient FP8 GEMM kernels with fine-grained scaling\n\n## README\n\n# DeepGEMM\n\nDeepGEMM is a unified, high-performance tensor core kernel library that brings together the key computation primitives of modern large language models — GEMMs (FP8, FP4, BF16), fused MoE with overlapped communication (Mega MoE), MQA scoring for the lightning indexer, HyperConnection (HC), and more — into a single, cohesive CUDA codebase. All kernels are compiled at runtime via a lightweight Just-In-Time (JIT) module, requiring no CUDA compilation during installation.\n\nDeepGEMM leverages some concepts from [CUTLASS](https://github.com/nvidia/cutlass) and [CuTe](https://github.com/NVIDIA/cutlass/tree/main/include/cute), but avoids heavy reliance on their templates or algebras. The library is designed for simplicity, with only a limited number of core kernel functions, making it a clean and accessible resource for learning NVIDIA GPU kernel optimization techniques.\n\nDespite its lightweight design, DeepGEMM's performance matches or exceeds expert-tuned libraries across various matrix shapes.\n\n## News\n\n- 2026.04.16: Mega MoE, FP8xFP4 GEMM, FP4 Indexer, PDL, faster JIT compilation and more.\n    - Please see [#304](https://github.com/deepseek-ai/DeepGEMM/pull/304) for more details.\n    - For Mega MoE benchmarks, refer to [#316](https://github.com/deepseek-ai/DeepGEMM/pull/316).\n- 2025.09.28: DeepGEMM now supports scoring kernels (weighted ReLU MQA logits) for the lightning indexer for DeepSeek v3.2.\n    - Please see [#200](https://github.com/deepseek-ai/DeepGEMM/pull/200) for more details.\n- 2025.07.20: DeepGEMM now supports both SM90/SM100, and has a full refactor with a low-CPU-overhead JIT CPP module.\n    - NVRTC and post-compilation SASS optimization are all disabled.\n    - NVRTC will be supported later.\n    - As NVCC 12.9 will automatically do the FFMA inter...",
+        "metadata": {
+          "description": "DeepGEMM: clean and efficient FP8 GEMM kernels with fine-grained scaling",
+          "fetched_at": "2026-04-26T07:26:13+0800",
+          "lane": "github-trending-weekly",
+          "language": "Cuda",
+          "rank": 10,
+          "repo": "deepseek-ai/DeepGEMM",
+          "source": "github-trending",
+          "stars_this_week": 605,
+          "title": "DeepGEMM",
+          "type": "trending-weekly",
+          "url": "https://github.com/deepseek-ai/DeepGEMM"
+        }
+      },
+      "source_snippet": "DeepGEMM: clean and efficient FP8 GEMM kernels with fine-grained scaling\n\n## Trending Context\n\n- Rank: #10 on GitHub Trending Weekly\n- Language: Cuda\n- Stars this week: 605\n\n## Description\n\nDeepGEMM: clean and efficient FP8 GEMM kernels with fine-grained scaling\n\n## README\n\n# DeepGEMM\n\nDeepGEMM is a unified, high-performance tensor core kernel library that brings together the key computation primitives of modern large language models — GEMMs (FP8, FP4, BF16), fused MoE with overlapped communication (Mega MoE), MQA scoring for the lightning indexer, HyperConnection (HC), and more — into a single, cohesive CUDA codebase. All kernels are compiled at runtime via a lightweight Just-In-Time (JIT) module, requiring no CUDA compilation during installation.\n\nDeepGEMM leverages some concepts from [CUTLASS](https://github.com/nvidia/cutlass) and [CuTe](https://github.com/NVIDIA/cutlass/tree/main/include/cute), but avoids heavy reliance on their templates or algebras. The library is designed for simplicity, with only a limited number of core kernel functions, making it a clean and accessible resource for learning NVIDIA GPU kernel optimization techniques.\n\nDespite its lightweight design, Deep...",
+      "source_url": "https://github.com/deepseek-ai/DeepGEMM",
+      "title": "deepseek-ai/DeepGEMM"
+    },
+    {
+      "candidate_source": "forrestchang__andrej-karpathy-skills__trending-weekly.md",
+      "id": "repo:forrestchang/andrej-karpathy-skills",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #2 on GitHub Trending Weekly\n- Language: \n- Stars this week: 29435\n\n## Description\n\nA single CLAUDE.md file to improve Claude Code behavior, derived from Andrej Karpathy's observations on LLM coding pitfalls.\n\n## README\n\n# Karpathy-Inspired Claude Code Guidelines\n\n> Check out my new project [Multica](https://github.com/multica-ai/multica) — an open-source platform for running and managing coding agents with reusable skills.\n>\n> Follow me on X: [https://x.com/jiayuan_jy](https://x.com/jiayuan_jy)\n\nA single `CLAUDE.md` file to improve Claude Code behavior, derived from [Andrej Karpathy's observations](https://x.com/karpathy/status/2015883857489522876) on LLM coding pitfalls.\n\nEnglish | [简体中文](./README.zh.md)\n\n## The Problems\n\nFrom Andrej's post:\n\n> \"The models make wrong assumptions on your behalf and just run along with them without checking. They don't manage their confusion, don't seek clarifications, don't surface inconsistencies, don't present tradeoffs, don't push back when they should.\"\n\n> \"They really like to overcomplicate code and APIs, bloat abstractions, don't clean up dead code... implement a bloated construction over 1000 lines when 100 would do.\"\n\n> \"They still sometimes change/remove comments and code they don't sufficiently understand as side effects, even if orthogonal to the task.\"\n\n## The Solution\n\nFour principles in one file that directly address these issues:\n\n| Principle | Addresses |\n|-----------|-----------|\n| **Think Before Coding** | Wrong assumptions, hidden confusion, missing tradeoffs |\n| **Simplicity First** | Overcomplication, bloated abstractions |\n| **Surgical Changes** | Orthogonal edits, touching code you shouldn't |\n| **Goal-Driven Execution** | Leverage through tests-first, verifiable success criteria |\n\n## The Four Principles in Detail\n\n### 1. Think Before Coding\n\n**Don't assume. Don't hide confusion. Surface tradeoffs.**\n\nLLMs often pick an interpretation silently and run with it. This principle for...",
+        "metadata": {
+          "description": "A single CLAUDE.md file to improve Claude Code behavior, derived from Andrej Karpathy's observations on LLM coding pitfalls.",
+          "fetched_at": "2026-04-26T07:26:03+0800",
+          "lane": "github-trending-weekly",
+          "language": "",
+          "rank": 2,
+          "repo": "forrestchang/andrej-karpathy-skills",
+          "source": "github-trending",
+          "stars_this_week": 29435,
+          "title": "andrej-karpathy-skills",
+          "type": "trending-weekly",
+          "url": "https://github.com/forrestchang/andrej-karpathy-skills"
+        }
+      },
+      "source_snippet": "A single CLAUDE.md file to improve Claude Code behavior, derived from Andrej Karpathy's observations on LLM coding pitfalls.\n\n## Trending Context\n\n- Rank: #2 on GitHub Trending Weekly\n- Language: \n- Stars this week: 29435\n\n## Description\n\nA single CLAUDE.md file to improve Claude Code behavior, derived from Andrej Karpathy's observations on LLM coding pitfalls.\n\n## README\n\n# Karpathy-Inspired Claude Code Guidelines\n\n> Check out my new project [Multica](https://github.com/multica-ai/multica) — an open-source platform for running and managing coding agents with reusable skills.\n>\n> Follow me on X: [https://x.com/jiayuan_jy](https://x.com/jiayuan_jy)\n\nA single `CLAUDE.md` file to improve Claude Code behavior, derived from [Andrej Karpathy's observations](https://x.com/karpathy/status/2015883857489522876) on LLM coding pitfalls.\n\nEnglish | [简体中文](./README.zh.md)\n\n## The Problems\n\nFrom Andrej's post:\n\n> \"The models make wrong assumptions on your behalf and just run along with them without checking. They don't manage their confusion, don't seek clarifications, don't surface inconsistencies, don't present tradeoffs, don't push back when they should.\"\n\n> \"They really like to overcomplicat...",
+      "source_url": "https://github.com/forrestchang/andrej-karpathy-skills",
+      "title": "forrestchang/andrej-karpathy-skills"
+    },
+    {
+      "candidate_source": "lsdefine__GenericAgent__trending-weekly.md",
+      "id": "repo:lsdefine/GenericAgent",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #5 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 3483\n\n## Description\n\nSelf-evolving agent: grows skill tree from 3.3K-line seed, achieving full system control with 6x less token consumption\n\n## README\n\n<div align=\"center\">\n<img src=\"assets/images/bar.jpg\" width=\"880\"/>\n\n<a href=\"https://trendshift.io/repositories/25944\" target=\"_blank\"><img src=\"https://trendshift.io/api/badge/repositories/25944\" alt=\"lsdefine%2FGenericAgent | Trendshift\" style=\"width: 250px; height: 55px;\" width=\"250\" height=\"55\"/></a>\n\n</div>\n\n<p align=\"center\">\n  <a href=\"#english\">English</a> | <a href=\"#chinese\">中文</a> | 📄 Technical Report:&nbsp;<a href=\"https://arxiv.org/abs/2604.17091\"><img src=\"https://img.shields.io/badge/arXiv-2604.17091-b31b1b?logo=arxiv&logoColor=white\" alt=\"arXiv\" height=\"18\"/></a>&nbsp;<a href=\"assets/GenericAgent_Technical_Report.pdf\"><img src=\"https://img.shields.io/badge/-PDF-EA4335?logo=adobeacrobatreader&logoColor=white\" alt=\"Technical Report PDF\" height=\"18\"/></a>&nbsp;<a href=\"https://github.com/JinyiHan99/GA-Technical-Report\"><img src=\"https://img.shields.io/badge/-Code%20%26%20Data-181717?logo=github&logoColor=white\" alt=\"Experiments & Reproduction Repo\" height=\"18\"/></a> | 📘 <a href=\"https://datawhalechina.github.io/hello-generic-agent/\">教程</a>\n</p>\n\n---\n<a name=\"english\"></a>\n## 🌟 Overview\n\n**GenericAgent** is a minimal, self-evolving autonomous agent framework. Its core is just **~3K lines of code**. Through **9 atomic tools + a ~100-line Agent Loop**, it grants any LLM system-level control over a local computer — covering browser, terminal, filesystem, keyboard/mouse input, screen vision, and mobile devices (ADB).\n\nIts design philosophy: **don't preload skills — evolve them.**\n\nEvery time GenericAgent solves a new task, it automatically crystallizes the execution path into an skill for direct reuse later. The longer you use it, the more skills accumulate — forming a skill tree that belongs entirely to you, g...",
+        "metadata": {
+          "description": "Self-evolving agent: grows skill tree from 3.3K-line seed, achieving full system control with 6x less token consumption",
+          "fetched_at": "2026-04-26T07:26:06+0800",
+          "lane": "github-trending-weekly",
+          "language": "Python",
+          "rank": 5,
+          "repo": "lsdefine/GenericAgent",
+          "source": "github-trending",
+          "stars_this_week": 3483,
+          "title": "GenericAgent",
+          "type": "trending-weekly",
+          "url": "https://github.com/lsdefine/GenericAgent"
+        }
+      },
+      "source_snippet": "Self-evolving agent: grows skill tree from 3.3K-line seed, achieving full system control with 6x less token consumption\n\n## Trending Context\n\n- Rank: #5 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 3483\n\n## Description\n\nSelf-evolving agent: grows skill tree from 3.3K-line seed, achieving full system control with 6x less token consumption\n\n## README\n\n<div align=\"center\">\n<img src=\"assets/images/bar.jpg\" width=\"880\"/>\n\n<a href=\"https://trendshift.io/repositories/25944\" target=\"_blank\"><img src=\"https://trendshift.io/api/badge/repositories/25944\" alt=\"lsdefine%2FGenericAgent | Trendshift\" style=\"width: 250px; height: 55px;\" width=\"250\" height=\"55\"/></a>\n\n</div>\n\n<p align=\"center\">\n  <a href=\"#english\">English</a> | <a href=\"#chinese\">中文</a> | 📄 Technical Report:&nbsp;<a href=\"https://arxiv.org/abs/2604.17091\"><img src=\"https://img.shields.io/badge/arXiv-2604.17091-b31b1b?logo=arxiv&logoColor=white\" alt=\"arXiv\" height=\"18\"/></a>&nbsp;<a href=\"assets/GenericAgent_Technical_Report.pdf\"><img src=\"https://img.shields.io/badge/-PDF-EA4335?logo=adobeacrobatreader&logoColor=white\" alt=\"Technical Report PDF\" height=\"18\"/></a>&nbsp;<a href=\"https://github.com/JinyiHan99/GA-T...",
+      "source_url": "https://github.com/lsdefine/GenericAgent",
+      "title": "lsdefine/GenericAgent"
+    },
+    {
+      "candidate_source": "multica-ai__multica__trending-weekly.md",
+      "id": "repo:multica-ai/multica",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #11 on GitHub Trending Weekly\n- Language: TypeScript\n- Stars this week: 5421\n\n## Description\n\nThe open-source managed agents platform. Turn coding agents into real teammates — assign tasks, track progress, compound skills.\n\n## README\n\n<p align=\"center\">\n  <img src=\"docs/assets/banner.jpg\" alt=\"Multica — humans and agents, side by side\" width=\"100%\">\n</p>\n\n<div align=\"center\">\n\n<picture>\n  <source media=\"(prefers-color-scheme: dark)\" srcset=\"docs/assets/logo-dark.svg\">\n  <source media=\"(prefers-color-scheme: light)\" srcset=\"docs/assets/logo-light.svg\">\n  <img alt=\"Multica\" src=\"docs/assets/logo-light.svg\" width=\"50\">\n</picture>\n\n# Multica\n\n**Your next 10 hires won't be human.**\n\nThe open-source managed agents platform.<br/>\nTurn coding agents into real teammates — assign tasks, track progress, compound skills.\n\n[![CI](https://github.com/multica-ai/multica/actions/workflows/ci.yml/badge.svg)](https://github.com/multica-ai/multica/actions/workflows/ci.yml)\n[![GitHub stars](https://img.shields.io/github/stars/multica-ai/multica?style=flat)](https://github.com/multica-ai/multica/stargazers)\n\n[Website](https://multica.ai) · [Cloud](https://multica.ai/app) · [X](https://x.com/MulticaAI) · [Self-Hosting](SELF_HOSTING.md) · [Contributing](CONTRIBUTING.md)\n\n**English | [简体中文](README.zh-CN.md)**\n\n</div>\n\n## What is Multica?\n\nMultica turns coding agents into real teammates. Assign issues to an agent like you'd assign to a colleague — they'll pick up the work, write code, report blockers, and update statuses autonomously.\n\nNo more copy-pasting prompts. No more babysitting runs. Your agents show up on the board, participate in conversations, and compound reusable skills over time. Think of it as open-source infrastructure for managed agents — vendor-neutral, self-hosted, and designed for human + AI teams. Works with **Claude Code**, **Codex**, **OpenClaw**, **OpenCode**, **Hermes**, **Gemini**, **Pi**, and **Cursor Agent**.\n\n<p align=\"center\">\n  <img...",
+        "metadata": {
+          "description": "The open-source managed agents platform. Turn coding agents into real teammates — assign tasks, track progress, compound skills.",
+          "fetched_at": "2026-04-26T07:26:13+0800",
+          "lane": "github-trending-weekly",
+          "language": "TypeScript",
+          "rank": 11,
+          "repo": "multica-ai/multica",
+          "source": "github-trending",
+          "stars_this_week": 5421,
+          "title": "multica",
+          "type": "trending-weekly",
+          "url": "https://github.com/multica-ai/multica"
+        }
+      },
+      "source_snippet": "The open-source managed agents platform. Turn coding agents into real teammates — assign tasks, track progress, compound skills.\n\n## Trending Context\n\n- Rank: #11 on GitHub Trending Weekly\n- Language: TypeScript\n- Stars this week: 5421\n\n## Description\n\nThe open-source managed agents platform. Turn coding agents into real teammates — assign tasks, track progress, compound skills.\n\n## README\n\n<p align=\"center\">\n  <img src=\"docs/assets/banner.jpg\" alt=\"Multica — humans and agents, side by side\" width=\"100%\">\n</p>\n\n<div align=\"center\">\n\n<picture>\n  <source media=\"(prefers-color-scheme: dark)\" srcset=\"docs/assets/logo-dark.svg\">\n  <source media=\"(prefers-color-scheme: light)\" srcset=\"docs/assets/logo-light.svg\">\n  <img alt=\"Multica\" src=\"docs/assets/logo-light.svg\" width=\"50\">\n</picture>\n\n# Multica\n\n**Your next 10 hires won't be human.**\n\nThe open-source managed agents platform.<br/>\nTurn coding agents into real teammates — assign tasks, track progress, compound skills.\n\n[![CI](https://github.com/multica-ai/multica/actions/workflows/ci.yml/badge.svg)](https://github.com/multica-ai/multica/actions/workflows/ci.yml)\n[![GitHub stars](https://img.shields.io/github/stars/multica-ai/multica?...",
+      "source_url": "https://github.com/multica-ai/multica",
+      "title": "multica-ai/multica"
+    },
+    {
+      "candidate_source": "openai__openai-agents-python__trending-weekly.md",
+      "id": "repo:openai/openai-agents-python",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #9 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 3372\n\n## Description\n\nA lightweight, powerful framework for multi-agent workflows\n\n## README\n\n# OpenAI Agents SDK [![PyPI](https://img.shields.io/pypi/v/openai-agents?label=pypi%20package)](https://pypi.org/project/openai-agents/)\n\nThe OpenAI Agents SDK is a lightweight yet powerful framework for building multi-agent workflows. It is provider-agnostic, supporting the OpenAI Responses and Chat Completions APIs, as well as 100+ other LLMs.\n\n<img src=\"https://cdn.openai.com/API/docs/images/orchestration.png\" alt=\"Image of the Agents Tracing UI\" style=\"max-height: 803px;\">\n\n> [!NOTE]\n> Looking for the JavaScript/TypeScript version? Check out [Agents SDK JS/TS](https://github.com/openai/openai-agents-js).\n\n### Core concepts:\n\n1. [**Agents**](https://openai.github.io/openai-agents-python/agents): LLMs configured with instructions, tools, guardrails, and handoffs\n1. [**Sandbox Agents**](https://openai.github.io/openai-agents-python/sandbox_agents): Agents preconfigured to work with a container to perform work over long time horizons.\n1. **[Agents as tools](https://openai.github.io/openai-agents-python/tools/#agents-as-tools) / [Handoffs](https://openai.github.io/openai-agents-python/handoffs/)**: Delegating to other agents for specific tasks\n1. [**Tools**](https://openai.github.io/openai-agents-python/tools/): Various Tools let agents take actions (functions, MCP, hosted tools)\n1. [**Guardrails**](https://openai.github.io/openai-agents-python/guardrails/): Configurable safety checks for input and output validation\n1. [**Human in the loop**](https://openai.github.io/openai-agents-python/human_in_the_loop/): Built-in mechanisms for involving humans across agent runs\n1. [**Sessions**](https://openai.github.io/openai-agents-python/sessions/): Automatic conversation history management across agent runs\n1. [**Tracing**](https://openai.github.io/openai-agents-python/tracing/): Built-i...",
+        "metadata": {
+          "description": "A lightweight, powerful framework for multi-agent workflows",
+          "fetched_at": "2026-04-26T07:26:11+0800",
+          "lane": "github-trending-weekly",
+          "language": "Python",
+          "rank": 9,
+          "repo": "openai/openai-agents-python",
+          "source": "github-trending",
+          "stars_this_week": 3372,
+          "title": "openai-agents-python",
+          "type": "trending-weekly",
+          "url": "https://github.com/openai/openai-agents-python"
+        }
+      },
+      "source_snippet": "A lightweight, powerful framework for multi-agent workflows\n\n## Trending Context\n\n- Rank: #9 on GitHub Trending Weekly\n- Language: Python\n- Stars this week: 3372\n\n## Description\n\nA lightweight, powerful framework for multi-agent workflows\n\n## README\n\n# OpenAI Agents SDK [![PyPI](https://img.shields.io/pypi/v/openai-agents?label=pypi%20package)](https://pypi.org/project/openai-agents/)\n\nThe OpenAI Agents SDK is a lightweight yet powerful framework for building multi-agent workflows. It is provider-agnostic, supporting the OpenAI Responses and Chat Completions APIs, as well as 100+ other LLMs.\n\n<img src=\"https://cdn.openai.com/API/docs/images/orchestration.png\" alt=\"Image of the Agents Tracing UI\" style=\"max-height: 803px;\">\n\n> [!NOTE]\n> Looking for the JavaScript/TypeScript version? Check out [Agents SDK JS/TS](https://github.com/openai/openai-agents-js).\n\n### Core concepts:\n\n1. [**Agents**](https://openai.github.io/openai-agents-python/agents): LLMs configured with instructions, tools, guardrails, and handoffs\n1. [**Sandbox Agents**](https://openai.github.io/openai-agents-python/sandbox_agents): Agents preconfigured to work with a container to perform work over long time horizons....",
+      "source_url": "https://github.com/openai/openai-agents-python",
+      "title": "openai/openai-agents-python"
+    },
+    {
+      "candidate_source": "thunderbird__thunderbolt__trending-weekly.md",
+      "id": "repo:thunderbird/thunderbolt",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #3 on GitHub Trending Weekly\n- Language: TypeScript\n- Stars this week: 2840\n\n## Description\n\nAI You Control: Choose your models. Own your data. Eliminate vendor lock-in.\n\n## README\n\n# Thunderbolt [![CI](https://github.com/thunderbird/thunderbolt/actions/workflows/ci.yml/badge.svg)](https://github.com/thunderbird/thunderbolt/actions/workflows/ci.yml)\n\n**AI You Control: Choose your models. Own your data. Eliminate vendor lock-in.**\n\n![Thunderbolt Main Dashboard](./docs/screenshots/main.png)\n\n> [!IMPORTANT]\n> ⚠️ **We are excited about the amount of interest Thunderbolt has been getting and want to clarify that it is still early and under active development**. Currently, we are targeting enterprise customers that want to deploy it on-prem. We encourage you to self-host it and try it out, but there are a few caveats we are still working on:\n>\n> - While we eventually plan to make Thunderbolt fully offline-first, it currently depends on authentication and search functionality (though you can disable search on the integrations screen in the app). You can [deploy your own backend with Docker](./deploy/README.md) and sign up in order to test it locally.\n> - You’ll need to add your own model providers - we don’t yet have a public inference endpoint. We recommend using Thunderbolt with [Ollama](https://ollama.com) or [llama.cpp](https://github.com/ggml-org/llama.cpp) if you want free local inference, or you can add API keys for any OpenAI-compatible model provider in the settings.\n\nThunderbolt is an open-source, cross-platform AI client that can be deployed on-prem anywhere.\n\n- 🌐 Available on all major desktop and mobile platforms: web, iOS, Android, Mac, Linux, and Windows.\n- 🧠 Compatible with frontier, local, and on-prem models.\n- 🙋 Enterprise features, support, and FDEs available.\n\n**Thunderbolt is under active development, currently undergoing a security audit, and preparing for enterprise production readiness.**\n\n## Need Help?\n\nFound a bug? Ha...",
+        "metadata": {
+          "description": "AI You Control: Choose your models. Own your data. Eliminate vendor lock-in.",
+          "fetched_at": "2026-04-26T07:26:05+0800",
+          "lane": "github-trending-weekly",
+          "language": "TypeScript",
+          "rank": 3,
+          "repo": "thunderbird/thunderbolt",
+          "source": "github-trending",
+          "stars_this_week": 2840,
+          "title": "thunderbolt",
+          "type": "trending-weekly",
+          "url": "https://github.com/thunderbird/thunderbolt"
+        }
+      },
+      "source_snippet": "AI You Control: Choose your models. Own your data. Eliminate vendor lock-in.\n\n## Trending Context\n\n- Rank: #3 on GitHub Trending Weekly\n- Language: TypeScript\n- Stars this week: 2840\n\n## Description\n\nAI You Control: Choose your models. Own your data. Eliminate vendor lock-in.\n\n## README\n\n# Thunderbolt [![CI](https://github.com/thunderbird/thunderbolt/actions/workflows/ci.yml/badge.svg)](https://github.com/thunderbird/thunderbolt/actions/workflows/ci.yml)\n\n**AI You Control: Choose your models. Own your data. Eliminate vendor lock-in.**\n\n![Thunderbolt Main Dashboard](./docs/screenshots/main.png)\n\n> [!IMPORTANT]\n> ⚠️ **We are excited about the amount of interest Thunderbolt has been getting and want to clarify that it is still early and under active development**. Currently, we are targeting enterprise customers that want to deploy it on-prem. We encourage you to self-host it and try it out, but there are a few caveats we are still working on:\n>\n> - While we eventually plan to make Thunderbolt fully offline-first, it currently depends on authentication and search functionality (though you can disable search on the integrations screen in the app). You can [deploy your own backend with...",
+      "source_url": "https://github.com/thunderbird/thunderbolt",
+      "title": "thunderbird/thunderbolt"
+    },
+    {
+      "candidate_source": "tractorjuice__arc-kit__trending-weekly.md",
+      "id": "repo:tractorjuice/arc-kit",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #7 on GitHub Trending Weekly\n- Language: HTML\n- Stars this week: 1054\n\n## Description\n\nEnterprise Architecture Governance &amp; Vendor Procurement Toolkit\n\n## README\n\n# ArcKit - Enterprise Architecture Governance Toolkit\n\n[![GitHub Stars](https://img.shields.io/github/stars/tractorjuice/arc-kit?style=flat&logo=github)](https://github.com/tractorjuice/arc-kit/stargazers)\n[![GitHub Forks](https://img.shields.io/github/forks/tractorjuice/arc-kit?style=flat&logo=github)](https://github.com/tractorjuice/arc-kit/network/members)\n[![License: MIT](https://img.shields.io/github/license/tractorjuice/arc-kit)](LICENSE)\n[![Latest Release](https://img.shields.io/github/v/release/tractorjuice/arc-kit)](https://github.com/tractorjuice/arc-kit/releases)\n[![GitHub Issues](https://img.shields.io/github/issues/tractorjuice/arc-kit)](https://github.com/tractorjuice/arc-kit/issues)\n[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tractorjuice/arc-kit)\n\n![ArcKit - Enterprise Architecture Governance Toolkit](docs/assets/arckit-banner-light.svg)\n\n**Build better enterprise architecture through structured governance, vendor procurement, and design review workflows.**\n\nArcKit is a toolkit for enterprise architects that transforms architecture governance from scattered documents into a systematic, AI-assisted workflow for:\n\n- 🏛️ Establishing and enforcing architecture principles\n- 👥 Analyzing stakeholder drivers, goals, and outcomes\n- 🛡️ Risk management (HM Treasury Orange Book)\n- 💼 Business case justification (HM Treasury Green Book SOBC)\n- 📋 Creating comprehensive requirements documents\n- 🗄️ Data modeling with ERD, GDPR compliance, and data governance\n- 🔬 Technology research with build vs buy analysis (web search powered)\n- ☁️ Azure-specific research using Microsoft Learn MCP for authoritative documentation\n- 🗺️ Strategic planning with Wardley Mapping\n- 📊 Generating visual architecture diagrams (Mermaid)\n- 🤝 Managing vendor RFP and selectio...",
+        "metadata": {
+          "description": "Enterprise Architecture Governance &amp; Vendor Procurement Toolkit",
+          "fetched_at": "2026-04-26T07:26:09+0800",
+          "lane": "github-trending-weekly",
+          "language": "HTML",
+          "rank": 7,
+          "repo": "tractorjuice/arc-kit",
+          "source": "github-trending",
+          "stars_this_week": 1054,
+          "title": "arc-kit",
+          "type": "trending-weekly",
+          "url": "https://github.com/tractorjuice/arc-kit"
+        }
+      },
+      "source_snippet": "Enterprise Architecture Governance &amp; Vendor Procurement Toolkit\n\n## Trending Context\n\n- Rank: #7 on GitHub Trending Weekly\n- Language: HTML\n- Stars this week: 1054\n\n## Description\n\nEnterprise Architecture Governance &amp; Vendor Procurement Toolkit\n\n## README\n\n# ArcKit - Enterprise Architecture Governance Toolkit\n\n[![GitHub Stars](https://img.shields.io/github/stars/tractorjuice/arc-kit?style=flat&logo=github)](https://github.com/tractorjuice/arc-kit/stargazers)\n[![GitHub Forks](https://img.shields.io/github/forks/tractorjuice/arc-kit?style=flat&logo=github)](https://github.com/tractorjuice/arc-kit/network/members)\n[![License: MIT](https://img.shields.io/github/license/tractorjuice/arc-kit)](LICENSE)\n[![Latest Release](https://img.shields.io/github/v/release/tractorjuice/arc-kit)](https://github.com/tractorjuice/arc-kit/releases)\n[![GitHub Issues](https://img.shields.io/github/issues/tractorjuice/arc-kit)](https://github.com/tractorjuice/arc-kit/issues)\n[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tractorjuice/arc-kit)\n\n![ArcKit - Enterprise Architecture Governance Toolkit](docs/assets/arckit-banner-light.svg)\n\n**Build better enterprise architecture t...",
+      "source_url": "https://github.com/tractorjuice/arc-kit",
+      "title": "tractorjuice/arc-kit"
+    },
+    {
+      "candidate_source": "zilliztech__claude-context__trending-weekly.md",
+      "id": "repo:zilliztech/claude-context",
+      "raw": {
+        "markdown": "## Trending Context\n\n- Rank: #4 on GitHub Trending Weekly\n- Language: TypeScript\n- Stars this week: 2878\n\n## Description\n\nCode search MCP for Claude Code. Make entire codebase the context for any coding agent.\n\n## README\n\n![](assets/claude-context.png)\n\n> 🆕 **Looking for persistent memory for Claude Code?** Check out [memsearch Claude Code plugin](https://github.com/zilliztech/memsearch/tree/main/plugins/claude-code) — a markdown-first memory system that gives your AI agent long-term memory across sessions.\n\n### Your entire codebase as Claude's context\n\n[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)\n[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg)](https://nodejs.org/)\n[![Documentation](https://img.shields.io/badge/Documentation-📚-orange.svg)](docs/)\n[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/zilliz.semanticcodesearch?label=VS%20Code%20Extension&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=zilliz.semanticcodesearch)\n[![npm - core](https://img.shields.io/npm/v/@zilliz/claude-context-core?label=%40zilliz%2Fclaude-context-core&logo=npm)](https://www.npmjs.com/package/@zilliz/claude-context-core)\n[![npm - mcp](https://img.shields.io/npm/v/@zilliz/claude-context-mcp?label=%40zilliz%2Fclaude-context-mcp&logo=npm)](https://www.npmjs.com/package/@zilliz/claude-context-mcp)\n[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/zilliz_universe.svg?style=social&label=Follow%20%40Zilliz)](https://twitter.com/zilliz_universe)\n[![DeepWiki](https://img.shields.io/badge/DeepWiki-AI%20Docs-purple.svg?logo=gitbook&logoColor=white)](https://deepwiki.com/zilliztech/claude-context)\n<a href=\"https://discord.gg/mKc3R95yE5\"><img height=\"20\" src=\"https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white\" alt=\"discord\" /></a>\n<a href=\"https://trendshift.io/repositories/15064\"><img src=\"https://trendshift....",
+        "metadata": {
+          "description": "Code search MCP for Claude Code. Make entire codebase the context for any coding agent.",
+          "fetched_at": "2026-04-26T07:26:05+0800",
+          "lane": "github-trending-weekly",
+          "language": "TypeScript",
+          "rank": 4,
+          "repo": "zilliztech/claude-context",
+          "source": "github-trending",
+          "stars_this_week": 2878,
+          "title": "claude-context",
+          "type": "trending-weekly",
+          "url": "https://github.com/zilliztech/claude-context"
+        }
+      },
+      "source_snippet": "Code search MCP for Claude Code. Make entire codebase the context for any coding agent.\n\n## Trending Context\n\n- Rank: #4 on GitHub Trending Weekly\n- Language: TypeScript\n- Stars this week: 2878\n\n## Description\n\nCode search MCP for Claude Code. Make entire codebase the context for any coding agent.\n\n## README\n\n![](assets/claude-context.png)\n\n> 🆕 **Looking for persistent memory for Claude Code?** Check out [memsearch Claude Code plugin](https://github.com/zilliztech/memsearch/tree/main/plugins/claude-code) — a markdown-first memory system that gives your AI agent long-term memory across sessions.\n\n### Your entire codebase as Claude's context\n\n[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)\n[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg)](https://nodejs.org/)\n[![Documentation](https://img.shields.io/badge/Documentation-📚-orange.svg)](docs/)\n[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/zilliz.semanticcodesearch?label=VS%20Code%20Extension&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=zilliz.semanticcodesearch)\n[![npm - core](https://img.shields.io/npm/v/...",
+      "source_url": "https://github.com/zilliztech/claude-context",
+      "title": "zilliztech/claude-context"
+    }
+  ],
+  "report_date": "2026-04-26",
+  "schema_version": 1,
+  "source_runtime_path": "/Users/haha/.daily-lane-data/signals/github-trending-weekly/2026-04-26/signals"
+}
