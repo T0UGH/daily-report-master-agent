@@ -99,6 +99,24 @@
 - 把 HN/X 的人话要求固化到 contract、validator、tests 或 runtime quality gate，不能只写 prompt。
 - 每次修复后，在本文件追加：改了哪些文件、commit、验证命令、真实日报 smoke 结果。
 
+#### Implementation progress — lane subagent vertical slice
+
+- Change: completed remaining Tasks 6-9 for the internal `github-ai-projects` worker path.
+- Details:
+  - Added deterministic GitHub repo aggregation from trending and cross-lane repo mentions.
+  - Added `side_artifacts.memory_markdown` and runtime `lane-memory/github-ai-projects.md` writing.
+  - Added configured compatibility memory artifact writing to `lane_workers.github_ai_projects.memory_repo_dir` without git commit/push.
+  - Added `build_lane_output()` dispatch so `github-ai-projects` uses its lane input and other lanes keep the local renderer.
+  - Added `github-ai-projects` lane input composition from GitHub Trending, X, Reddit, HN, HN search, and Product Hunt repo mentions.
+- Verification:
+  - `python3 -m pytest -q tests/test_github_ai_projects_worker.py tests/test_lane_workers.py tests/test_run_daily_report_flow.py -k 'worker_mode or github_ai_projects or cross_lane_repo_mentions'` -> `9 passed, 30 deselected`
+  - `python3 -m pytest -q tests/test_lane_contracts.py tests/test_lane_workers.py tests/test_lane_report_assembler.py tests/test_github_ai_projects_worker.py` -> `11 passed`
+  - `python3 -m pytest -q tests/test_run_daily_report_flow.py tests/test_signals_adapter.py` -> `144 passed`
+  - `python3 -m pytest -q` -> `178 passed`
+  - real-date worker smoke: `python3 helpers/run_daily_report_flow.py --report-date 2026-04-27 --config /tmp/daily-report-lane-worker-smoke-full.yaml --skip-collect --title-suffix 'lane-worker-smoke-full' --verbose` -> exit 0, `decision=generated`, `validation.status=passed`.
+  - artifact check: `lane-inputs/github-ai-projects.json`, `lane-outputs/github-ai-projects.json`, `lane-memory/github-ai-projects.md`, and `report.md` all exist; banned phrases `采集文本 / 保守看 / 摘要里能看到 / 先按标题本身交代主题` all false.
+- Result: master remains the only report entrypoint; lane worker artifacts are written under runtime `lane-inputs/`, `lane-outputs/`, and `lane-memory/`. Worker mode keeps default disabled in production config and requires `enabled_lanes` to match `fixed_section_order` for a run, so partial mode cannot silently drop columns.
+
 ## 改动记录模板
 
 ### YYYY-MM-DD

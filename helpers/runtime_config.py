@@ -30,6 +30,26 @@ def resolve_lane_item_limits(config: dict[str, Any]) -> dict[str, int]:
     return result
 
 
+def resolve_lane_worker_config(config: dict[str, Any]) -> dict[str, Any]:
+    raw = config.get("lane_workers") or {}
+    enabled = bool(raw.get("enabled", False))
+    mode = raw.get("mode", "local")
+    if mode not in {"local", "subagent"}:
+        raise ValueError("lane_workers.mode must be local or subagent")
+    enabled_lanes = raw.get("enabled_lanes") or []
+    if not isinstance(enabled_lanes, list) or not all(isinstance(lane, str) for lane in enabled_lanes):
+        raise ValueError("lane_workers.enabled_lanes must be list[str]")
+    github_ai_projects = raw.get("github_ai_projects") or {}
+    if not isinstance(github_ai_projects, dict):
+        raise ValueError("lane_workers.github_ai_projects must be object")
+    return {
+        "enabled": enabled,
+        "mode": mode,
+        "enabled_lanes": enabled_lanes,
+        "github_ai_projects": github_ai_projects,
+    }
+
+
 def resolve_lane_paragraph_targets(config: dict[str, Any]) -> dict[str, dict[str, int]]:
     reader_facing = config.get("reader_facing") or {}
     targets = reader_facing.get("lane_paragraph_targets") or {}

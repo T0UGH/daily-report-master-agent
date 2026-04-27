@@ -43,6 +43,7 @@ FALLBACK_SOURCE_URL_TEMPLATES = {
     "claude-code-watch": "https://github.com/example/claude-code-watch/{report_date}",
     "codex-watch": "https://github.com/example/codex-watch/{report_date}",
     "openclaw-watch": "https://github.com/example/openclaw-watch/{report_date}",
+    "github-ai-projects": "https://github.com/example/github-ai-projects/{report_date}",
     "github-trending-weekly": "https://github.com/example/github-trending-weekly/{report_date}",
     "product-hunt-watch": "https://www.producthunt.com/posts/product-hunt-watch-{report_date}",
     "polymarket-watch": "https://polymarket.com/event/polymarket-watch-{report_date}",
@@ -57,6 +58,7 @@ LINK_LABELS = {
     "claude-code-watch": "Release",
     "codex-watch": "GitHub",
     "openclaw-watch": "Release",
+    "github-ai-projects": "GitHub",
     "github-trending-weekly": "GitHub",
     "product-hunt-watch": "Product Hunt",
     "polymarket-watch": "Polymarket",
@@ -71,6 +73,7 @@ DEFAULT_LANE_ITEM_LIMITS = {
     "claude-code-watch": 10,
     "codex-watch": 10,
     "openclaw-watch": 10,
+    "github-ai-projects": 10,
     "github-trending-weekly": 10,
     "product-hunt-watch": 10,
     "polymarket-watch": 10,
@@ -79,6 +82,7 @@ DEFAULT_LANE_ITEM_LIMITS = {
 SECONDARY_ITEM_SCORE_FLOORS = {
     "reddit-watch": 10,
     "codex-watch": 10,
+    "github-ai-projects": 8,
     "github-trending-weekly": 8,
 }
 TOPIC_TOKEN_STOPWORDS = {
@@ -149,6 +153,7 @@ CONTENT_SECTION_PREFERENCES = {
     "claude-code-watch": ("summary", "release notes", "post"),
     "codex-watch": ("merged pr", "summary", "post"),
     "openclaw-watch": ("summary", "release notes", "post"),
+    "github-ai-projects": ("summary", "readme", "post"),
     "github-trending-weekly": ("summary", "readme", "post"),
     "product-hunt-watch": ("preview", "snapshot", "post"),
     "polymarket-watch": ("expectation", "outcome probabilities", "market strength"),
@@ -367,6 +372,12 @@ EDITOR_RULES = (
         "keywords": (("harness", "deterministic"), ("harness", "repeatable")),
         "headline": "harness builder 开始把 AI coding 的可重复性单独做成基础设施。",
         "detail": "这个趋势项目强调的不是再包一层 agent，而是把 AI coding 流程做得更可控、更可重复。",
+    },
+    {
+        "lane": "github-ai-projects",
+        "keywords": (("harness", "deterministic"), ("harness", "repeatable")),
+        "headline": "harness builder 开始把 AI coding 的可重复性单独做成基础设施。",
+        "detail": "这个 GitHub AI 项目强调的不是再包一层 agent，而是把 AI coding 流程做得更可控、更可重复。",
     },
     {
         "lane": "product-hunt-watch",
@@ -1518,7 +1529,7 @@ def can_add_secondary_candidate(
     score = int(candidate.get("_relevance_score", 0))
     if score < SECONDARY_ITEM_SCORE_FLOORS.get(lane_name, 0):
         return False
-    allowed_gap = 10 if lane_name == "github-trending-weekly" else 6
+    allowed_gap = 10 if lane_name in {"github-ai-projects", "github-trending-weekly"} else 6
     if top_score > 0 and score + allowed_gap < top_score:
         return False
 
@@ -2008,7 +2019,7 @@ def build_generic_headline(
         if focus_label:
             return f"{subject} 这一版把 {focus_label} 和可用性细节一起往前推。"
         return f"{subject} 这一版继续向产品可用性收口。"
-    if lane_name == "github-trending-weekly":
+    if lane_name in {"github-ai-projects", "github-trending-weekly"}:
         if focus_label:
             return f"{subject} 这周上榜，不只是因为热度，更因为它把重点放在 {focus_label} 上。"
         return f"{subject} 仍然是本周值得看的趋势项目之一。"
@@ -2095,7 +2106,7 @@ def build_generic_detail(
         if focus_label:
             return f"这版同时推进 {focus_label} 和稳定性补丁，明显更偏向真实使用场景而不是概念展示。"
 
-    if lane_name == "github-trending-weekly":
+    if lane_name in {"github-ai-projects", "github-trending-weekly"}:
         if "harness" in normalized and ("deterministic" in normalized or "repeatable" in normalized):
             return "这个趋势项目强调的不是再包一层 agent，而是把 AI coding 流程做得更可控、更可重复。"
         if focus_label:
