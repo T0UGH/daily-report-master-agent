@@ -93,6 +93,9 @@
 - HN 输出需要从标题搬运改为“人话解释”：谁发了什么、是什么项目/讨论、核心事实、讨论点/卡点、为什么和 AI agent/coding workflow 相关。
 - X 输出需要落实 2026-04-24 定义的事实槽位：谁、做了什么、怎么做、结果/反馈、卡点、必要背景；原帖事实不足时降权或过滤。
 - X 推荐流 / X 关注流的条目数量需要单独检查：2026-04-27 重生成版里 X 推荐流只有 4 条、X 关注流只有 3 条；用户期望“之前应该是 10”的量级。需要追踪是 `lane_limit`、selection gate、publishability gate、跨日去重，还是低信号过滤过严导致有效条目数被压缩；质量过滤不能把 X 栏目缩到明显不够看的程度。
+  - 2026-04-27 追踪结论：不是 `lane_limit` 太小，主要是 X detail renderer 对若干有具体信息的帖子返回空字符串，导致后续 publishability/selection 无法补满；典型被误伤项包括 `@Rixhabh__` Claude Code 官方用法资料、`@steipete` clawsweeper/50 Codex 并行、`@garrytan` GBrain eval harness、`@gdb` Codex 构建能力判断等。
+  - 修复：补 X generic/source-fact detail 和 2026-04-27 live cases，让有 agent/coding 事实的短帖能生成可发布人话复述，同时保留广告/截断/低信号 gate。
+  - 验证：`python3 -m pytest -q tests/test_signals_adapter.py -k 'x_post_detail or noisy_x_candidate_gate_rejects_live_2026_04_27_low_signal_items'` 为 `6 passed`；完整 `python3 -m pytest -q` 为 `162 passed`；重生成 `python3 helpers/run_daily_report_flow.py --report-date 2026-04-27 --skip-collect --title-suffix '重生成版' --verbose` 通过，`x_lane_counts` 从 `x-feed: 4 / x-following: 3` 修复为 `x-feed: 10 / x-following: 10`，旧坏词 `采集文本 / 保守看 / 摘要里给出的直接变化 / 可以让读者复述 / HN 坏模板` 均为 0。
 - 把 HN/X 的人话要求固化到 contract、validator、tests 或 runtime quality gate，不能只写 prompt。
 - 每次修复后，在本文件追加：改了哪些文件、commit、验证命令、真实日报 smoke 结果。
 

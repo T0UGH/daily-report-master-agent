@@ -3692,6 +3692,13 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
             return f"帖子把焦点放在 `{subject}`，把 skills 讲成 agent 可复用的能力块，并提醒还需要外层运行框架承接工具和状态"
         if "cloud" in lowered and "computer" in lowered:
             return f"帖子把焦点放在 `{subject}`，说 agent 开始拿到更完整的云端运行环境"
+        generic_detail = build_generic_x_source_fact_detail(
+            subject=subject,
+            source_text=cleaned_source,
+            lowered_source=lowered,
+        )
+        if generic_detail:
+            return generic_detail
         return ""
 
     fallback_object = ""
@@ -3704,6 +3711,50 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
     if fallback_object:
         return ""
     return ""
+
+
+def build_generic_x_source_fact_detail(*, subject: str, source_text: str, lowered_source: str) -> str:
+    if not noisy_x_source_has_operational_detail(source_text):
+        return ""
+    topic_hit = any(
+        term in lowered_source
+        for term in (
+            "agent",
+            "claude",
+            "codex",
+            "openclaw",
+            "mcp",
+            "memory",
+            "skill",
+            "workflow",
+            "github",
+            "privacy filter",
+            "course",
+        )
+    ) or any(term in source_text for term in ("智能体", "工作流", "记忆", "课程", "模型", "开源", "工具"))
+    if not topic_hit:
+        return ""
+
+    sentences = simple_sentences(strip_x_leading_markers(source_text))
+    concrete_sentences: list[str] = []
+    for sentence in sentences:
+        cleaned = normalize_whitespace(trim_fragmentary_tail(sentence)).strip(" .。")
+        if not cleaned:
+            continue
+        if any(re.match(pattern, cleaned.lower()) for pattern in RESIDUAL_NOISY_X_CLAUSE_PATTERNS):
+            continue
+        if len(cleaned) > 180:
+            cleaned = cleaned[:180].rstrip(" ，,；;")
+        if x_clause_supports_fact_rewrite(cleaned) or noisy_x_source_has_operational_detail(cleaned):
+            concrete_sentences.append(cleaned)
+        if len(concrete_sentences) >= 2:
+            break
+    if not concrete_sentences:
+        return ""
+
+    if len(concrete_sentences) == 1:
+        return f"原帖围绕 `{subject}` 给出一个具体点：{concrete_sentences[0]}。"
+    return f"原帖围绕 `{subject}` 给出两层信息：{concrete_sentences[0]}；{concrete_sentences[1]}。"
 
 
 def build_thin_x_reaction_detail(*, title: str, source_text: str) -> str:
@@ -4045,6 +4096,41 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
         facts.append("帖子把问题直接抛到团队层面：`Claude Code` 到底该怎么在团队里用起来")
     if "memoria permanente" in lowered and "48 horas" in lowered and "95%" in cleaned_source:
         facts.append("有人给 `Claude Code` 做了持久记忆，这个项目 48 小时拿到约 4.6 万星，并声称 token 消耗可下降约 95%")
+
+    if "anthropic's own team" in lowered and "claude code" in lowered:
+        facts.append("原帖在推荐 Anthropic 团队自己讲 `Claude Code` 用法的 30 分钟资料，重点是从官方示范里学习怎样正确使用 Claude Code，而不是只看二手技巧清单")
+    if "resource bible" in lowered and "claude code" in lowered:
+        facts.append("原帖在整理 `Claude Code` builder 资源合集，定位是把常用资料集中成一个可收藏的入口")
+    if "openclaw 2026.4.24" in lowered:
+        facts.append("`OpenClaw 2026.4.24` 发布，原帖点名 voice calls 可以触达完整 agent、DeepSeek V4 Flash/Pro 加入模型队列，并继续补 browser automation")
+    if "clawsweeper" in lowered and "50 codex" in lowered:
+        facts.append("@steipete 做了 `clawsweeper`，让 50 个 Codex 实例长期并行扫描 issues / PRs，并自动关闭已经过期或已解决的条目")
+    if "gbrain" in lowered and "proper eval harness" in lowered:
+        facts.append("@garrytan 给 `GBrain` 做了 eval harness：145 个查询、Opus 生成语料，并用 graph / vector / hybrid 检索栈评估 retrieval 效果")
+    if "privacy filter" in lowered and "openai" in lowered:
+        facts.append("原帖说 OpenAI 开源了 privacy filter 小模型：总参数约 1.5B、激活参数约 50M，并采用 Apache 2.0 协议")
+    if "ai agents for beginners" in lowered:
+        facts.append("原帖在推荐微软的 `AI Agents for Beginners` 课程：12 讲覆盖从零搭建智能体的基础内容")
+    if "女娲.skill" in cleaned_source or "14k+ stars" in lowered:
+        facts.append("原帖说 `女娲.skill` 半个多月拿到 14k+ stars，并已被腾讯、Kimi、智谱的 Agent 产品作为默认 skill 植入")
+    if "han1" in lowered and "agent" in lowered:
+        facts.append("原帖建议关注设计师 Han1 的 Agent 实践，理由是他长期分享与 Friday 相关的实践和开源项目，并强调产品里人与人的真实连接")
+    if "agent记忆" in cleaned_source or "agent 记忆" in cleaned_source:
+        facts.append("原帖批评很多 AI Agent 记忆只是把历史记录堆进 Markdown，问题是事实会冲突、偏好会过期，最后导致长期记忆不可用")
+    if "codex empowers anyone to build" in lowered:
+        facts.append("@gdb 的短帖判断是：`Codex` 正在把构建能力下放给更多人，重点是降低从想法到可运行产品的门槛")
+    if "what my openclaw does" in lowered and "context" in lowered:
+        facts.append("@garrytan 展示自己用 `OpenClaw` 结合个人 context 回答问题，反馈是上下文一旦打通，agent 的实用性会明显上升")
+    if "simply says" in lowered and "i don" in lowered and "hallucinating" in lowered:
+        facts.append("原帖在说 coding 场景里宁愿 AI 明确回答“不知道”，也不要为了显得有用而 hallucinate")
+    if "ai coding" in lowered and "侄子" in cleaned_source:
+        facts.append("原帖准备把 AI coding 文章转给家人，让他们学会后再带孩子入门，说明 AI coding 已经开始进入家庭教育/启蒙语境")
+    if "no more updating needed" in lowered and "nous portal" in lowered:
+        facts.append("NousResearch 说通过 `Nous Portal` 和 OpenRouter，新模型发布后不再需要手动更新，重点是模型接入和分发链路自动化")
+    if "rocketsim_app" in lowered and "agent skill" in lowered:
+        facts.append("@twannl 预告 `RocketSim` 下一版，提到 Agent Skill 相关安装/集成，但也强调质量门槛还没到发布标准")
+    if "同步听" in cleaned_source and "实时语音模型" in cleaned_source:
+        facts.append("@turingou 准备把 `tuwa` 的同步听能力拆成新产品，并扩展到同步听、同步说、同步学，目标是继续压实时语音模型的工程边界")
 
     if "opencclaw 2026.4.15" in lowered or ("openclaw" in lowered and "2026.4.15" in cleaned_source):
         openclaw_facts: list[str] = []

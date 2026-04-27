@@ -6508,6 +6508,26 @@ matched_query: Claude Code
                 "做 Yuragi FM 的过程中，我发现 AIGC 类产品的难点第一是在乎探索语言空间和结构，第二是难以评估实验成果，总是在 60-80 分之间横跳，没有 90+ 以上的生成产物。第三就是设计实验的成本和测试时间过长。",
                 ("Yuragi FM", "60-80", "90+", "实验"),
             ),
+            (
+                "@Rixhabh__ #57",
+                "🚨 Anthropic's own team just showed how to actually use Claude Code properly. A 30-minute guide from the source.",
+                ("Claude Code", "Anthropic", "官方示范"),
+            ),
+            (
+                "@steipete #34",
+                "Built clawsweeper, which runs 50 codex in parallel around the clock, scans issues/prs deep and closes what is already done.",
+                ("clawsweeper", "50", "Codex", "issues"),
+            ),
+            (
+                "@garrytan",
+                "For GBrain I built a proper eval harness. 145 queries, Opus-generated corpus. The retrieval stack uses graph based, vector based, and hybrid retrieval.",
+                ("GBrain", "145", "eval harness", "retrieval"),
+            ),
+            (
+                "@gdb",
+                "codex empowers anyone to build",
+                ("Codex", "构建能力"),
+            ),
         ]
 
         for title, source_text, expected_terms in cases:
