@@ -6416,6 +6416,65 @@ matched_query: Claude Code
                 for term in expected_terms:
                     self.assertIn(term, detail)
 
+    def test_build_x_post_detail_covers_live_2026_04_27_human_retell_cases(self) -> None:
+        cases = [
+            (
+                "@dani_avila7 #32",
+                "Introducing Claude Code Hook - Context Timeline (Saving this to try later) Install with: npx claude-code-templates@lat",
+                ("Claude Code Hook", "Context Timeline", "claude-code-templates"),
+            ),
+            (
+                "@yaojingang #70",
+                "两周前，开源了第一个系统：GEOFlow 到今天，已经有1k Star了 作为一个非常细分场景里的开源系统，这个反馈其实挺超预期的 这个系统的功能复杂度还挺大的，集成了：CLI、Skill、爬虫、API、GEO工作流、自动化、AI友好度优化",
+                ("GEOFlow", "1k Star", "CLI", "Skill"),
+            ),
+            (
+                "@Pluvio9yte",
+                "现在 90% 用 AI 编程工具的人，Skill 管理方式还停留在手动复制粘贴到项目文件夹的原始时代。 志辉大佬花两周打磨的 skills-manage 直接把这个问题终结了 一个中央仓库 + 软链接，20多个平台一处改全部同步，Git",
+                ("skills-manage", "中央仓库", "软链接", "20 多个平台"),
+            ),
+            (
+                "@turingou",
+                "做 Yuragi FM 的过程中，我发现 AIGC 类产品的难点第一是在乎探索语言空间和结构，第二是难以评估实验成果，总是在 60-80 分之间横跳，没有 90+ 以上的生成产物。第三就是设计实验的成本和测试时间过长。",
+                ("Yuragi FM", "60-80", "90+", "实验"),
+            ),
+        ]
+
+        for title, source_text, expected_terms in cases:
+            with self.subTest(title=title):
+                detail = build_x_post_detail(lane_name="x-feed", title=title, source_text=source_text)
+                self.assertTrue(detail)
+                self.assertNotIn("采集文本", detail)
+                self.assertNotIn("保守看", detail)
+                self.assertNotIn("摘要里给出的直接变化", detail)
+                self.assertNotIn("可以让读者复述", detail)
+                for term in expected_terms:
+                    self.assertIn(term, detail)
+
+    def test_noisy_x_candidate_gate_rejects_live_2026_04_27_low_signal_items(self) -> None:
+        bad_cases = [
+            {
+                "lane": "x-feed",
+                "title": "@zstmfhy #94",
+                "source_snippet": "感谢大佬推荐，奶爸这边的政策就是不满意可以退款，用户的评价有口皆碑，我也很感谢大家的信任，谢谢 主打一个稳定性，专注于 OpenAI 👉 注册即用",
+                "excerpt": "感谢大佬推荐，奶爸这边的政策就是不满意可以退款，用户的评价有口皆碑，我也很感谢大家的信任，谢谢 主打一个稳定性，专注于 OpenAI 👉 注册即用",
+                "source_url": "https://x.com/zstmfhy/status/2048425813968834942",
+            },
+            {
+                "lane": "x-feed",
+                "title": "@GitTrend0x #29",
+                "source_snippet": "今天 GitHub 被工具到内存基建Agent军团彻底屠榜了🚀 5 个星标暴增最狠的项目，专业拆解下！ 1.",
+                "excerpt": "今天 GitHub 被工具到内存基建Agent军团彻底屠榜了🚀 5 个星标暴增最狠的项目，专业拆解下！ 1.",
+                "source_url": "https://x.com/GitTrend0x/status/2048223579767177365",
+            },
+        ]
+
+        from helpers.signals_adapter import noisy_x_candidate_has_specific_summary
+
+        for candidate in bad_cases:
+            with self.subTest(title=candidate["title"]):
+                self.assertFalse(noisy_x_candidate_has_specific_summary(candidate))
+
     def test_build_hacker_news_detail_covers_live_2026_04_27_cases(self) -> None:
         cases = [
             (

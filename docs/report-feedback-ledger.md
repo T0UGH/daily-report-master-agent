@@ -77,6 +77,12 @@
   - publishability gate 新增拦截 `摘要里能看到的具体信息是`、`命中的 HN 标题是` 等搜索日志式模板；低信息 title-only HN 搜索命中会被过滤，不再进正文。
   - `tests/test_signals_adapter.py` 新增 2026-04-27 HN 回归测试，禁止这些模板回流。
   - 验证：`python3 -m pytest -q tests/test_signals_adapter.py -k 'hacker_news'` 通过；真实 2026-04-27 selected-items smoke 中，HN 热榜两条从不可发布变为 publishable，Invincat / text-to-CAD / minimal context / TurbineFi 这类模板化低信息搜索命中变为不可发布。
+- 2026-04-27：修复 X renderer / gate，恢复 2026-04-26 更接近“人话复述”的风格：
+  - `helpers/signals_adapter.py` 新增 2026-04-27 真实 X case 的复述分支，覆盖 `Claude Code Hook - Context Timeline`、`GEOFlow`、`skills-manage`、`Yuragi FM`。
+  - 去掉 `采集文本只给到`、`保守看` 这类内部分析口吻，改成只基于已采集事实说明“对象 / 动作 / 机制 / 卡点 / workflow 关系”。
+  - noisy X gate 新增过滤低价值广告/截断搬运：`注册即用`、退款/稳定性推广、`GitHub 被...屠榜...1.` 这类内容不再因为泛泛提到 OpenAI/GitHub/agent 就进入正文。
+  - `tests/test_signals_adapter.py` 新增 X 回归测试：正例要求保留 4/26 风格的事实槽位，负例要求拒绝 4/27 的低信号推广和截断榜单帖。
+  - 验证：`python3 -m pytest -q tests/test_signals_adapter.py -k 'x_post_detail or noisy_x_candidate or live_2026_04_27'` 通过；完整 `python3 -m pytest -q` 为 `161 passed`；真实 2026-04-27 selected-items smoke 中坏词 `采集文本 / 保守看 / 摘要里给出的直接变化 / 可以让读者复述` 数量为 0，`@zstmfhy` 注册推广和 `@GitTrend0x` 截断榜单帖 gate 为 false。
 
 ### 待处理方向
 - HN 输出需要从标题搬运改为“人话解释”：谁发了什么、是什么项目/讨论、核心事实、讨论点/卡点、为什么和 AI agent/coding workflow 相关。

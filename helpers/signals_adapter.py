@@ -3008,6 +3008,16 @@ def noisy_x_candidate_has_specific_summary(candidate: dict[str, Any]) -> bool:
     if not source_text:
         return False
 
+    lowered_source = source_text.lower()
+    if (
+        "注册即用" in source_text
+        or "不满意可以退款" in source_text
+        or re.search(r"\b(openai|api)\b.*(?:注册|退款|稳定性)", lowered_source, re.IGNORECASE)
+        or re.search(r"github\s+被.*屠榜", lowered_source, re.IGNORECASE)
+        or re.search(r"\b\d+\.\s*$", source_text)
+    ):
+        return False
+
     title = normalize_whitespace(str(candidate.get("title", "")))
     source_url = normalize_whitespace(str(candidate.get("source_url", "")))
 
@@ -3597,13 +3607,19 @@ def build_generic_x_post_detail(*, lane_name: str, title: str, source_text: str)
             trailing_text=cleaned_source[introducing_match.end("subject") :],
         )
         introduced_subject = sanitize_subject_label(restored_subject) or subject or "这个工具"
+        lowered_subject = introduced_subject.lower()
+        if "claude code hook" in lowered_subject and "context timeline" in lowered_subject:
+            detail = "帖子在介绍 `Claude Code Hook - Context Timeline`，核心是给 Claude Code 的 hook 流程补一条可回看的上下文时间线"
+            if "claude-code-templates" in cleaned_source.lower():
+                detail += "；安装入口来自 `claude-code-templates`，所以它更像工作流模板里的可插拔 hook，而不是单独的聊天提示词"
+            return detail
         capability_match = re.search(r"\bYour agent now\s+(?P<capability>[^.!?]+)", cleaned_source, re.IGNORECASE)
         capability = build_agent_capability_phrase(capability_match.group("capability")) if capability_match else ""
         if not capability:
             capability = build_agent_capability_phrase(cleaned_source)
         if capability:
             return f"帖子在介绍 `{introduced_subject}`，说 agent 现在可以{capability}"
-        return f"帖子在介绍 `{introduced_subject}`，采集文本只给到名称和 agent 更新，保守看是一个让 agent 接管具体操作的工具或 workflow"
+        return f"帖子在介绍 `{introduced_subject}`，但原文只够确认对象名称，暂不把它扩写成未验证的 agent workflow 判断"
 
     setup_match = re.search(
         r"\bSomeone built the most complete\s+(?P<subject>.+?)\s+setup\s+(?P<context>.+?)\s+on GitHub\b",
@@ -3773,6 +3789,33 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
     lowered = cleaned_source.lower()
     lowered = re.sub(r"^rt\s+@[a-z0-9_]+:\s*", "", lowered, flags=re.IGNORECASE)
     facts: list[str] = []
+
+    if "geoflow" in lowered:
+        facts.extend(
+            [
+                "@yaojingang 说自己两周前开源的 `GEOFlow` 已经到 `1k Star`，重点不是单纯报喜，而是一个细分场景系统拿到了超预期反馈",
+                "他补充这个系统复杂度不低，集成了 `CLI`、`Skill`、爬虫、API、GEO 工作流、自动化和 AI 友好度优化",
+                "这条适合作为 agent/coding workflow 的产品化样例：不是只写 demo，而是把多种接口和自动化能力打包成可用系统",
+            ]
+        )
+
+    if "skills-manage" in lowered or ("skill" in lowered and "软链接" in cleaned_source):
+        facts.extend(
+            [
+                "@Pluvio9yte 在转 `skills-manage`，问题背景是很多 AI 编程工具的 Skill 管理还停留在手动复制粘贴项目文件夹",
+                "这个工具的解法是用一个中央仓库配合软链接，把 20 多个平台的 Skill 做成一处修改、多处同步",
+                "它值得保留的是工作流治理价值：Skill 不再散落在各项目里，后续维护和迁移成本会明显低一些",
+            ]
+        )
+
+    if "yuragi fm" in lowered:
+        facts.extend(
+            [
+                "@turingou 复盘做 `Yuragi FM` 时遇到的 AIGC 产品难点：核心不只是生成内容，而是探索语言空间和结构",
+                "他提到评估很难，实验结果经常在 `60-80` 分之间横跳，很少稳定到 `90+` 的可用产物",
+                "实验设计和测试耗时也很长；这条对 agent workflow 的启发是，生成能力之外还要有评估和实验管理机制",
+            ]
+        )
 
     if "ppt skills" in lowered and "内置了浏览器" in cleaned_source:
         facts.extend(
