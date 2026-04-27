@@ -1337,6 +1337,108 @@ def test_main_worker_mode_writes_lane_inputs_and_outputs(tmp_path: Path, monkeyp
     assert summary["lane_workers"]["outputs"]["github-trending-weekly"]["status"] == "ok"
 
 
+def test_main_subagent_worker_mode_writes_lane_output_via_process(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config_path = tmp_path / "runtime.yaml"
+    signals_root = tmp_path / "signals"
+    runtime_root = tmp_path / "runtime"
+    signals_root.mkdir(parents=True)
+    config_path.write_text(
+        "version: 1\n"
+        f"repo_root: {tmp_path}\n"
+        "paths:\n"
+        f"  signals_root: {signals_root}\n"
+        f"  runtime_root: {runtime_root}\n"
+        "selection:\n"
+        "  per_lane_limits:\n"
+        "    github-trending-weekly: 10\n"
+        "reader_facing:\n"
+        "  fixed_section_order:\n"
+        "    - github-trending-weekly\n"
+        "runtime:\n"
+        "  timezone: Asia/Shanghai\n"
+        "lane_workers:\n"
+        "  enabled: true\n"
+        "  mode: subagent\n"
+        "  enabled_lanes:\n"
+        "    - github-trending-weekly\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-27",
+            config=config_path,
+            skip_collect=True,
+            publish=False,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_collect_result",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "lanes": [{"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1}],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "selected_items": [
+                {
+                    "id": "repo:codex-labs/agent-skills",
+                    "lane": "github-trending-weekly",
+                    "title": "codex-labs/agent-skills",
+                    "summary": "当前可作为候选继续观察，具体变化见来源。",
+                    "excerpt": "当前可作为候选继续观察，具体变化见来源。",
+                    "source_snippet": (
+                        "codex-labs/agent-skills is a catalog of Claude Code and Codex agent skills. "
+                        "It ships 42 reusable skills and includes MCP workflow examples."
+                    ),
+                    "source_url": "https://github.com/codex-labs/agent-skills",
+                    "signal_path": "github-trending-weekly/2026-04-27/signals/agent-skills.md",
+                    "fetched_at": "2026-04-27T00:00:00Z",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "github-trending-weekly", "selected_item_count": 1}],
+            },
+        },
+    )
+    monkeypatch.setattr(flow, "validate_report_markdown", lambda *_args, **_kwargs: None)
+
+    assert flow.main() == 0
+
+    run_dir = runtime_root / "2026-04-27"
+    output_path = run_dir / "lane-outputs" / "github-trending-weekly.json"
+    log_path = run_dir / "lane-logs" / "github-trending-weekly.md"
+    assert output_path.is_file()
+    lane_output = json.loads(output_path.read_text(encoding="utf-8"))
+    assert lane_output["lane"] == "github-trending-weekly"
+    assert "42 reusable skills" in lane_output["markdown"]
+    log_text = log_path.read_text(encoding="utf-8")
+    assert "-m helpers.lane_subagent_worker" in log_text
+    assert "STDOUT" in log_text
+    assert "github-trending-weekly" in log_text
+    summary = json.loads((run_dir / "run-summary.json").read_text(encoding="utf-8"))
+    lane_summary = summary["lane_workers"]["outputs"]["github-trending-weekly"]
+    assert lane_summary["status"] == "ok"
+    assert lane_summary["output_path"] == str(output_path)
+    assert lane_summary["log_path"] == str(log_path)
+
+
 def test_build_lane_input_artifact_for_github_ai_projects_includes_cross_lane_repo_mentions() -> None:
     selected_items = {
         "report_date": "2026-04-27",

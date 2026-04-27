@@ -126,6 +126,11 @@
 - Added an internal `github-trending-weekly` worker that reads `lane_input.signals` raw snippets, filters non-AI repos, and writes concrete Chinese bullets with GitHub sources instead of renderer template summaries.
 - Verification: `python3 -m pytest -q tests/test_github_trending_worker.py tests/test_lane_workers.py tests/test_run_daily_report_flow.py -k 'github_trending or lane_output or worker_mode'` -> `10 passed, 31 deselected`.
 
+#### Process-isolated lane subagent mode
+- Added `helpers/lane_subagent_worker.py` and `helpers/lane_subagent_runner.py` so `lane_workers.mode: subagent` writes lane input JSON, invokes `python -m helpers.lane_subagent_worker` in a separate process, captures stdout/stderr to `lane-logs/*.md`, reads lane output JSON, and validates it before report assembly.
+- Updated `helpers/run_daily_report_flow.py` to keep local mode in-process and route subagent mode through the process runner; the previous `ValueError("subagent lane worker mode is not implemented yet")` path is removed.
+- Verification: `python3 -m pytest -q tests/test_lane_subagent_runner.py tests/test_run_daily_report_flow.py -k 'subagent or worker_mode or github_trending'` -> `7 passed, 31 deselected`; `python3 -m pytest -q` -> `190 passed`.
+
 ## 改动记录模板
 
 ### YYYY-MM-DD

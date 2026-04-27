@@ -19,6 +19,7 @@ if __package__ in {None, ""}:
 
 from helpers.lane_contracts import validate_lane_input_artifact, validate_lane_output_artifact
 from helpers.lane_report_assembler import build_report_artifact_from_lane_outputs
+from helpers.lane_subagent_runner import run_lane_subagent
 from helpers.lane_workers import build_lane_output
 from helpers.runtime_config import (
     DEFAULT_RUNTIME_CONFIG_PATH,
@@ -1969,27 +1970,34 @@ def main() -> int:
                 selected_items=selected_items,
                 config=config,
             )
-            dump_json(lane_input, lane_inputs_dir / f"{lane_name}.json")
-            if lane_worker_config["mode"] != "local":
-                raise ValueError("subagent lane worker mode is not implemented yet")
-            lane_output = build_lane_output(
-                report_date=args.report_date,
-                lane_name=lane_name,
-                selected_items=selected_items,
-                lane_input=lane_input,
-            )
-            validate_lane_output_artifact(lane_output)
+            input_path = lane_inputs_dir / f"{lane_name}.json"
             output_path = lane_outputs_dir / f"{lane_name}.json"
-            dump_json(lane_output, output_path)
-            (lane_logs_dir / f"{lane_name}.md").write_text(
-                f"# {lane_name}\n\nstatus: {lane_output['status']}\n",
-                encoding="utf-8",
-            )
+            log_path = lane_logs_dir / f"{lane_name}.md"
+            dump_json(lane_input, input_path)
+            if lane_worker_config["mode"] == "local":
+                lane_output = build_lane_output(
+                    report_date=args.report_date,
+                    lane_name=lane_name,
+                    selected_items=selected_items,
+                    lane_input=lane_input,
+                )
+                validate_lane_output_artifact(lane_output)
+                dump_json(lane_output, output_path)
+                log_path.write_text(
+                    f"# {lane_name}\n\nmode: local\n\nstatus: {lane_output['status']}\n",
+                    encoding="utf-8",
+                )
+            elif lane_worker_config["mode"] == "subagent":
+                lane_output = run_lane_subagent(input_path, output_path, log_path)
+                validate_lane_output_artifact(lane_output)
+            else:
+                raise ValueError("lane_workers.mode must be local or subagent")
             lane_outputs.append(lane_output)
             summary["lane_workers"]["outputs"][lane_name] = {
                 "status": lane_output["status"],
                 "item_count": lane_output.get("quality", {}).get("item_count"),
                 "output_path": str(output_path),
+                "log_path": str(log_path),
             }
             side_artifacts = lane_output.get("side_artifacts") or {}
             memory_markdown = side_artifacts.get("memory_markdown")
