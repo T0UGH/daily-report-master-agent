@@ -20,6 +20,7 @@ selection:
     claude-code-watch: 10
     codex-watch: 10
     openclaw-watch: 10
+    github-ai-projects: 5
     github-trending-weekly: 10
     product-hunt-watch: 10
     polymarket-watch: 10
@@ -43,6 +44,7 @@ reader_facing:
     - claude-code-watch
     - codex-watch
     - openclaw-watch
+    - github-ai-projects
     - github-trending-weekly
     - product-hunt-watch
     - polymarket-watch
@@ -51,6 +53,12 @@ runtime:
   cron_job_name: daily-report-master-0600
   cron_schedule: "0 6 * * *"
   cron_deliver: feishu
+lane_workers:
+  enabled: false
+  mode: local
+  enabled_lanes: []
+  github_ai_projects:
+    memory_repo_dir: /Users/haha/workspace/memory/github-ai-projects
 archive:
   knowledge_wiki:
     repo_root: /Users/haha/workspace/knowledge-wiki

@@ -30,6 +30,10 @@ FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "signals-ad
 REPORT_DATE = "2026-04-12"
 
 
+def test_github_ai_projects_lane_has_reader_facing_section_title() -> None:
+    assert FIXED_SECTION_TITLES["github-ai-projects"] == "GitHub AI 项目"
+
+
 class SignalsAdapterTest(unittest.TestCase):
     def write_signal_bundle(
         self,

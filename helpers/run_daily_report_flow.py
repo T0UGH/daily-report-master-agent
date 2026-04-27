@@ -17,8 +17,17 @@ from uuid import uuid4
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from helpers.runtime_config import DEFAULT_RUNTIME_CONFIG_PATH, load_runtime_config, resolve_lane_item_limits
+from helpers.lane_contracts import validate_lane_input_artifact, validate_lane_output_artifact
+from helpers.lane_report_assembler import build_report_artifact_from_lane_outputs
+from helpers.lane_workers import build_lane_output
+from helpers.runtime_config import (
+    DEFAULT_RUNTIME_CONFIG_PATH,
+    load_runtime_config,
+    resolve_lane_item_limits,
+    resolve_lane_worker_config,
+)
 from helpers.signals_adapter import (
+    FIXED_SECTION_TITLES,
     build_collect_result,
     build_report_artifact,
     build_selected_items,
@@ -66,6 +75,7 @@ READOUT_SECTION_TRANSITIONS = {
     "Claude Code": "接着是 Claude Code。",
     "Codex": "接着是 Codex。",
     "OpenClaw": "接着是 OpenClaw。",
+    "GitHub AI 项目": "接着看 GitHub AI 项目。",
     "GitHub 趋势项目": "接着看 GitHub 趋势项目。",
     "Product Hunt 新品": "再来看 Product Hunt 新品。",
     "Polymarket 市场": "再来看 Polymarket 市场。",
@@ -90,6 +100,17 @@ READOUT_ENGLISH_PHRASE_REWRITES = {
     "markdown handoff": "markdown 交接文件",
 }
 OPS_NOTICE_TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "ops-notice.md"
+GITHUB_AI_PROJECTS_INPUT_LANES = {
+    "github-trending-weekly",
+    "x-feed",
+    "x-following",
+    "reddit-watch",
+    "hacker-news-watch",
+    "hacker-news-search-watch",
+    "product-hunt-watch",
+}
+GITHUB_REPO_URL_RE = re.compile(r"https?://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", flags=re.IGNORECASE)
+GITHUB_REPO_BARE_RE = re.compile(r"(?<![A-Za-z0-9_.-])[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![A-Za-z0-9_.-])")
 
 
 def parse_args() -> argparse.Namespace:
@@ -117,6 +138,88 @@ def is_path_writable(path: Path) -> bool:
 def shanghai_date() -> str:
     result = subprocess.run(["date", "+%F"], capture_output=True, text=True, check=True)
     return result.stdout.strip()
+
+
+def _github_repo_candidate_text(item: dict[str, Any], *, include_urls: bool) -> str:
+    parts = [
+        item.get("title"),
+        item.get("summary"),
+        item.get("source_snippet"),
+        item.get("excerpt"),
+    ]
+    if include_urls:
+        parts.extend([item.get("source_url"), item.get("url")])
+    raw = item.get("raw")
+    if isinstance(raw, str):
+        parts.append(raw)
+    elif isinstance(raw, dict):
+        parts.extend([raw.get("title"), raw.get("summary"), raw.get("source_snippet")])
+        if include_urls:
+            parts.append(raw.get("url"))
+    return "\n".join(str(part) for part in parts if part)
+
+
+def _contains_github_repo_reference(item: dict[str, Any]) -> bool:
+    url_text = _github_repo_candidate_text(item, include_urls=True)
+    non_url_text = _github_repo_candidate_text(item, include_urls=False)
+    return bool(GITHUB_REPO_URL_RE.search(url_text) or GITHUB_REPO_BARE_RE.search(non_url_text))
+
+
+def build_lane_input_artifact(
+    *,
+    report_date: str,
+    lane_name: str,
+    selected_items: dict[str, Any],
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    config = config or {}
+    selection = config.get("selection") or {}
+    target_count = resolve_lane_item_limits(config).get(
+        lane_name,
+        selection.get("default_per_lane_limit", 10),
+    )
+    if lane_name == "github-ai-projects":
+        candidate_lanes = GITHUB_AI_PROJECTS_INPUT_LANES
+    else:
+        candidate_lanes = {lane_name}
+    signals = []
+    for item in selected_items.get("selected_items", []):
+        if not isinstance(item, dict) or item.get("lane") not in candidate_lanes:
+            continue
+        if lane_name == "github-ai-projects" and not _contains_github_repo_reference(item):
+            continue
+        url = str(item.get("source_url") or item.get("url") or "").strip()
+        if not url:
+            continue
+        signals.append(
+            {
+                "id": str(item.get("id") or item.get("title") or url),
+                "title": str(item.get("title") or item.get("summary") or item.get("id") or "untitled"),
+                "url": url,
+                "source_lane": str(item.get("lane") or lane_name),
+                "source_urls": [url],
+                "raw": item,
+            }
+        )
+    payload = {
+        "artifact_type": "lane_input",
+        "schema_version": 1,
+        "report_date": report_date,
+        "lane": lane_name,
+        "timezone": config.get("runtime", {}).get("timezone", "Asia/Shanghai"),
+        "lane_title": FIXED_SECTION_TITLES[lane_name],
+        "target_item_count": target_count,
+        "min_item_count": 1,
+        "signals": signals,
+        "recent_history": {"repo_ids": []},
+        "cross_lane_context": {"github_search_queries": []} if lane_name == "github-ai-projects" else {},
+        "style_contract": {
+            "language": "zh-CN",
+            "forbidden_phrases": ["采集文本", "保守看", "摘要里能看到"],
+        },
+    }
+    validate_lane_input_artifact(payload)
+    return payload
 
 
 def parse_dotenv_value(raw_value: str) -> str:
@@ -1810,6 +1913,27 @@ def main() -> int:
     dump_json(selected_items, selected_items_path)
     dump_json(build_validation_bundle(collect_result=collect_result, selected_items=selected_items), validation_bundle_path)
 
+    lane_worker_config = resolve_lane_worker_config(config)
+    summary["lane_workers"] = {
+        "enabled": lane_worker_config["enabled"],
+        "mode": lane_worker_config["mode"],
+        "outputs": {},
+    }
+    lane_outputs: list[dict[str, Any]] = []
+    if lane_worker_config["enabled"]:
+        enabled_lane_set = set(lane_worker_config["enabled_lanes"])
+        lane_order_set = set(lane_order)
+        if enabled_lane_set != lane_order_set:
+            missing = [lane for lane in lane_order if lane not in enabled_lane_set]
+            extra = [lane for lane in lane_worker_config["enabled_lanes"] if lane not in lane_order_set]
+            details = []
+            if missing:
+                details.append(f"missing: {missing}")
+            if extra:
+                details.append(f"extra: {extra}")
+            suffix = "; ".join(details) if details else "enabled_lanes does not match fixed_section_order"
+            raise ValueError(f"lane worker mode requires all fixed_section_order lanes; {suffix}")
+
     if collect_result["summary"]["useful_item_count"] <= 0:
         summary["decision"] = "blocked"
         summary["reason"] = "no usable content after collect"
@@ -1818,7 +1942,63 @@ def main() -> int:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
         return 3
 
-    artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+    if lane_worker_config["enabled"]:
+        lane_inputs_dir = run_dir / "lane-inputs"
+        lane_outputs_dir = run_dir / "lane-outputs"
+        lane_logs_dir = run_dir / "lane-logs"
+        lane_inputs_dir.mkdir(parents=True, exist_ok=True)
+        lane_outputs_dir.mkdir(parents=True, exist_ok=True)
+        lane_logs_dir.mkdir(parents=True, exist_ok=True)
+        for lane_name in lane_order:
+            lane_input = build_lane_input_artifact(
+                report_date=args.report_date,
+                lane_name=lane_name,
+                selected_items=selected_items,
+                config=config,
+            )
+            dump_json(lane_input, lane_inputs_dir / f"{lane_name}.json")
+            if lane_worker_config["mode"] != "local":
+                raise ValueError("subagent lane worker mode is not implemented yet")
+            lane_output = build_lane_output(
+                report_date=args.report_date,
+                lane_name=lane_name,
+                selected_items=selected_items,
+                lane_input=lane_input,
+            )
+            validate_lane_output_artifact(lane_output)
+            output_path = lane_outputs_dir / f"{lane_name}.json"
+            dump_json(lane_output, output_path)
+            (lane_logs_dir / f"{lane_name}.md").write_text(
+                f"# {lane_name}\n\nstatus: {lane_output['status']}\n",
+                encoding="utf-8",
+            )
+            lane_outputs.append(lane_output)
+            summary["lane_workers"]["outputs"][lane_name] = {
+                "status": lane_output["status"],
+                "item_count": lane_output.get("quality", {}).get("item_count"),
+                "output_path": str(output_path),
+            }
+            side_artifacts = lane_output.get("side_artifacts") or {}
+            memory_markdown = side_artifacts.get("memory_markdown")
+            if isinstance(memory_markdown, str) and memory_markdown.strip():
+                lane_memory_dir = run_dir / "lane-memory"
+                lane_memory_dir.mkdir(parents=True, exist_ok=True)
+                memory_path = lane_memory_dir / f"{lane_name}.md"
+                memory_path.write_text(memory_markdown, encoding="utf-8")
+                summary["lane_workers"]["outputs"][lane_name]["memory_path"] = str(memory_path)
+                memory_repo_dir = (lane_worker_config.get("github_ai_projects") or {}).get("memory_repo_dir")
+                if lane_name == "github-ai-projects" and memory_repo_dir:
+                    memory_repo_path = expand_path(str(memory_repo_dir)) / f"{args.report_date}.md"
+                    memory_repo_path.parent.mkdir(parents=True, exist_ok=True)
+                    memory_repo_path.write_text(memory_markdown, encoding="utf-8")
+                    summary["lane_workers"]["outputs"][lane_name]["memory_repo_path"] = str(memory_repo_path)
+        artifact = build_report_artifact_from_lane_outputs(
+            report_date=args.report_date,
+            lane_outputs=lane_outputs,
+            lane_order=lane_order,
+        )
+    else:
+        artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
     dump_json(artifact, artifact_path)
     report_markdown = artifact["body_markdown"]
     report_path.write_text(report_markdown, encoding="utf-8")

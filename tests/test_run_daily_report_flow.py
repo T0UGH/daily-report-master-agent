@@ -1251,6 +1251,308 @@ def test_main_publish_path_blocks_and_records_contract_failure_before_publish(
     assert "reader-facing 成稿未通过输出合同校验：X 推荐流 的正文条目不得使用占位统计文案" in ops_notice
 
 
+def test_main_worker_mode_writes_lane_inputs_and_outputs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    config_path = tmp_path / "runtime.yaml"
+    signals_root = tmp_path / "signals"
+    runtime_root = tmp_path / "runtime"
+    signals_root.mkdir(parents=True)
+    config_path.write_text(
+        "version: 1\n"
+        f"repo_root: {tmp_path}\n"
+        "paths:\n"
+        f"  signals_root: {signals_root}\n"
+        f"  runtime_root: {runtime_root}\n"
+        "selection:\n"
+        "  per_lane_limits:\n"
+        "    github-trending-weekly: 10\n"
+        "reader_facing:\n"
+        "  fixed_section_order:\n"
+        "    - github-trending-weekly\n"
+        "runtime:\n"
+        "  timezone: Asia/Shanghai\n"
+        "lane_workers:\n"
+        "  enabled: true\n"
+        "  mode: local\n"
+        "  enabled_lanes:\n"
+        "    - github-trending-weekly\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-27",
+            config=config_path,
+            skip_collect=True,
+            publish=False,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_collect_result",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "lanes": [{"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1}],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "selected_items": [
+                {
+                    "id": "repo:owner/name",
+                    "lane": "github-trending-weekly",
+                    "title": "owner/name",
+                    "summary": "agent workflow 工具",
+                    "excerpt": "agent workflow 工具",
+                    "source_snippet": "agent workflow 工具",
+                    "source_url": "https://github.com/owner/name",
+                    "signal_path": "github-trending-weekly/2026-04-27/signals/name.md",
+                    "fetched_at": "2026-04-27T00:00:00Z",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "github-trending-weekly", "selected_item_count": 1}],
+            },
+        },
+    )
+    monkeypatch.setattr(flow, "validate_report_markdown", lambda *_args, **_kwargs: None)
+
+    assert flow.main() == 0
+
+    run_dir = runtime_root / "2026-04-27"
+    assert (run_dir / "lane-inputs" / "github-trending-weekly.json").is_file()
+    assert (run_dir / "lane-outputs" / "github-trending-weekly.json").is_file()
+    summary = json.loads((run_dir / "run-summary.json").read_text(encoding="utf-8"))
+    assert summary["lane_workers"]["enabled"] is True
+    assert summary["lane_workers"]["outputs"]["github-trending-weekly"]["status"] == "ok"
+
+
+def test_build_lane_input_artifact_for_github_ai_projects_includes_cross_lane_repo_mentions() -> None:
+    selected_items = {
+        "report_date": "2026-04-27",
+        "selected_items": [
+            {
+                "id": "gh:1",
+                "lane": "github-trending-weekly",
+                "title": "owner/trending-agent",
+                "source_url": "https://github.com/owner/trending-agent",
+            },
+            {
+                "id": "x:1",
+                "lane": "x-following",
+                "title": "@dev",
+                "summary": "推荐 owner/trending-agent 做 agent 编排",
+                "source_url": "https://x.com/dev/status/1",
+            },
+            {
+                "id": "ph:1",
+                "lane": "product-hunt-watch",
+                "title": "Another Tool",
+                "summary": "没有 repo",
+                "source_url": "https://producthunt.com/posts/tool",
+            },
+            {
+                "id": "cc:1",
+                "lane": "claude-code-watch",
+                "title": "owner/not-included",
+                "summary": "非候选 lane 不能进入 GitHub AI Projects 输入",
+                "source_url": "https://github.com/owner/not-included",
+            },
+        ],
+        "summary": {"selected_item_count": 4, "lane_counts": []},
+    }
+
+    payload = flow.build_lane_input_artifact(
+        report_date="2026-04-27",
+        lane_name="github-ai-projects",
+        selected_items=selected_items,
+    )
+
+    source_lanes = {item["source_lane"] for item in payload["signals"]}
+    assert source_lanes == {"github-trending-weekly", "x-following"}
+    assert all(item["source_urls"] for item in payload["signals"])
+    assert payload["cross_lane_context"]["github_search_queries"] == []
+
+
+def test_main_worker_mode_writes_github_ai_projects_memory_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config_path = tmp_path / "runtime.yaml"
+    signals_root = tmp_path / "signals"
+    runtime_root = tmp_path / "runtime"
+    memory_repo_dir = tmp_path / "memory" / "github-ai-projects"
+    signals_root.mkdir(parents=True)
+    config_path.write_text(
+        "version: 1\n"
+        f"repo_root: {tmp_path}\n"
+        "paths:\n"
+        f"  signals_root: {signals_root}\n"
+        f"  runtime_root: {runtime_root}\n"
+        "selection:\n"
+        "  per_lane_limits:\n"
+        "    github-ai-projects: 5\n"
+        "reader_facing:\n"
+        "  fixed_section_order:\n"
+        "    - github-ai-projects\n"
+        "runtime:\n"
+        "  timezone: Asia/Shanghai\n"
+        "lane_workers:\n"
+        "  enabled: true\n"
+        "  mode: local\n"
+        "  enabled_lanes:\n"
+        "    - github-ai-projects\n"
+        "  github_ai_projects:\n"
+        f"    memory_repo_dir: {memory_repo_dir}\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-27",
+            config=config_path,
+            skip_collect=True,
+            publish=False,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_collect_result",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "lanes": [
+                {"name": "github-ai-projects", "status": "ok", "useful_item_count": 1},
+                {"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "selected_items": [
+                {
+                    "id": "repo:owner/name",
+                    "lane": "github-trending-weekly",
+                    "title": "owner/name",
+                    "summary": "agent workflow 工具",
+                    "excerpt": "agent workflow 工具",
+                    "source_snippet": "agent workflow 工具",
+                    "source_url": "https://github.com/owner/name",
+                    "signal_path": "github-trending-weekly/2026-04-27/signals/name.md",
+                    "fetched_at": "2026-04-27T00:00:00Z",
+                }
+            ],
+            "summary": {
+                "selected_item_count": 1,
+                "lane_counts": [{"lane": "github-trending-weekly", "selected_item_count": 1}],
+            },
+        },
+    )
+    monkeypatch.setattr(flow, "validate_report_markdown", lambda *_args, **_kwargs: None)
+
+    assert flow.main() == 0
+
+    run_dir = runtime_root / "2026-04-27"
+    memory_path = run_dir / "lane-memory" / "github-ai-projects.md"
+    assert memory_path.is_file()
+    assert "owner/name" in memory_path.read_text(encoding="utf-8")
+    assert (memory_repo_dir / "2026-04-27.md").is_file()
+    summary = json.loads((run_dir / "run-summary.json").read_text(encoding="utf-8"))
+    lane_summary = summary["lane_workers"]["outputs"]["github-ai-projects"]
+    assert lane_summary["memory_path"] == str(memory_path)
+    assert lane_summary["memory_repo_path"] == str(memory_repo_dir / "2026-04-27.md")
+
+
+def test_main_worker_mode_requires_all_fixed_order_lanes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    config_path = tmp_path / "runtime.yaml"
+    signals_root = tmp_path / "signals"
+    runtime_root = tmp_path / "runtime"
+    signals_root.mkdir(parents=True)
+    config_path.write_text(
+        "version: 1\n"
+        f"repo_root: {tmp_path}\n"
+        "paths:\n"
+        f"  signals_root: {signals_root}\n"
+        f"  runtime_root: {runtime_root}\n"
+        "reader_facing:\n"
+        "  fixed_section_order:\n"
+        "    - github-trending-weekly\n"
+        "    - product-hunt-watch\n"
+        "runtime:\n"
+        "  timezone: Asia/Shanghai\n"
+        "lane_workers:\n"
+        "  enabled: true\n"
+        "  mode: local\n"
+        "  enabled_lanes:\n"
+        "    - github-trending-weekly\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-04-27",
+            config=config_path,
+            skip_collect=True,
+            publish=False,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_collect_result",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "lanes": [
+                {"name": "github-trending-weekly", "status": "ok", "useful_item_count": 1},
+                {"name": "product-hunt-watch", "status": "ok", "useful_item_count": 1},
+            ],
+            "summary": {"useful_item_count": 2, "partial_lane_count": 0},
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_selected_items",
+        lambda **_: {
+            "report_date": "2026-04-27",
+            "source": "test",
+            "selected_items": [],
+            "summary": {
+                "selected_item_count": 0,
+                "lane_counts": [
+                    {"lane": "github-trending-weekly", "selected_item_count": 0},
+                    {"lane": "product-hunt-watch", "selected_item_count": 0},
+                ],
+            },
+        },
+    )
+
+    with pytest.raises(ValueError, match="requires all fixed_section_order lanes"):
+        flow.main()
+
+
 def test_main_writes_ops_notice_when_publish_degrades(monkeypatch, tmp_path: Path) -> None:
     valid_report_markdown = (
         "# AI Agent 日报（2026-04-16）\n\n"
