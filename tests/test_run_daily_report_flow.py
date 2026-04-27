@@ -1381,7 +1381,35 @@ def test_build_lane_input_artifact_for_github_ai_projects_includes_cross_lane_re
     source_lanes = {item["source_lane"] for item in payload["signals"]}
     assert source_lanes == {"github-trending-weekly", "x-following"}
     assert all(item["source_urls"] for item in payload["signals"])
-    assert payload["cross_lane_context"]["github_search_queries"] == []
+    assert payload["cross_lane_context"]["github_search_queries"] == [
+        "GitHub trending AI 2026-04-27",
+        "GitHub new AI projects 2026-04-27",
+        "awesome AI GitHub 2026-04-27",
+    ]
+
+
+def test_build_lane_input_artifact_for_github_ai_projects_uses_configured_discovery_queries() -> None:
+    payload = flow.build_lane_input_artifact(
+        report_date="2026-04-27",
+        lane_name="github-ai-projects",
+        selected_items={"report_date": "2026-04-27", "selected_items": []},
+        config={
+            "lane_workers": {
+                "github_ai_projects": {
+                    "discovery_queries": [
+                        "GitHub trending AI {date}",
+                        "GitHub new AI projects {report_date}",
+                    ]
+                }
+            }
+        },
+    )
+
+    assert payload["signals"] == []
+    assert payload["cross_lane_context"]["github_search_queries"] == [
+        "GitHub trending AI 2026-04-27",
+        "GitHub new AI projects 2026-04-27",
+    ]
 
 
 def test_main_worker_mode_writes_github_ai_projects_memory_artifact(
@@ -1391,7 +1419,7 @@ def test_main_worker_mode_writes_github_ai_projects_memory_artifact(
     config_path = tmp_path / "runtime.yaml"
     signals_root = tmp_path / "signals"
     runtime_root = tmp_path / "runtime"
-    memory_repo_dir = tmp_path / "memory" / "github-ai-projects"
+    compat_memory_dir = tmp_path / "memory" / "github-ai-projects"
     signals_root.mkdir(parents=True)
     config_path.write_text(
         "version: 1\n"
@@ -1413,7 +1441,8 @@ def test_main_worker_mode_writes_github_ai_projects_memory_artifact(
         "  enabled_lanes:\n"
         "    - github-ai-projects\n"
         "  github_ai_projects:\n"
-        f"    memory_repo_dir: {memory_repo_dir}\n",
+        "    discovery_queries:\n"
+        "      - GitHub trending AI {date}\n",
         encoding="utf-8",
     )
 
@@ -1475,11 +1504,11 @@ def test_main_worker_mode_writes_github_ai_projects_memory_artifact(
     memory_path = run_dir / "lane-memory" / "github-ai-projects.md"
     assert memory_path.is_file()
     assert "owner/name" in memory_path.read_text(encoding="utf-8")
-    assert (memory_repo_dir / "2026-04-27.md").is_file()
+    assert not (compat_memory_dir / "2026-04-27.md").exists()
     summary = json.loads((run_dir / "run-summary.json").read_text(encoding="utf-8"))
     lane_summary = summary["lane_workers"]["outputs"]["github-ai-projects"]
     assert lane_summary["memory_path"] == str(memory_path)
-    assert lane_summary["memory_repo_path"] == str(memory_repo_dir / "2026-04-27.md")
+    assert "memory_repo_path" not in lane_summary
 
 
 def test_main_worker_mode_requires_all_fixed_order_lanes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

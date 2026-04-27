@@ -120,3 +120,26 @@ def test_build_lane_output_requires_lane_input_for_github_ai_projects() -> None:
             lane_name="github-ai-projects",
             selected_items={"selected_items": []},
         )
+
+
+def test_build_github_ai_projects_output_rejects_false_positive_bare_repos() -> None:
+    lane_input = _lane_input()
+    lane_input["signals"] = [
+        {
+            "id": "x:false-positive",
+            "title": "model speed note",
+            "url": "https://x.com/dev/status/2",
+            "source_lane": "x-following",
+            "source_urls": ["https://x.com/dev/status/2"],
+            "raw": {
+                "source_snippet": "Elephant 跑到 340 tokens/s；另一个 HN 讨论提到 user/assistant 对话格式。"
+            },
+        }
+    ]
+
+    output = build_github_ai_projects_output(lane_input)
+
+    assert output["status"] == "empty"
+    assert "tokens/s" not in output["markdown"]
+    assert "user/assistant" not in output["markdown"]
+

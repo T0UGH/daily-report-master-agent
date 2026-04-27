@@ -201,6 +201,19 @@ def build_lane_input_artifact(
                 "raw": item,
             }
         )
+    github_ai_config = (config.get("lane_workers") or {}).get("github_ai_projects") or {}
+    github_search_queries = [
+        str(query).format(report_date=report_date, date=report_date)
+        for query in github_ai_config.get(
+            "discovery_queries",
+            [
+                "GitHub trending AI {date}",
+                "GitHub new AI projects {date}",
+                "awesome AI GitHub {date}",
+            ],
+        )
+        if str(query).strip()
+    ]
     payload = {
         "artifact_type": "lane_input",
         "schema_version": 1,
@@ -212,7 +225,7 @@ def build_lane_input_artifact(
         "min_item_count": 1,
         "signals": signals,
         "recent_history": {"repo_ids": []},
-        "cross_lane_context": {"github_search_queries": []} if lane_name == "github-ai-projects" else {},
+        "cross_lane_context": {"github_search_queries": github_search_queries} if lane_name == "github-ai-projects" else {},
         "style_contract": {
             "language": "zh-CN",
             "forbidden_phrases": ["采集文本", "保守看", "摘要里能看到"],
@@ -1986,12 +1999,6 @@ def main() -> int:
                 memory_path = lane_memory_dir / f"{lane_name}.md"
                 memory_path.write_text(memory_markdown, encoding="utf-8")
                 summary["lane_workers"]["outputs"][lane_name]["memory_path"] = str(memory_path)
-                memory_repo_dir = (lane_worker_config.get("github_ai_projects") or {}).get("memory_repo_dir")
-                if lane_name == "github-ai-projects" and memory_repo_dir:
-                    memory_repo_path = expand_path(str(memory_repo_dir)) / f"{args.report_date}.md"
-                    memory_repo_path.parent.mkdir(parents=True, exist_ok=True)
-                    memory_repo_path.write_text(memory_markdown, encoding="utf-8")
-                    summary["lane_workers"]["outputs"][lane_name]["memory_repo_path"] = str(memory_repo_path)
         artifact = build_report_artifact_from_lane_outputs(
             report_date=args.report_date,
             lane_outputs=lane_outputs,

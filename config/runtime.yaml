@@ -58,7 +58,10 @@ lane_workers:
   mode: local
   enabled_lanes: []
   github_ai_projects:
-    memory_repo_dir: /Users/haha/workspace/memory/github-ai-projects
+    discovery_queries:
+      - GitHub trending AI {date}
+      - GitHub new AI projects {date}
+      - awesome AI GitHub {date}
 archive:
   knowledge_wiki:
     repo_root: /Users/haha/workspace/knowledge-wiki

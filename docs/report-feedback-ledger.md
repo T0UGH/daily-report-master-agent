@@ -117,6 +117,9 @@
   - artifact check: `lane-inputs/github-ai-projects.json`, `lane-outputs/github-ai-projects.json`, `lane-memory/github-ai-projects.md`, and `report.md` all exist; banned phrases `采集文本 / 保守看 / 摘要里能看到 / 先按标题本身交代主题` all false.
 - Result: master remains the only report entrypoint; lane worker artifacts are written under runtime `lane-inputs/`, `lane-outputs/`, and `lane-memory/`. Worker mode keeps default disabled in production config and requires `enabled_lanes` to match `fixed_section_order` for a run, so partial mode cannot silently drop columns.
 
+- Correction after preview feedback: the intended migration is agent-cron's discovery logic, not its shared memory file. Removed the shared `memory_repo_dir` read/write compatibility path from report-master runtime behavior; `github-ai-projects` now carries the old agent-cron discovery queries inside `cross_lane_context.github_search_queries` (`GitHub trending AI {date}`, `GitHub new AI projects {date}`, `awesome AI GitHub {date}`), while runtime memory remains under `lane-memory/` only. Also tightened false-positive bare repo filtering for `tokens/s` and `user/assistant`.
+- Verification: targeted `python3 -m pytest -q tests/test_github_ai_projects_worker.py tests/test_run_daily_report_flow.py -k 'github_ai_projects'` -> `9 passed`; full `python3 -m pytest -q` -> `180 passed`; 2026-04-27 worker preview -> `decision=generated`, `validation.status=passed`, GitHub input queries present, `memory_repo_path` absent, `/Users/haha/workspace/memory/github-ai-projects/2026-04-27.md` not created.
+
 ## 改动记录模板
 
 ### YYYY-MM-DD

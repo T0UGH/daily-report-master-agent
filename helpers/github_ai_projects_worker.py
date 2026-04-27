@@ -12,8 +12,20 @@ GITHUB_URL_RE = re.compile(
 )
 BARE_REPO_RE = re.compile(r"(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)(?![A-Za-z0-9_.-])")
 TRAILING_REPO_CHARS_RE = re.compile(r"[\s\].,;:!?)}]+$")
-REJECTED_BARE_REPO_OWNERS = {"docs", "issues", "operations", "assets", "src", "tests", "test", "api"}
-REJECTED_BARE_REPO_NAMES = {"assets", "prs", "maintenance", "7", "24", "api", "docs"}
+REJECTED_BARE_REPO_OWNERS = {
+    "api",
+    "assets",
+    "docs",
+    "issues",
+    "operations",
+    "src",
+    "test",
+    "tests",
+    "tokens",
+    "user",
+    "users",
+}
+REJECTED_BARE_REPO_NAMES = {"7", "24", "api", "assets", "assistant", "docs", "maintenance", "prs", "s"}
 
 
 def _normalize_repo_id(owner: str, repo: str) -> str | None:
