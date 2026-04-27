@@ -3808,7 +3808,7 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
             [
                 "@Pluvio9yte 在转 `skills-manage`，问题背景是很多 AI 编程工具的 Skill 管理还停留在手动复制粘贴项目文件夹",
                 "这个工具的解法是用一个中央仓库配合软链接，把 20 多个平台的 Skill 做成一处修改、多处同步",
-                "它值得保留的是工作流治理价值：Skill 不再散落在各项目里，后续维护和迁移成本会明显低一些",
+                "结果是 Skill 不再散落在各项目里，后续维护和迁移时只需要更新中央仓库和软链接关系",
             ]
         )
 
@@ -3817,7 +3817,7 @@ def build_x_post_detail(*, lane_name: str, title: str, source_text: str) -> str:
             [
                 "@turingou 复盘做 `Yuragi FM` 时遇到的 AIGC 产品难点：核心不只是生成内容，而是探索语言空间和结构",
                 "他提到评估很难，实验结果经常在 `60-80` 分之间横跳，很少稳定到 `90+` 的可用产物",
-                "实验设计和测试耗时也很长；这条对 agent workflow 的启发是，生成能力之外还要有评估和实验管理机制",
+                "实验设计和测试耗时也很长；他把这个问题归到生成产品的评估和实验管理，而不只是模型能力本身",
             ]
         )
 
@@ -4144,6 +4144,18 @@ def build_claude_code_release_detail(*, title: str, source_text: str) -> str:
         facts.append("hooks 现在可以通过 `type: \"mcp_tool\"` 直接调用 MCP tools")
     if "disable_updates" in lowered_source:
         facts.append("新增 `DISABLE_UPDATES`，可以彻底阻断包括手动 `claude update` 在内的所有更新路径，比 `DISABLE_AUTOUPDATER` 更严格")
+    if "claude_code_fork_subagent" in lowered_source or "forked subagents" in lowered_source:
+        facts.append("外部构建现在可以通过 `CLAUDE_CODE_FORK_SUBAGENT=1` 启用 forked subagents")
+    if "frontmatter" in lowered_source and "mcpservers" in lowered_source and "--agent" in lowered_source:
+        facts.append("通过 `--agent` 启动主线程 agent session 时，会加载 agent frontmatter 里的 `mcpServers`")
+    if "/model" in lowered_source and "persist" in lowered_source and "project" in lowered_source:
+        facts.append("`/model` 的选择现在会跨重启保留，即使项目本身固定了另一个模型；启动 header 也会标出当前模型来自项目还是 managed settings")
+    if "/resume" in lowered_source and "summarize" in lowered_source and "stale" in lowered_source:
+        facts.append("`/resume` 会在重新读取过大、过旧 session 前先提示生成摘要，行为和 `--resume` 对齐")
+    if "concurrent connect" in lowered_source and "mcp servers" in lowered_source:
+        facts.append("本地和 claude.ai MCP servers 同时配置时，会并发连接以加快启动")
+    if "webfetch" in lowered_source and "very large html" in lowered_source:
+        facts.append("`WebFetch` 处理超大 HTML 页面时会先截断再转 markdown，避免长时间挂住")
     if "/ultraplan" in source_text and "cloud environment" in lowered_source:
         facts.append("`/ultraplan` 和其他 remote-session 功能会自动创建默认 cloud environment，不再要求先去网页里手动 setup")
     if "brief mode" in lowered_source:
@@ -4383,6 +4395,10 @@ def build_openclaw_release_detail(*, title: str, source_text: str) -> str:
         facts.append("Slack/interactions 这边把全局 `allowFrom` owner allowlist 真正落实到 block-action 和 modal interactive events")
     if "`config.patch`" in lowered_source and "`config.apply`" in lowered_source and "gateway-tool" in lowered_source:
         facts.append("Agents/gateway-tool 还卡住了会新开危险安全开关的 `config.patch` / `config.apply` 请求")
+    if "voice replies" in lowered_source and "tts" in lowered_source:
+        facts.append("语音回复做了一轮 TTS 升级：新增 `/tts latest`、按聊天控制自动 TTS、personas，以及 agent/account 级覆盖配置")
+    if "azure speech" in lowered_source and "elevenlabs" in lowered_source:
+        facts.append("TTS provider 覆盖扩到 Azure Speech、小米、本地 CLI、Inworld、火山引擎和 ElevenLabs v3")
     security_topics: list[str] = []
     if "`hook:wake`" in source_text or "hook:wake" in lowered_source:
         security_topics.append("`hook:wake` 不可信系统事件会强制降权")
