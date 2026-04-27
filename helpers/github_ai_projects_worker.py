@@ -14,9 +14,12 @@ BARE_REPO_RE = re.compile(r"(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)
 TRAILING_REPO_CHARS_RE = re.compile(r"[\s\].,;:!?)}]+$")
 REJECTED_BARE_REPO_OWNERS = {
     "api",
+    "apk",
     "assets",
     "docs",
     "issues",
+    "jar",
+    "javascript",
     "operations",
     "src",
     "test",
@@ -25,7 +28,21 @@ REJECTED_BARE_REPO_OWNERS = {
     "user",
     "users",
 }
-REJECTED_BARE_REPO_NAMES = {"7", "24", "api", "assets", "assistant", "docs", "maintenance", "prs", "s"}
+REJECTED_BARE_REPO_NAMES = {
+    "7",
+    "24",
+    "aar",
+    "api",
+    "assets",
+    "assistant",
+    "docs",
+    "maintenance",
+    "min",
+    "prs",
+    "s",
+    "typescript",
+    "xapk",
+}
 
 
 def _normalize_repo_id(owner: str, repo: str) -> str | None:

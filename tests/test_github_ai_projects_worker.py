@@ -132,7 +132,7 @@ def test_build_github_ai_projects_output_rejects_false_positive_bare_repos() -> 
             "source_lane": "x-following",
             "source_urls": ["https://x.com/dev/status/2"],
             "raw": {
-                "source_snippet": "Elephant 跑到 340 tokens/s；另一个 HN 讨论提到 user/assistant 对话格式。"
+                "source_snippet": "Elephant 跑到 340 tokens/s、req/min；另一个 HN 讨论提到 user/assistant 对话格式；支持 APK/XAPK、JAR/AAR 和 JavaScript/TypeScript。"
             },
         }
     ]
@@ -141,5 +141,9 @@ def test_build_github_ai_projects_output_rejects_false_positive_bare_repos() -> 
 
     assert output["status"] == "empty"
     assert "tokens/s" not in output["markdown"]
+    assert "req/min" not in output["markdown"]
     assert "user/assistant" not in output["markdown"]
+    assert "APK/XAPK" not in output["markdown"]
+    assert "JAR/AAR" not in output["markdown"]
+    assert "JavaScript/TypeScript" not in output["markdown"]
 
