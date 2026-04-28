@@ -26,7 +26,13 @@ Reject items when:
 Select 2-3 AI/coding-agent relevant products. Reject generic SaaS or broad productivity launches. Keep Product Hunt links.
 
 ## Writing Style
-Write Chinese-first, concrete, human-readable prose. Explain who did what, what changed, why it matters today, and what the reader can do with it. Keep source links.
+Write Chinese-first, concrete, human-readable prose. Keep source links.
+
+子条目要更精炼：
+- 每条默认 1 句，最多 2 句；不要写成长段落。
+- 单条建议控制在 80-140 个中文字符；只有版本号、关键数字、限制/价格/链接等事实密度很高时才放宽。
+- 句式优先：`发生了什么 + 对读者有什么用/风险`，少写铺垫和评价。
+- 删除“值得关注/值得跟踪/说明生态变化”等空泛判断，除非同句给出具体证据。
 
 ## Forbidden Output
 禁止使用：
