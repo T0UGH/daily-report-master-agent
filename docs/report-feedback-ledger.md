@@ -178,7 +178,7 @@
   - Feishu preview: `https://www.feishu.cn/docx/WwjKdtN1LooDdNxwDfBcO4KznAd`
   - fetch verification: title present; contains `天气`、`X 推荐`、`GitHub 趋势`、`forrestchang/andrej-karpathy-skills`; does not contain `采集文本` or `具体变化见来源`。
 - 2026-04-28：根据 MT 反馈继续修第二版：
-  - 13 条 lane skill 的 Writing Style 增加“子条目更精炼”规则：默认 1 句、最多 2 句，建议 80-140 中文字符，优先写 `发生了什么 + 对读者有什么用/风险`，删除空泛判断。
+  - 13 条 lane skill 的 Writing Style 先增加“子条目更精炼”规则，随后按 MT 反馈修正为：每条默认 1-3 句、正文最长不超过 200 个中文字符，优先保留关键事实/数字/风险，删除空泛判断。
   - 用 2026-04-28 当天数据重新跑 Hermes subagent preview：runtime root `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-04-28-skill-preview-v2`。
   - Hermes 主 session 直接调用 `delegate_task` 生成 13 个 lane outputs；`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 `report.md`。
   - Feishu preview: `https://www.feishu.cn/docx/GaiDdxAxAowcH2xGMxDcfPiPn8g`。

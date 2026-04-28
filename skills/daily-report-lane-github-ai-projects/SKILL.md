@@ -28,10 +28,10 @@ Run internal discovery or evidence helper when useful. Never use the old shared 
 ## Writing Style
 Write Chinese-first, concrete, human-readable prose. Keep source links.
 
-子条目要更精炼：
-- 每条默认 1 句，最多 2 句；不要写成长段落。
-- 单条建议控制在 80-140 个中文字符；只有版本号、关键数字、限制/价格/链接等事实密度很高时才放宽。
-- 句式优先：`发生了什么 + 对读者有什么用/风险`，少写铺垫和评价。
+子条目要信息密度高但不要拖长：
+- 每条默认 1-3 句；信息简单时 1 句，复杂更新最多 3 句。
+- 单条正文最长不超过 200 个中文字符；链接不计入正文长度。
+- 句式优先：`发生了什么 + 关键事实/数字 + 对读者有什么用/风险`，少写铺垫和评价。
 - 删除“值得关注/值得跟踪/说明生态变化”等空泛判断，除非同句给出具体证据。
 
 ## Forbidden Output
