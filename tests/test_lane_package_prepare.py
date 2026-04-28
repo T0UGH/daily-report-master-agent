@@ -16,8 +16,10 @@ def test_prepare_lane_packages_marks_missing_raw_corpus(tmp_path):
 def test_prepare_lane_packages_copies_recent_reports_for_agent_dedup_reference(tmp_path):
     (tmp_path/'2026-04-25').mkdir()
     (tmp_path/'2026-04-25'/'report.md').write_text('# 2026-04-25\nYesterday report topic',encoding='utf-8')
+    (tmp_path/'2026-04-25'/'run-summary.json').write_text(json.dumps({'publish':{'doc_url':'https://www.feishu.cn/docx/YESTERDAY'}}),encoding='utf-8')
     (tmp_path/'2026-04-24').mkdir()
     (tmp_path/'2026-04-24'/'report.md').write_text('# 2026-04-24\nDay before report topic',encoding='utf-8')
+    (tmp_path/'2026-04-24'/'run-summary.json').write_text(json.dumps({'doc_url':'https://www.feishu.cn/docx/DAYBEFORE'}),encoding='utf-8')
     (tmp_path/'2026-04-23').mkdir()
     (tmp_path/'2026-04-23'/'report.md').write_text('# 2026-04-23\nToo old topic',encoding='utf-8')
 
@@ -33,11 +35,21 @@ def test_prepare_lane_packages_copies_recent_reports_for_agent_dedup_reference(t
     context=json.loads((package/'context.json').read_text(encoding='utf-8'))
     assert context['recent_report_mode']=='agent_dedup_reference_only'
     assert context['recent_report_paths']==[str(yesterday),str(day_before)]
+    assert context['recent_report_urls']==['https://www.feishu.cn/docx/YESTERDAY','https://www.feishu.cn/docx/DAYBEFORE']
+    assert context['recent_reports']==[
+        {'date':'2026-04-25','path':str(yesterday),'source_path':str(tmp_path/'2026-04-25'/'report.md'),'doc_url':'https://www.feishu.cn/docx/YESTERDAY'},
+        {'date':'2026-04-24','path':str(day_before),'source_path':str(tmp_path/'2026-04-24'/'report.md'),'doc_url':'https://www.feishu.cn/docx/DAYBEFORE'},
+    ]
 
     text=(package/'input.md').read_text(encoding='utf-8')
     assert 'Read yesterday and day-before-yesterday reports before selecting or writing' in text
     assert 'history/2026-04-25-report.md' in text
     assert 'history/2026-04-24-report.md' in text
+    assert 'https://www.feishu.cn/docx/YESTERDAY' in text
+    assert 'https://www.feishu.cn/docx/DAYBEFORE' in text
+    assert str(tmp_path/'2026-04-25'/'report.md') in text
+    assert str(tmp_path/'2026-04-24'/'report.md') in text
+    assert 'if a copy is missing or unclear, use the source file paths and published doc URLs' in text
     assert 'reject exact repeats or substantially unchanged topics' in text
     assert 'do not dedupe weather/current market items purely because yesterday had the same section' in text
     assert 'agent judgment, not code-controlled filtering' in text
