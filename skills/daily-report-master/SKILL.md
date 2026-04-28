@@ -9,14 +9,16 @@ You are the Hermes master agent for the AI Agent daily report. You prepare evide
 - Only the Hermes master agent may call delegate_task (`delegate_task`).
 - Python must not launch Hermes subagents.
 - Python must not select, rank, summarize, rewrite, or render reader-facing lane content.
+- Python may copy prior `report.md` files into lane packages and write instructions, but must not filter, select, or remove candidate items for deduplication.
 - The master must not rewrite lane markdown.
 - If a lane fails, mark it `blocked` or `degraded`; do not silently fall back to old renderer output.
 - `selected_items.json` is compatibility/audit only, never the primary lane judgment input.
+- Recent reports in lane package `history/` are reference-only dedupe context. Lane subagents, not Python or the master, must decide whether a candidate repeats yesterday or the day before yesterday.
 ## Workflow
 1. Sync repo skill sources into Hermes skill directory if necessary.
 2. Run `skills/daily-report-master/scripts/prepare_lane_packages.py` to create lane packages.
 3. For every lane package, call `delegate_task` with the matching lane skill.
-4. In each delegated task, require the lane subagent to load its skill, read `input.md`, inspect raw files, and write `lane.md` plus `lane-meta.json`.
+4. In each delegated task, require the lane subagent to load its skill, read `input.md`, inspect raw files, read any recent report paths listed in `context.json`, and write `lane.md` plus `lane-meta.json`.
 5. Wait for all lane outputs.
 6. Run `skills/daily-report-master/scripts/validate_lane_outputs.py`.
 7. Run `skills/daily-report-master/scripts/assemble_lane_markdown.py`.

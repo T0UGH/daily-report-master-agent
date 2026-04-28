@@ -10,8 +10,10 @@ Read the lane package provided by the master:
 - `input.md`
 - `context.json`
 - `raw/`
+- `history/` if present
 
 Do not use `selected_items.json` as primary judgment input. Raw corpus is the evidence source.
+Use recent reports only as reference-only dedupe context. Before selecting or writing, read yesterday and day-before-yesterday report files listed in `context.json` `recent_report_paths` or package `history/`. Reject exact repeats or substantially unchanged topics. Keep meaningful follow-ups with new facts and state what changed. Do not dedupe weather/current market items purely because yesterday had the same section. This is lane-agent judgment, not code-controlled filtering.
 ## Selection Rules
 Select only items that can be explained concretely for an AI/coding-agent reader. Prefer specific releases, workflows, repos, discussions, failures, tools, versions, or user-visible changes.
 ## Rejection Rules
