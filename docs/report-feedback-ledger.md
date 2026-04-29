@@ -183,3 +183,16 @@
   - Hermes 主 session 直接调用 `delegate_task` 生成 13 个 lane outputs；`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 `report.md`。
   - Feishu preview: `https://www.feishu.cn/docx/GaiDdxAxAowcH2xGMxDcfPiPn8g`。
   - quality check: forbidden phrases `采集文本`、`具体变化见来源`、`趋势信息包含这些具体点`、`值得关注`、`值得跟踪` 均为 0；83 条 bullet 中仅 3 条超过 260 字，主要是长 URL 导致。
+
+## 2026-04-30
+
+### 生产日报运行记录
+- Hermes cron 已按原生 subagent lane 架构运行：13 条 lane 均由 `delegate_task` 拉起的 Hermes subagent 生成 `lane.md` 与 `lane-meta.json`，master 只做 package / validate / assemble / publish / archive。
+- 当天大多数 signals raw corpus 缺失，导致 X、Reddit、HN、Claude Code、Codex、OpenClaw、GitHub Trending、Product Hunt、Polymarket 多数为空或降级；仅天气与 GitHub AI 项目有正文内容。
+- Feishu 文档：`https://www.feishu.cn/docx/ENWtd8VAUo6a6oxy8hIcvlfhnHc`。
+- runtime root：`/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-04-30/`。
+- archive：已归档到 `/Users/haha/workspace/knowledge-vault/Inbox/ai daily report/2026-04-30.md`。
+
+### 待验证 / 待修复
+- 需要检查 2026-04-30 signals 为什么缺失，避免生产日报只剩天气和 GitHub 发现补充。
+- assembled `report.md` 出现两个 `## Hacker News 搜索` 段，需检查 assembler/fixed section order 或 lane heading 配置。
