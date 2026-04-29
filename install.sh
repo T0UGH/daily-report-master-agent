@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 RUNTIME_HOME="$HERMES_HOME/daily-report-master"
-SKILL_SRC_ROOT="$REPO_ROOT/hermes-skills/productivity"
+SKILL_SRC_ROOT="$REPO_ROOT/skills"
 SKILL_DST_ROOT="$HERMES_HOME/skills/productivity"
 PROMPT_SRC="$REPO_ROOT/main-prompt.md"
 CONFIG_SRC="$REPO_ROOT/config/runtime.yaml"
@@ -35,12 +35,20 @@ prompt = (repo_root / 'main-prompt.md').read_text(encoding='utf-8')
 config = yaml.safe_load((repo_root / 'config' / 'runtime.yaml').read_text(encoding='utf-8'))
 runtime = config['runtime']
 skill_names = [
-    'daily-report-master-collect-signals',
-    'daily-report-master-assess-reportability',
-    'daily-report-master-build-report',
-    'daily-report-master-publish-report',
-    'daily-report-master-archive-report',
-    'daily-report-master-notify-ops',
+    'daily-report-master',
+    'daily-report-lane-weather',
+    'daily-report-lane-x-feed',
+    'daily-report-lane-x-following',
+    'daily-report-lane-reddit',
+    'daily-report-lane-hacker-news',
+    'daily-report-lane-hacker-news-search',
+    'daily-report-lane-claude-code',
+    'daily-report-lane-codex',
+    'daily-report-lane-openclaw',
+    'daily-report-lane-github-ai-projects',
+    'daily-report-lane-github-trending',
+    'daily-report-lane-product-hunt',
+    'daily-report-lane-polymarket',
 ]
 job_name = runtime['cron_job_name']
 schedule = runtime['cron_schedule']
