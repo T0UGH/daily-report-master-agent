@@ -204,3 +204,11 @@
 - lane status：13 total；12 ok；1 degraded（`github-ai-projects`）；0 blocked；subagent selected total 69。
 - Feishu 文档：`https://www.feishu.cn/docx/Ij44dAtxMoaTZWxz3EKcN53UnBb`。
 - archive：已归档到 knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-04-30.md`，commit `790ebcaa601d11166b81efb8d570e983d96b20bd`。
+
+## 2026-05-01
+
+### 运行记录
+- 06:00 cron 使用 Hermes 原生 subagent lane 架构生成日报；collect/validate/assemble/publish/archive 完成。
+- `github-ai-projects` deterministic collect 缺少 run.json，lane subagent 按 skill 使用 bounded live GitHub discovery fallback，最终 lane 标记为 degraded。
+- Feishu 文档发布成功：https://www.feishu.cn/docx/L0aPdUGQBocInMxm28WcttEXn5d
+- knowledge-wiki 归档提交：b3a0639186fba2d341feccf3e45a38ff23a449aa
