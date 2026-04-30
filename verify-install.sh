@@ -40,11 +40,20 @@ if 'Daily Report Master Cron Main Prompt' not in prompt:
     raise SystemExit('cron prompt does not appear to be sourced from main-prompt.md')
 expected_skills = {
     'daily-report-master-collect-signals',
-    'daily-report-master-assess-reportability',
-    'daily-report-master-build-report',
-    'daily-report-master-publish-report',
-    'daily-report-master-archive-report',
-    'daily-report-master-notify-ops',
+    'daily-report-master',
+    'daily-report-lane-weather',
+    'daily-report-lane-x-feed',
+    'daily-report-lane-x-following',
+    'daily-report-lane-reddit',
+    'daily-report-lane-hacker-news',
+    'daily-report-lane-hacker-news-search',
+    'daily-report-lane-claude-code',
+    'daily-report-lane-codex',
+    'daily-report-lane-openclaw',
+    'daily-report-lane-github-ai-projects',
+    'daily-report-lane-github-trending',
+    'daily-report-lane-product-hunt',
+    'daily-report-lane-polymarket',
 }
 if set(job.get('skills') or []) != expected_skills:
     raise SystemExit(f'cron skills mismatch: {job.get("skills")!r}')

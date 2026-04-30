@@ -35,6 +35,7 @@ prompt = (repo_root / 'main-prompt.md').read_text(encoding='utf-8')
 config = yaml.safe_load((repo_root / 'config' / 'runtime.yaml').read_text(encoding='utf-8'))
 runtime = config['runtime']
 skill_names = [
+    'daily-report-master-collect-signals',
     'daily-report-master',
     'daily-report-lane-weather',
     'daily-report-lane-x-feed',

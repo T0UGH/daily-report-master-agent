@@ -39,7 +39,7 @@
 
 1. 使用 Asia/Shanghai 日期作为 report date。
 2. 读取并遵守 `daily-report-master` skill。
-3. 如当天 signals 不存在或明显不完整，可先运行 deterministic collect/diagnose/retry；但 collect 只产生 raw corpus/evidence，不得产生 reader-facing 正文。
+3. **必须先运行 deterministic collect/diagnose/retry**，再准备 lane packages。不要假设当天 signals 已经存在；即使已有部分 signals，也要在本次 run 内完成 collect 并记录结果。collect 只产生 raw corpus/evidence，不得产生 reader-facing 正文。
 4. 运行：
 
 ```bash
