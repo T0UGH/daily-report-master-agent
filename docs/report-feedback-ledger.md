@@ -196,3 +196,11 @@
 ### 待验证 / 待修复
 - 需要检查 2026-04-30 signals 为什么缺失，避免生产日报只剩天气和 GitHub 发现补充。
 - assembled `report.md` 出现两个 `## Hacker News 搜索` 段，需检查 assembler/fixed section order 或 lane heading 配置。
+
+### 2026-04-30 09:30 rerun 记录
+- 重新按 Hermes 原生 subagent lane 架构跑生产链路：本次 run 先在同一 master run 内执行 signals-engine collect/diagnose/retry，再 prepare lane packages，再由 Hermes `delegate_task` 生成 13 条 lane 输出。
+- collect 结果：12 条 lane collect 成功；`github-ai-projects` collect 首次失败后 diagnose + retry 仍失败，但该 lane subagent 明确按降级处理并用 GitHub Search / raw README 补证据。
+- validation：`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-04-30/report.md`。
+- lane status：13 total；12 ok；1 degraded（`github-ai-projects`）；0 blocked；subagent selected total 69。
+- Feishu 文档：`https://www.feishu.cn/docx/Ij44dAtxMoaTZWxz3EKcN53UnBb`。
+- archive：已归档到 knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-04-30.md`，commit `790ebcaa601d11166b81efb8d570e983d96b20bd`。
