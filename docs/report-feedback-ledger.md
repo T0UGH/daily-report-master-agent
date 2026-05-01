@@ -212,3 +212,17 @@
 - `github-ai-projects` deterministic collect 缺少 run.json，lane subagent 按 skill 使用 bounded live GitHub discovery fallback，最终 lane 标记为 degraded。
 - Feishu 文档发布成功：https://www.feishu.cn/docx/L0aPdUGQBocInMxm28WcttEXn5d
 - knowledge-wiki 归档提交：b3a0639186fba2d341feccf3e45a38ff23a449aa
+
+## 2026-05-02
+
+### 生产运行记录
+- Hermes 原生 subagent lane 架构完成 06:00 cron 主链路；本次先执行 deterministic collect/diagnose/retry，再 prepare lane packages，再由 13 个 Hermes lane subagent 写 `lane.md` / `lane-meta.json`。
+- collect 结果：`hacker-news-search-watch` 首次失败后 retry 成功；`github-ai-projects` collect 诊断/重试后仍失败，lane subagent 按 skill 使用 bounded GitHub API fallback，标记 degraded。
+- validation：`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-02/report.md`。
+- 发布：Feishu 文档成功，doc URL `https://www.feishu.cn/docx/HfJmd8cLTowOp5xKptmcnmaqnZK`。
+- 归档：最终 `report.md` 已归档到 `knowledge-wiki/raw/inbound/ai-daily-report/2026/2026-05-02.md`，commit `08001cae98d570b2f4c8c9a638382926e28950ed`。
+
+### 当天实际表现 / 待跟进
+- 13 条 lane 全部有 subagent 输出文件，但多数 lane package 的 raw corpus 为 missing，导致最终状态为 `0 ok / 5 empty / 7 degraded / 1 blocked`。
+- `hacker-news` 因 raw corpus 缺失被 lane subagent 标记 blocked；X、Codex、OpenClaw、Polymarket 多为空；报告内容主要剩天气与 GitHub AI 项目 fallback。
+- 后续需追查 signals-engine collect 成功但 package raw 缺失的映射问题，尤其 lane 名 `*-watch` 与 reader lane 名之间的 raw 目录适配，避免 “collect exit=0 但 prepare package raw_file_count=0”。
