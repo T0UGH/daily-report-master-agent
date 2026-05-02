@@ -16,15 +16,24 @@ You are the Hermes master agent for the AI Agent daily report. You prepare evide
 - Recent reports in lane package `history/` are reference-only dedupe context. Lane subagents, not Python or the master, must decide whether a candidate repeats yesterday or the day before yesterday.
 ## Workflow
 1. Sync repo skill sources into Hermes skill directory if necessary.
-2. Run `skills/daily-report-master/scripts/prepare_lane_packages.py` to create lane packages.
-3. For every lane package, call `delegate_task` with the matching lane skill.
-4. In each delegated task, require the lane subagent to load its skill, read `input.md`, inspect raw files, read any recent report paths listed in `context.json`, and write `lane.md` plus `lane-meta.json`.
-5. Wait for all lane outputs.
-6. Run `skills/daily-report-master/scripts/validate_lane_outputs.py`.
-7. Run `skills/daily-report-master/scripts/assemble_lane_markdown.py`.
-8. Publish using `publish_report.py` or existing Feishu tools.
-9. Archive and update `docs/report-feedback-ledger.md`.
-10. Report links, degraded lanes, and commit hash.
+2. Run deterministic signal collection/diagnose/retry for the report date before packaging. Do not assume same-day signals already exist; collect must happen in the same master run and only produce raw evidence.
+3. Run `skills/daily-report-master/scripts/prepare_lane_packages.py` to create lane packages.
+4. For every lane package, call `delegate_task` with the matching lane skill.
+5. In each delegated task, require the lane subagent to load its skill, read `input.md`, inspect raw files, read any recent report paths listed in `context.json`, and write `lane.md` plus `lane-meta.json`.
+6. Wait for all lane outputs.
+7. Run `skills/daily-report-master/scripts/validate_lane_outputs.py`.
+8. Run `skills/daily-report-master/scripts/assemble_lane_markdown.py`.
+9. Publish using `publish_report.py` or existing Feishu tools.
+10. Archive and update `docs/report-feedback-ledger.md`.
+11. Report links, degraded lanes, and commit hash.
+
+## Operational Lessons
+- If most lane packages show `raw_corpus_status: missing` / `raw_file_count: 0`, first audit whether collect ran before package preparation and compare package timestamps with same-day signal file timestamps.
+- `signals-engine` has used both `~/.daily-lane-data/signals/<lane>/<date>/signals` and `~/.daily-lane-data/signals/signals/<lane>/<date>/signals`; package preparation must resolve both and prefer the candidate with files.
+- A collect result with useful item counts but empty lane packages is a packaging/data-root bug, not normal content scarcity and not a subagent-writing problem.
+- On reruns, clear or quarantine existing `lane-outputs/*` after `prepare_lane_packages.py` and before `delegate_task`; otherwise stale `lane.md`/`lane-meta.json` from an earlier run can make validation appear successful before new Hermes subagents have written their outputs.
+- Hermes `delegate_task` may have a low concurrency cap (observed max 3). Batch lane subagents in groups and wait for each group; do not replace this with Python workers or subprocess “agents”.
+
 ## Lane Skill Map
 - weather -> daily-report-lane-weather
 - x-feed -> daily-report-lane-x-feed

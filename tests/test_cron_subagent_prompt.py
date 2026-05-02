@@ -23,4 +23,4 @@ def test_install_syncs_subagent_skills_to_cron() -> None:
     assert "'daily-report-lane-x-feed'" in install_script
     assert "'daily-report-lane-github-ai-projects'" in install_script
     assert "'daily-report-master-build-report'" not in install_script
-    assert "'daily-report-master-collect-signals'" not in install_script
+    assert "'daily-report-master-collect-signals'" in install_script

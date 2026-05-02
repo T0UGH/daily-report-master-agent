@@ -13,6 +13,36 @@ def test_prepare_lane_packages_marks_missing_raw_corpus(tmp_path):
     context=json.loads((packages['github-ai-projects']/'context.json').read_text(encoding='utf-8'))
     assert context['raw_corpus_status'] in {'missing','degraded'}
 
+
+def test_prepare_lane_packages_reads_nested_signals_root(tmp_path):
+    lane_dir=tmp_path/'signals'/'signals'/'weather-watch'/'2026-04-26'/'signals'
+    lane_dir.mkdir(parents=True)
+    (lane_dir/'weather.md').write_text('北京天气',encoding='utf-8')
+
+    packages=prepare_lane_packages('2026-04-26',tmp_path/'signals',tmp_path/'runtime',None)
+
+    context=json.loads((packages['weather']/'context.json').read_text(encoding='utf-8'))
+    text=(packages['weather']/'input.md').read_text(encoding='utf-8')
+    assert context['raw_corpus_status']=='ok'
+    assert context['raw_file_count']==1
+    assert '北京天气' in text
+
+
+def test_prepare_lane_packages_prefers_candidate_with_files(tmp_path):
+    empty_dir=tmp_path/'signals'/'x-feed'/'2026-04-26'/'signals'
+    empty_dir.mkdir(parents=True)
+    nested_dir=tmp_path/'signals'/'signals'/'x-feed'/'2026-04-26'/'signals'
+    nested_dir.mkdir(parents=True)
+    (nested_dir/'tweet.md').write_text('nested x signal',encoding='utf-8')
+
+    packages=prepare_lane_packages('2026-04-26',tmp_path/'signals',tmp_path/'runtime',None)
+
+    context=json.loads((packages['x-feed']/'context.json').read_text(encoding='utf-8'))
+    text=(packages['x-feed']/'input.md').read_text(encoding='utf-8')
+    assert context['raw_corpus_status']=='ok'
+    assert context['raw_file_count']==1
+    assert 'nested x signal' in text
+
 def test_prepare_lane_packages_copies_recent_reports_for_agent_dedup_reference(tmp_path):
     (tmp_path/'2026-04-25').mkdir()
     (tmp_path/'2026-04-25'/'report.md').write_text('# 2026-04-25\nYesterday report topic',encoding='utf-8')

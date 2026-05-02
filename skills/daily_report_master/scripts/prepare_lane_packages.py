@@ -6,9 +6,30 @@ LANES=['weather','x-feed','x-following','reddit','hacker-news','hacker-news-sear
 SIGNAL_LANE_MAP={'weather':'weather-watch','x-feed':'x-feed','x-following':'x-following','reddit':'reddit-watch','hacker-news':'hacker-news-watch','hacker-news-search':'hacker-news-search-watch','claude-code':'claude-code-watch','codex':'codex-watch','openclaw':'openclaw-watch','github-ai-projects':'github-ai-projects','github-trending':'github-trending-weekly','product-hunt':'product-hunt-watch','polymarket':'polymarket-watch'}
 LANE_SKILL_MAP={lane:f'daily-report-lane-{lane}' for lane in LANES}
 
+def _count_files(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for p in path.rglob('*') if p.is_file())
+
+
 def _source_dir(signal_root: Path, signal_lane: str, report_date: str) -> Path:
-    base=signal_root/signal_lane/report_date
-    return base/'signals' if (base/'signals').exists() else base
+    """Resolve the raw signal directory for a lane/date.
+
+    `signals-engine` has run with two data-root conventions in production:
+    - <root>/<lane>/<date>/signals
+    - <root>/signals/<lane>/<date>/signals
+
+    Package preparation must tolerate both, otherwise collect can succeed while
+    lane packages are empty. Prefer the candidate that actually contains files.
+    """
+    candidates=[]
+    for root in (signal_root, signal_root/'signals'):
+        base=root/signal_lane/report_date
+        candidates.append(base/'signals' if (base/'signals').exists() else base)
+    existing=[p for p in candidates if p.exists()]
+    if not existing:
+        return candidates[0]
+    return max(existing, key=_count_files)
 
 def _recent_report_doc_url(report_dir: Path) -> str | None:
     summary_path=report_dir/'run-summary.json'
