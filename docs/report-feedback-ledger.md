@@ -228,3 +228,19 @@
 - 13 条 lane 全部有真实 Hermes subagent 输出文件，报告主体不使用旧 renderer/local fallback。
 - `github-ai-projects` 没有可核验 raw corpus，本次按 no-info contract 输出 `- 无`，没有复用昨日旧项目。
 - 输出 contract 暴露两个 runtime hardening 点：assembler 只拼接 lane.md，未自动生成统一 `## 来源`；empty/degraded no-info lane 需要严格输出 `- 无` 才能跳过 source 要求。后续应把这两点固化到 `assemble_lane_markdown.py` / lane validation，而不是每次人工补。
+
+## 2026-05-03
+
+### 生产运行记录
+- Hermes 原生 subagent lane 架构完成 06:00 cron 主链路；本次先执行 deterministic collect/diagnose/retry，再 prepare lane packages，再由 13 个 Hermes lane subagent 写 `lane.md` / `lane-meta.json`。
+- collect 结果：11 条 lane ok；`x-feed` collect 命令成功但 run status empty/source fetch browser session error，`github-ai-projects` collect 首次失败后 diagnose + retry 仍缺少 run.json；两条 lane raw corpus 为空并由 subagent 降级输出 `- 无`。
+- package/raw 结果：除 `x-feed`、`github-ai-projects` raw_file_count=0 外，其余 11 条 lane package 均有 raw files。
+- validation：`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-03/report.md`；补 `## 来源` 附录后 `validate_report_markdown()` passed。
+- lane status：13 total；11 ok；2 degraded（`x-feed`、`github-ai-projects`）；0 blocked；compat selected_item_count=197。
+- 发布：Feishu 文档成功，doc URL `https://www.feishu.cn/docx/ATzvdyk3VoDq0qxaRoQcY0cjn4f`；本次未发送卡片/音频。
+- 归档：最终 `report.md` 已归档到 `knowledge-wiki/raw/inbound/ai-daily-report/2026/2026-05-03.md`，commit `425d839e6fcddd1e3cc94f7666b1ab7023470af4`。
+
+### 当天实际表现 / 待跟进
+- 13 条 lane 全部有真实 Hermes subagent 输出文件，报告主体不使用旧 renderer/local fallback。
+- `x-feed` browser collector 不稳定导致当天推荐流缺失；需要后续单独修复 browser session/collector 稳定性。
+- `github-ai-projects` 仍持续缺 run.json；需要修复 deterministic collect，而不是依赖 lane 降级。
