@@ -216,13 +216,15 @@
 ## 2026-05-02
 
 ### 生产运行记录
-- Hermes 原生 subagent lane 架构完成 06:00 cron 主链路；本次先执行 deterministic collect/diagnose/retry，再 prepare lane packages，再由 13 个 Hermes lane subagent 写 `lane.md` / `lane-meta.json`。
-- collect 结果：`hacker-news-search-watch` 首次失败后 retry 成功；`github-ai-projects` collect 诊断/重试后仍失败，lane subagent 按 skill 使用 bounded GitHub API fallback，标记 degraded。
-- validation：`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-02/report.md`。
-- 发布：Feishu 文档成功，doc URL `https://www.feishu.cn/docx/HfJmd8cLTowOp5xKptmcnmaqnZK`。
-- 归档：最终 `report.md` 已归档到 `knowledge-wiki/raw/inbound/ai-daily-report/2026/2026-05-02.md`，commit `08001cae98d570b2f4c8c9a638382926e28950ed`。
+- Hermes 原生 subagent lane 架构完成 cron 主链路；本次先执行 deterministic collect/diagnose/retry，再 prepare lane packages，再由 13 个 Hermes lane subagent 写 `lane.md` / `lane-meta.json`。
+- collect 结果：12 条 lane collect 成功；`github-ai-projects` collect 首次失败后 diagnose + retry 仍失败，最终该 lane 因 raw corpus 为空标记 degraded / no-info。
+- package/raw 结果：除 `github-ai-projects` raw_file_count=0 外，其余 12 条 lane package 均有 raw files；之前 “collect 成功但 package raw 缺失” 的 signals root 适配问题本次已避开。
+- validation：`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-02/report.md`；补 `## 来源` 附录后 `validate_report_markdown()` passed。
+- lane status：13 total；12 ok；1 degraded（`github-ai-projects`）；0 blocked；compat selected_item_count=41。
+- 发布：Feishu 文档和精选卡片成功，doc URL `https://www.feishu.cn/docx/Xs5kdPuO7ouiy6xUig0cn6T9nWe`；音频生成因 MiniMax `2056 usage limit exceeded` 失败，整体 publish degraded。
+- 归档：最终 `report.md` 已归档到 `knowledge-wiki/raw/inbound/ai-daily-report/2026/2026-05-02.md`，commit `95e4dba710d7a183be9b20690f644962b5471309`。
 
 ### 当天实际表现 / 待跟进
-- 13 条 lane 全部有 subagent 输出文件，但多数 lane package 的 raw corpus 为 missing，导致最终状态为 `0 ok / 5 empty / 7 degraded / 1 blocked`。
-- `hacker-news` 因 raw corpus 缺失被 lane subagent 标记 blocked；X、Codex、OpenClaw、Polymarket 多为空；报告内容主要剩天气与 GitHub AI 项目 fallback。
-- 后续需追查 signals-engine collect 成功但 package raw 缺失的映射问题，尤其 lane 名 `*-watch` 与 reader lane 名之间的 raw 目录适配，避免 “collect exit=0 但 prepare package raw_file_count=0”。
+- 13 条 lane 全部有真实 Hermes subagent 输出文件，报告主体不使用旧 renderer/local fallback。
+- `github-ai-projects` 没有可核验 raw corpus，本次按 no-info contract 输出 `- 无`，没有复用昨日旧项目。
+- 输出 contract 暴露两个 runtime hardening 点：assembler 只拼接 lane.md，未自动生成统一 `## 来源`；empty/degraded no-info lane 需要严格输出 `- 无` 才能跳过 source 要求。后续应把这两点固化到 `assemble_lane_markdown.py` / lane validation，而不是每次人工补。
