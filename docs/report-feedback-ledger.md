@@ -244,3 +244,17 @@
 - 13 条 lane 全部有真实 Hermes subagent 输出文件，报告主体不使用旧 renderer/local fallback。
 - `x-feed` browser collector 不稳定导致当天推荐流缺失；需要后续单独修复 browser session/collector 稳定性。
 - `github-ai-projects` 仍持续缺 run.json；需要修复 deterministic collect，而不是依赖 lane 降级。
+
+## 2026-05-04
+
+### 运行记录
+- 06:00 Hermes 原生 subagent lane 架构完成生产运行：collect → prepare lane packages → 13 个真实 Hermes lane subagent → validate → assemble → Feishu doc publish → knowledge-wiki archive。
+- GitHub AI 项目 lane collect 命令首轮与 retry 均失败，package raw 为空；lane subagent 按规则输出 degraded / `- 无`，未使用旧 renderer 或 selected_items fallback。
+- final report contract 首次校验发现 Reddit 空泛判断句；已交回 Reddit lane subagent 基于 raw thread 修复，不由 master/Python 改写正文。
+
+### 产物
+- runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-04/`
+- final report: `report.md`
+- Feishu doc: https://www.feishu.cn/docx/XRO8dA95boNqoexQKXCcxQdqnSd
+- archive: `knowledge-wiki/raw/inbound/ai-daily-report/2026/2026-05-04.md` @ `5e8755194cef0825aad5a20f88d14f671da47aea`
+
