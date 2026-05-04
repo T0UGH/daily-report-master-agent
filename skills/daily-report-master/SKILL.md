@@ -33,6 +33,7 @@ You are the Hermes master agent for the AI Agent daily report. You prepare evide
 - A collect result with useful item counts but empty lane packages is a packaging/data-root bug, not normal content scarcity and not a subagent-writing problem.
 - On reruns, clear or quarantine existing `lane-outputs/*` after `prepare_lane_packages.py` and before `delegate_task`; otherwise stale `lane.md`/`lane-meta.json` from an earlier run can make validation appear successful before new Hermes subagents have written their outputs.
 - Hermes `delegate_task` may have a low concurrency cap (observed max 3). Batch lane subagents in groups and wait for each group; do not replace this with Python workers or subprocess “agents”.
+- `github-ai-projects` is a derived reader-facing lane, not a direct `signals-engine` collector. Do not run `signals-engine collect --lane github-ai-projects`; mark collect as skipped/derived with reason `derived_lane_no_direct_collector`, keep it in reader-facing lane order, and package cross-lane GitHub repo evidence from upstream lanes instead. Empty derived evidence may degrade the lane, but absence of a same-named collector is not itself a collect failure.
 
 ## Lane Skill Map
 - weather -> daily-report-lane-weather

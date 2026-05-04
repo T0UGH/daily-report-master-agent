@@ -11,7 +11,10 @@ def test_prepare_lane_packages_reads_signal_files_not_selected_items(tmp_path):
 def test_prepare_lane_packages_marks_missing_raw_corpus(tmp_path):
     packages=prepare_lane_packages('2026-04-26',tmp_path/'signals',tmp_path/'runtime',None)
     context=json.loads((packages['github-ai-projects']/'context.json').read_text(encoding='utf-8'))
-    assert context['raw_corpus_status'] in {'missing','degraded'}
+    assert context['raw_corpus_status']=='degraded'
+    assert context['raw_file_count']==0
+    assert context['derived_lane'] is True
+    assert context['derived_reason']=='derived_lane_no_direct_collector'
 
 
 def test_prepare_lane_packages_reads_nested_signals_root(tmp_path):
@@ -42,6 +45,86 @@ def test_prepare_lane_packages_prefers_candidate_with_files(tmp_path):
     assert context['raw_corpus_status']=='ok'
     assert context['raw_file_count']==1
     assert 'nested x signal' in text
+
+
+def test_prepare_lane_packages_derives_github_ai_projects_from_upstream_raw_repo_references(tmp_path):
+    repo_signal=tmp_path/'signals'/'github-trending-weekly'/'2026-05-04'/'signals'
+    repo_signal.mkdir(parents=True)
+    (repo_signal/'repo.md').write_text(
+        '# Repo\nhttps://github.com/owner/agent-workbench\nA useful AI agent workbench.',
+        encoding='utf-8',
+    )
+    unrelated_signal=tmp_path/'signals'/'x-feed'/'2026-05-04'/'signals'
+    unrelated_signal.mkdir(parents=True)
+    (unrelated_signal/'chat.md').write_text('No repository reference here.',encoding='utf-8')
+
+    packages=prepare_lane_packages('2026-05-04',tmp_path/'signals',tmp_path/'runtime',None)
+
+    package=packages['github-ai-projects']
+    context=json.loads((package/'context.json').read_text(encoding='utf-8'))
+    text=(package/'input.md').read_text(encoding='utf-8')
+    assert context['raw_corpus_status']=='ok'
+    assert context['raw_file_count']==1
+    assert context['derived_lane'] is True
+    assert context['derived_reason']=='derived_lane_no_direct_collector'
+    assert context['derived_upstream_lanes']==[
+        'github-trending-weekly',
+        'x-feed',
+        'x-following',
+        'reddit-watch',
+        'hacker-news-watch',
+        'hacker-news-search-watch',
+        'product-hunt-watch',
+    ]
+    assert (package/'raw'/'github-trending-weekly'/'repo.md').read_text(encoding='utf-8').startswith('# Repo')
+    assert 'https://github.com/owner/agent-workbench' in text
+    assert 'No repository reference here' not in text
+
+
+def test_prepare_lane_packages_derives_github_ai_projects_from_selected_items_repo_evidence(tmp_path):
+    selected=tmp_path/'selected-items.json'
+    selected.write_text(
+        json.dumps(
+            {
+                'report_date':'2026-05-04',
+                'selected_items':[
+                    {
+                        'id':'x:repo',
+                        'lane':'x-feed',
+                        'title':'owner/agent-workbench',
+                        'summary':'Developers are discussing owner/agent-workbench.',
+                        'source_url':'https://x.com/dev/status/1',
+                    },
+                    {
+                        'id':'cc:repo',
+                        'lane':'claude-code-watch',
+                        'title':'owner/not-derived',
+                        'source_url':'https://github.com/owner/not-derived',
+                    },
+                    {
+                        'id':'ph:no-repo',
+                        'lane':'product-hunt-watch',
+                        'title':'No repo here',
+                        'source_url':'https://www.producthunt.com/posts/no-repo',
+                    },
+                ],
+            }
+        ),
+        encoding='utf-8',
+    )
+
+    packages=prepare_lane_packages('2026-05-04',tmp_path/'signals',tmp_path/'runtime',selected)
+
+    package=packages['github-ai-projects']
+    context=json.loads((package/'context.json').read_text(encoding='utf-8'))
+    text=(package/'input.md').read_text(encoding='utf-8')
+    raw_files=list((package/'raw').rglob('*'))
+    assert context['raw_corpus_status']=='ok'
+    assert context['raw_file_count']==1
+    assert any(path.name=='x-repo.json' for path in raw_files)
+    assert 'owner/agent-workbench' in text
+    assert 'owner/not-derived' not in text
+    assert 'No repo here' not in text
 
 def test_prepare_lane_packages_copies_recent_reports_for_agent_dedup_reference(tmp_path):
     (tmp_path/'2026-04-25').mkdir()

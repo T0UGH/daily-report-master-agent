@@ -27,6 +27,17 @@ selection:
     weather-watch: 2
 reader_facing:
   title_template: "AI Agent 日报（{report_date}）"
+  derived_lanes:
+    github-ai-projects:
+      reason: derived_lane_no_direct_collector
+      upstream_lanes:
+        - github-trending-weekly
+        - x-feed
+        - x-following
+        - reddit-watch
+        - hacker-news-watch
+        - hacker-news-search-watch
+        - product-hunt-watch
   lane_paragraph_targets:
     x-feed:
       min_paragraphs: 6

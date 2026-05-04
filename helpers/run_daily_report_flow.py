@@ -101,7 +101,8 @@ READOUT_ENGLISH_PHRASE_REWRITES = {
     "markdown handoff": "markdown 交接文件",
 }
 OPS_NOTICE_TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "ops-notice.md"
-GITHUB_AI_PROJECTS_INPUT_LANES = {
+DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON = "derived_lane_no_direct_collector"
+GITHUB_AI_PROJECTS_UPSTREAM_LANES = (
     "github-trending-weekly",
     "x-feed",
     "x-following",
@@ -109,6 +110,13 @@ GITHUB_AI_PROJECTS_INPUT_LANES = {
     "hacker-news-watch",
     "hacker-news-search-watch",
     "product-hunt-watch",
+)
+GITHUB_AI_PROJECTS_INPUT_LANES = set(GITHUB_AI_PROJECTS_UPSTREAM_LANES)
+DEFAULT_DERIVED_READER_LANES: dict[str, dict[str, Any]] = {
+    "github-ai-projects": {
+        "reason": DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON,
+        "upstream_lanes": list(GITHUB_AI_PROJECTS_UPSTREAM_LANES),
+    }
 }
 GITHUB_REPO_URL_RE = re.compile(r"https?://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", flags=re.IGNORECASE)
 GITHUB_REPO_BARE_RE = re.compile(r"(?<![A-Za-z0-9_.-])[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![A-Za-z0-9_.-])")
@@ -164,6 +172,164 @@ def _contains_github_repo_reference(item: dict[str, Any]) -> bool:
     url_text = _github_repo_candidate_text(item, include_urls=True)
     non_url_text = _github_repo_candidate_text(item, include_urls=False)
     return bool(GITHUB_REPO_URL_RE.search(url_text) or GITHUB_REPO_BARE_RE.search(non_url_text))
+
+
+def resolve_derived_reader_lanes(config: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+    config = config or {}
+    resolved = {
+        lane: {
+            "reason": str(payload.get("reason") or DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON),
+            "upstream_lanes": [str(item) for item in payload.get("upstream_lanes", []) if str(item).strip()],
+        }
+        for lane, payload in DEFAULT_DERIVED_READER_LANES.items()
+    }
+
+    reader_facing = config.get("reader_facing") or {}
+    configured = reader_facing.get("derived_lanes") or config.get("derived_lanes") or {}
+    if not isinstance(configured, dict):
+        return resolved
+
+    for lane_name, raw_payload in configured.items():
+        if not isinstance(lane_name, str) or not lane_name:
+            continue
+        if raw_payload is False or raw_payload is None:
+            resolved.pop(lane_name, None)
+            continue
+        if not isinstance(raw_payload, dict):
+            raw_payload = {}
+        existing = resolved.get(lane_name, {})
+        raw_upstream = (
+            raw_payload.get("upstream_lanes")
+            or raw_payload.get("input_lanes")
+            or existing.get("upstream_lanes")
+            or []
+        )
+        if not isinstance(raw_upstream, list):
+            raw_upstream = []
+        resolved[lane_name] = {
+            "reason": str(raw_payload.get("reason") or existing.get("reason") or DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON),
+            "upstream_lanes": [str(item) for item in raw_upstream if str(item).strip()],
+        }
+    return resolved
+
+
+def collector_lanes_for_reader_lanes(lane_order: list[str], derived_lanes: dict[str, dict[str, Any]]) -> list[str]:
+    lanes: list[str] = []
+    for lane_name in lane_order:
+        derived_config = derived_lanes.get(lane_name)
+        if derived_config is None:
+            if lane_name not in lanes:
+                lanes.append(lane_name)
+            continue
+        for upstream_lane in derived_config.get("upstream_lanes", []):
+            if upstream_lane not in derived_lanes and upstream_lane not in lanes:
+                lanes.append(upstream_lane)
+    return lanes
+
+
+def build_empty_collect_result(*, report_date: str) -> dict[str, Any]:
+    return {
+        "report_date": report_date,
+        "source": "signals-engine",
+        "lanes": [],
+        "summary": {"useful_item_count": 0, "partial_lane_count": 0},
+    }
+
+
+def build_empty_selected_items(*, report_date: str) -> dict[str, Any]:
+    return {
+        "report_date": report_date,
+        "source": "signals-engine",
+        "selected_items": [],
+        "summary": {"selected_item_count": 0, "lane_counts": []},
+    }
+
+
+def build_derived_collect_skip(lane_name: str, derived_config: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "lane": lane_name,
+        "status": "skipped",
+        "kind": "derived",
+        "reason": str(derived_config.get("reason") or DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON),
+    }
+
+
+def add_derived_lanes_to_collect_result(
+    collect_result: dict[str, Any],
+    *,
+    lane_order: list[str],
+    derived_lanes: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    lanes_by_name = {
+        str(lane.get("name")): dict(lane)
+        for lane in collect_result.get("lanes", [])
+        if isinstance(lane, dict) and lane.get("name")
+    }
+    ordered_lanes: list[dict[str, Any]] = []
+    included: set[str] = set()
+    for lane_name in lane_order:
+        if lane_name in lanes_by_name:
+            ordered_lanes.append(lanes_by_name[lane_name])
+            included.add(lane_name)
+            continue
+        derived_config = derived_lanes.get(lane_name)
+        if derived_config is None:
+            continue
+        ordered_lanes.append(
+            {
+                "name": lane_name,
+                "status": "ok",
+                "useful_item_count": 0,
+                "collection_mode": "derived",
+                "reason": str(derived_config.get("reason") or DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON),
+            }
+        )
+        included.add(lane_name)
+
+    for lane_name, lane_payload in lanes_by_name.items():
+        if lane_name not in included:
+            ordered_lanes.append(lane_payload)
+
+    summary = dict(collect_result.get("summary") or {})
+    if ordered_lanes or any(lane_name in derived_lanes for lane_name in lane_order):
+        summary["useful_item_count"] = sum(int(lane.get("useful_item_count", 0)) for lane in ordered_lanes)
+        summary["partial_lane_count"] = sum(1 for lane in ordered_lanes if lane.get("status") != "ok")
+    result = dict(collect_result)
+    result["lanes"] = ordered_lanes
+    result["summary"] = summary
+    return result
+
+
+def add_derived_lanes_to_selected_items(
+    selected_items: dict[str, Any],
+    *,
+    lane_order: list[str],
+    derived_lanes: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    summary = dict(selected_items.get("summary") or {})
+    raw_counts = summary.get("lane_counts") or []
+    counts_by_lane = {
+        str(item.get("lane")): dict(item)
+        for item in raw_counts
+        if isinstance(item, dict) and item.get("lane")
+    }
+    ordered_counts: list[dict[str, Any]] = []
+    included: set[str] = set()
+    for lane_name in lane_order:
+        if lane_name in counts_by_lane:
+            ordered_counts.append(counts_by_lane[lane_name])
+            included.add(lane_name)
+            continue
+        if lane_name in derived_lanes:
+            ordered_counts.append({"lane": lane_name, "selected_item_count": 0})
+            included.add(lane_name)
+    for lane_name, count_payload in counts_by_lane.items():
+        if lane_name not in included:
+            ordered_counts.append(count_payload)
+    summary["lane_counts"] = ordered_counts
+    result = dict(selected_items)
+    result["summary"] = summary
+    return result
 
 
 def build_lane_input_artifact(
@@ -1867,6 +2033,8 @@ def main() -> int:
     paths = config["paths"]
     repo_root = Path(config.get("repo_root", Path(__file__).resolve().parent.parent)).resolve()
     lane_order = list(config["reader_facing"]["fixed_section_order"])
+    derived_lanes = resolve_derived_reader_lanes(config)
+    collector_lane_order = collector_lanes_for_reader_lanes(lane_order, derived_lanes)
     signals_root = expand_path(paths["signals_root"])
     data_dir = signals_root.parent
     runtime_root = expand_path(paths["runtime_root"])
@@ -1896,6 +2064,11 @@ def main() -> int:
 
     if should_collect:
         for lane in lane_order:
+            if lane in derived_lanes:
+                summary["collect"].append(build_derived_collect_skip(lane, derived_lanes[lane]))
+                if args.verbose:
+                    print(f"collect {lane}: skipped derived lane")
+                continue
             summary["collect"].append(
                 run_collect_with_retry(
                     lane=lane,
@@ -1906,14 +2079,34 @@ def main() -> int:
                 )
             )
 
-    collect_result = build_collect_result(signals_root=signals_root, report_date=args.report_date, lane_names=lane_order)
+    if collector_lane_order:
+        collect_result = build_collect_result(
+            signals_root=signals_root,
+            report_date=args.report_date,
+            lane_names=collector_lane_order,
+        )
+    else:
+        collect_result = build_empty_collect_result(report_date=args.report_date)
+    collect_result = add_derived_lanes_to_collect_result(
+        collect_result,
+        lane_order=lane_order,
+        derived_lanes=derived_lanes,
+    )
     previous_selected_items_path = resolve_previous_selected_items_path(runtime_root=runtime_root, report_date=args.report_date)
-    selected_items = build_selected_items(
-        signals_root=signals_root,
-        report_date=args.report_date,
-        lane_names=lane_order,
-        lane_item_limits=resolve_lane_item_limits(config),
-        previous_selected_items_path=previous_selected_items_path,
+    if collector_lane_order:
+        selected_items = build_selected_items(
+            signals_root=signals_root,
+            report_date=args.report_date,
+            lane_names=collector_lane_order,
+            lane_item_limits=resolve_lane_item_limits(config),
+            previous_selected_items_path=previous_selected_items_path,
+        )
+    else:
+        selected_items = build_empty_selected_items(report_date=args.report_date)
+    selected_items = add_derived_lanes_to_selected_items(
+        selected_items,
+        lane_order=lane_order,
+        derived_lanes=derived_lanes,
     )
 
     collect_result_path = run_dir / "collect-result.json"

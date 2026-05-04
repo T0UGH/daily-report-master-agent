@@ -1251,6 +1251,129 @@ def test_main_publish_path_blocks_and_records_contract_failure_before_publish(
     assert "reader-facing 成稿未通过输出合同校验：X 推荐流 的正文条目不得使用占位统计文案" in ops_notice
 
 
+def test_main_skips_signals_engine_collect_for_derived_reader_lanes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    config_path = tmp_path / "runtime.yaml"
+    signals_root = tmp_path / "signals"
+    runtime_root = tmp_path / "runtime"
+    signals_root.mkdir(parents=True)
+    config_path.write_text(
+        "version: 1\n"
+        f"repo_root: {tmp_path}\n"
+        "paths:\n"
+        f"  signals_root: {signals_root}\n"
+        f"  runtime_root: {runtime_root}\n"
+        "selection:\n"
+        "  per_lane_limits:\n"
+        "    x-feed: 1\n"
+        "    github-ai-projects: 5\n"
+        "reader_facing:\n"
+        "  fixed_section_order:\n"
+        "    - x-feed\n"
+        "    - github-ai-projects\n"
+        "runtime:\n"
+        "  timezone: Asia/Shanghai\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        flow,
+        "parse_args",
+        lambda: argparse.Namespace(
+            report_date="2026-05-04",
+            config=config_path,
+            skip_collect=False,
+            publish=False,
+            title_suffix="",
+            verbose=False,
+        ),
+    )
+    monkeypatch.setattr(flow, "is_path_writable", lambda _path: True)
+
+    collect_calls: list[str] = []
+
+    def fake_run_collect_with_retry(**kwargs: object) -> dict[str, object]:
+        lane = str(kwargs["lane"])
+        collect_calls.append(lane)
+        return {"lane": lane, "status": "ok", "attempts": 1, "collect_log": f"collect-{lane}.log"}
+
+    collect_lane_names: list[list[str]] = []
+
+    def fake_build_collect_result(**kwargs: object) -> dict[str, object]:
+        lane_names = list(kwargs["lane_names"])
+        collect_lane_names.append(lane_names)
+        return {
+            "report_date": "2026-05-04",
+            "source": "test",
+            "lanes": [{"name": lane_names[0], "status": "ok", "useful_item_count": 1}],
+            "summary": {"useful_item_count": 1, "partial_lane_count": 0},
+        }
+
+    selected_lane_names: list[list[str]] = []
+
+    def fake_build_selected_items(**kwargs: object) -> dict[str, object]:
+        selected_lane_names.append(list(kwargs["lane_names"]))
+        return {
+            "report_date": "2026-05-04",
+            "source": "test",
+            "selected_items": [],
+            "summary": {
+                "selected_item_count": 0,
+                "lane_counts": [{"lane": "x-feed", "selected_item_count": 0}],
+            },
+        }
+
+    monkeypatch.setattr(flow, "run_collect_with_retry", fake_run_collect_with_retry)
+    monkeypatch.setattr(flow, "build_collect_result", fake_build_collect_result)
+    monkeypatch.setattr(flow, "build_selected_items", fake_build_selected_items)
+    monkeypatch.setattr(flow, "validate_report_markdown", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        flow,
+        "build_report_artifact",
+        lambda **_: {
+            "body_markdown": "# AI Agent 日报（2026-05-04）\n\n## 来源\n",
+        },
+    )
+
+    assert flow.main() == 0
+
+    run_dir = runtime_root / "2026-05-04"
+    summary = json.loads((run_dir / "run-summary.json").read_text(encoding="utf-8"))
+    collect_result = json.loads((run_dir / "collect-result.json").read_text(encoding="utf-8"))
+    selected_items = json.loads((run_dir / "selected-items.json").read_text(encoding="utf-8"))
+    validation_bundle = json.loads((run_dir / "validation-bundle.json").read_text(encoding="utf-8"))
+
+    assert collect_calls == ["x-feed"]
+    assert collect_lane_names == [[
+        "x-feed",
+        "github-trending-weekly",
+        "x-following",
+        "reddit-watch",
+        "hacker-news-watch",
+        "hacker-news-search-watch",
+        "product-hunt-watch",
+    ]]
+    assert selected_lane_names == collect_lane_names
+    assert summary["collect"][1] == {
+        "lane": "github-ai-projects",
+        "status": "skipped",
+        "kind": "derived",
+        "reason": "derived_lane_no_direct_collector",
+    }
+    assert [lane["name"] for lane in collect_result["lanes"]] == ["x-feed", "github-ai-projects"]
+    assert collect_result["lanes"][1]["status"] == "ok"
+    assert collect_result["lanes"][1]["collection_mode"] == "derived"
+    assert collect_result["lanes"][1]["reason"] == "derived_lane_no_direct_collector"
+    assert collect_result["lanes"][1]["useful_item_count"] == 0
+    assert selected_items["summary"]["lane_counts"] == [
+        {"lane": "x-feed", "selected_item_count": 0},
+        {"lane": "github-ai-projects", "selected_item_count": 0},
+    ]
+    assert validation_bundle["summary"]["is_subset"] is True
+
+
 def test_main_worker_mode_writes_lane_inputs_and_outputs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config_path = tmp_path / "runtime.yaml"
     signals_root = tmp_path / "signals"

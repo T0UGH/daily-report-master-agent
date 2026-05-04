@@ -1,10 +1,16 @@
 from __future__ import annotations
-import argparse, json, shutil
+import argparse, json, re, shutil
 from datetime import date, timedelta
 from pathlib import Path
 LANES=['weather','x-feed','x-following','reddit','hacker-news','hacker-news-search','claude-code','codex','openclaw','github-ai-projects','github-trending','product-hunt','polymarket']
 SIGNAL_LANE_MAP={'weather':'weather-watch','x-feed':'x-feed','x-following':'x-following','reddit':'reddit-watch','hacker-news':'hacker-news-watch','hacker-news-search':'hacker-news-search-watch','claude-code':'claude-code-watch','codex':'codex-watch','openclaw':'openclaw-watch','github-ai-projects':'github-ai-projects','github-trending':'github-trending-weekly','product-hunt':'product-hunt-watch','polymarket':'polymarket-watch'}
 LANE_SKILL_MAP={lane:f'daily-report-lane-{lane}' for lane in LANES}
+DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON='derived_lane_no_direct_collector'
+GITHUB_AI_PROJECTS_UPSTREAM_LANES=['github-trending-weekly','x-feed','x-following','reddit-watch','hacker-news-watch','hacker-news-search-watch','product-hunt-watch']
+DERIVED_LANE_CONFIG={'github-ai-projects':{'reason':DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON,'upstream_lanes':GITHUB_AI_PROJECTS_UPSTREAM_LANES}}
+GITHUB_REPO_URL_RE=re.compile(r'https?://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+',flags=re.IGNORECASE)
+GITHUB_REPO_BARE_RE=re.compile(r'(?<![A-Za-z0-9_.-])[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![A-Za-z0-9_.-])')
+BARE_URL_RE=re.compile(r'https?://\S+')
 
 def _count_files(path: Path) -> int:
     if not path.exists():
@@ -30,6 +36,88 @@ def _source_dir(signal_root: Path, signal_lane: str, report_date: str) -> Path:
     if not existing:
         return candidates[0]
     return max(existing, key=_count_files)
+
+def _github_repo_candidate_text(item: dict, include_urls: bool) -> str:
+    parts=[item.get('title'),item.get('summary'),item.get('source_snippet'),item.get('excerpt')]
+    if include_urls:
+        parts.extend([item.get('source_url'),item.get('url')])
+    raw=item.get('raw')
+    if isinstance(raw,str):
+        parts.append(raw)
+    elif isinstance(raw,dict):
+        parts.extend([raw.get('title'),raw.get('summary'),raw.get('source_snippet')])
+        if include_urls:
+            parts.append(raw.get('url'))
+    return '\n'.join(str(part) for part in parts if part)
+
+def _contains_github_repo_reference_text(text: str) -> bool:
+    return bool(GITHUB_REPO_URL_RE.search(text) or GITHUB_REPO_BARE_RE.search(BARE_URL_RE.sub(' ',text)))
+
+def _contains_github_repo_reference_item(item: dict) -> bool:
+    url_text=_github_repo_candidate_text(item,True)
+    non_url_text=_github_repo_candidate_text(item,False)
+    return bool(GITHUB_REPO_URL_RE.search(url_text) or GITHUB_REPO_BARE_RE.search(non_url_text))
+
+def _load_selected_items(selected_items_path: Path|None) -> list[dict]:
+    if selected_items_path is None:
+        return []
+    try:
+        payload=json.loads(selected_items_path.read_text(encoding='utf-8'))
+    except (OSError,json.JSONDecodeError,TypeError,ValueError):
+        return []
+    if not isinstance(payload,dict):
+        return []
+    raw_items=payload.get('selected_items')
+    if not isinstance(raw_items,list):
+        raw_items=payload.get('items')
+    if not isinstance(raw_items,list):
+        return []
+    return [item for item in raw_items if isinstance(item,dict)]
+
+def _safe_evidence_name(value: str, fallback: str) -> str:
+    slug=re.sub(r'[^A-Za-z0-9_.-]+','-',value).strip('-_.').lower()
+    return (slug or fallback)[:80]
+
+def _copy_direct_raw_files(signal_root: Path, signal_lane: str, report_date: str, raw: Path) -> list[Path]:
+    files=[]
+    src=_source_dir(signal_root, signal_lane, report_date)
+    if src.exists():
+        for f in sorted(p for p in src.rglob('*') if p.is_file()):
+            rel=f.relative_to(src); dest=raw/rel; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(f,dest); files.append(dest)
+    return files
+
+def _copy_derived_github_ai_project_evidence(report_date: str, signal_root: Path, raw: Path, selected_items_path: Path|None) -> list[Path]:
+    files=[]
+    seen_destinations=set()
+    for upstream_lane in GITHUB_AI_PROJECTS_UPSTREAM_LANES:
+        src=_source_dir(signal_root, upstream_lane, report_date)
+        if not src.exists():
+            continue
+        for f in sorted(p for p in src.rglob('*') if p.is_file()):
+            try:
+                text=f.read_text(encoding='utf-8',errors='ignore')
+            except OSError:
+                continue
+            if not _contains_github_repo_reference_text(text):
+                continue
+            rel=f.relative_to(src); dest=raw/upstream_lane/rel; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(f,dest); files.append(dest); seen_destinations.add(dest)
+    selected_evidence_dir=raw/'selected-items'
+    upstream_set=set(GITHUB_AI_PROJECTS_UPSTREAM_LANES)
+    for index,item in enumerate(_load_selected_items(selected_items_path),start=1):
+        if item.get('lane') not in upstream_set:
+            continue
+        if not _contains_github_repo_reference_item(item):
+            continue
+        evidence_name=_safe_evidence_name(str(item.get('id') or item.get('title') or f'item-{index}'),f'item-{index}')
+        dest=selected_evidence_dir/f'{evidence_name}.json'
+        suffix=2
+        while dest in seen_destinations or dest.exists():
+            dest=selected_evidence_dir/f'{evidence_name}-{suffix}.json'
+            suffix += 1
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(json.dumps(item,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+        files.append(dest); seen_destinations.add(dest)
+    return files
 
 def _recent_report_doc_url(report_dir: Path) -> str | None:
     summary_path=report_dir/'run-summary.json'
@@ -68,11 +156,11 @@ def prepare_lane_packages(report_date: str, signal_root: Path, runtime_root: Pat
         package=pkg_root/lane; raw=package/'raw'; history=package/'history'; output=out_root/lane
         if package.exists(): shutil.rmtree(package)
         raw.mkdir(parents=True); output.mkdir(parents=True, exist_ok=True)
-        src=_source_dir(signal_root, SIGNAL_LANE_MAP[lane], report_date)
-        files=[]
-        if src.exists():
-            for f in sorted(p for p in src.rglob('*') if p.is_file()):
-                rel=f.relative_to(src); dest=raw/rel; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(f,dest); files.append(dest)
+        derived_config=DERIVED_LANE_CONFIG.get(lane)
+        if derived_config:
+            files=_copy_derived_github_ai_project_evidence(report_date,signal_root,raw,selected_items_path)
+        else:
+            files=_copy_direct_raw_files(signal_root,SIGNAL_LANE_MAP[lane],report_date,raw)
         recent_report_paths=[]
         recent_report_entries=[]
         for recent_report in recent_reports:
@@ -86,8 +174,14 @@ def prepare_lane_packages(report_date: str, signal_root: Path, runtime_root: Pat
             if recent_report.get('doc_url'):
                 entry['doc_url']=recent_report['doc_url']
             recent_report_entries.append(entry)
-        status='ok' if files else ('degraded' if lane=='github-ai-projects' else 'missing')
-        context={'report_date':report_date,'lane':lane,'signal_lane':SIGNAL_LANE_MAP[lane],'skill':LANE_SKILL_MAP[lane],'raw_dir':str(raw),'raw_corpus_status':status,'raw_file_count':len(files),'output_markdown':str(output/'lane.md'),'output_meta':str(output/'lane-meta.json'),'selected_items_path':str(selected_items_path) if selected_items_path else None,'selected_items_mode':'audit_only','recent_report_paths':[str(p) for p in recent_report_paths],'recent_report_urls':[e['doc_url'] for e in recent_report_entries if e.get('doc_url')],'recent_reports':recent_report_entries,'recent_report_mode':'agent_dedup_reference_only'}
+        status='ok' if files else ('degraded' if derived_config else 'missing')
+        context={'report_date':report_date,'lane':lane,'signal_lane':SIGNAL_LANE_MAP[lane],'skill':LANE_SKILL_MAP[lane],'raw_dir':str(raw),'raw_corpus_status':status,'raw_file_count':len(files),'output_markdown':str(output/'lane.md'),'output_meta':str(output/'lane-meta.json'),'selected_items_path':str(selected_items_path) if selected_items_path else None,'selected_items_mode':'audit_only','recent_report_paths':[str(p) for p in recent_report_paths],'recent_report_urls':[e['doc_url'] for e in recent_report_entries if e.get('doc_url')],'recent_reports':recent_report_entries,'recent_report_mode':'agent_dedup_reference_only','derived_lane':bool(derived_config)}
+        if derived_config:
+            context['derived_reason']=derived_config['reason']
+            context['derived_upstream_lanes']=derived_config['upstream_lanes']
+            context['raw_corpus_mode']='derived_cross_lane_evidence'
+        else:
+            context['raw_corpus_mode']='direct_signal_lane'
         (package/'context.json').write_text(json.dumps(context,ensure_ascii=False,indent=2),encoding='utf-8')
         index='\n'.join(f'- raw/{f.relative_to(raw)}' for f in files[:200]) or '- No raw files found.'
         recent_lines=[]
@@ -102,7 +196,8 @@ def prepare_lane_packages(report_date: str, signal_root: Path, runtime_root: Pat
             txt=f.read_text(encoding='utf-8',errors='ignore')[:2500]
             sample.append(f'\n### raw/{f.relative_to(raw)}\n\n```text\n{txt}\n```')
         sample_text = ''.join(sample)
-        (package/'input.md').write_text(f"""# Lane Package: {lane}\n\nReport date: {report_date}\nSkill: {LANE_SKILL_MAP[lane]}\nRaw corpus status: {status}\n\nUse raw corpus as primary evidence. `selected_items.json` is audit-only and must not drive judgment.\n\n## Recent report dedupe references\n{recent_index}\n\nRead yesterday and day-before-yesterday reports before selecting or writing. Prefer the local `history/` markdown copies; if a copy is missing or unclear, use the source file paths and published doc URLs listed here or in `context.json`. Use them only as reference-only dedupe context: reject exact repeats or substantially unchanged topics; keep meaningful follow-ups with new facts and state what changed. For recurring sections, do not dedupe weather/current market items purely because yesterday had the same section. This is agent judgment, not code-controlled filtering.\n\nWrite output files exactly:\n- {output/'lane.md'}\n- {output/'lane-meta.json'}\n\n## Raw file index\n{index}\n\n## Raw excerpts\n{sample_text}\n""",encoding='utf-8')
+        evidence_note='Derived evidence mode: cross-lane GitHub repository references copied from upstream raw corpora and selected-items-compatible evidence.' if derived_config else 'Evidence mode: direct signal lane raw corpus.'
+        (package/'input.md').write_text(f"""# Lane Package: {lane}\n\nReport date: {report_date}\nSkill: {LANE_SKILL_MAP[lane]}\nRaw corpus status: {status}\n{evidence_note}\n\nUse raw corpus as primary evidence. `selected_items.json` is audit-only and must not drive judgment.\n\n## Recent report dedupe references\n{recent_index}\n\nRead yesterday and day-before-yesterday reports before selecting or writing. Prefer the local `history/` markdown copies; if a copy is missing or unclear, use the source file paths and published doc URLs listed here or in `context.json`. Use them only as reference-only dedupe context: reject exact repeats or substantially unchanged topics; keep meaningful follow-ups with new facts and state what changed. For recurring sections, do not dedupe weather/current market items purely because yesterday had the same section. This is agent judgment, not code-controlled filtering.\n\nWrite output files exactly:\n- {output/'lane.md'}\n- {output/'lane-meta.json'}\n\n## Raw file index\n{index}\n\n## Raw excerpts\n{sample_text}\n""",encoding='utf-8')
         packages[lane]=package
     return packages
 
