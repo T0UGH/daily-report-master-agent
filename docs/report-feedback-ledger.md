@@ -258,3 +258,15 @@
 - Feishu doc: https://www.feishu.cn/docx/XRO8dA95boNqoexQKXCcxQdqnSd
 - archive: `knowledge-wiki/raw/inbound/ai-daily-report/2026/2026-05-04.md` @ `5e8755194cef0825aad5a20f88d14f671da47aea`
 
+## 2026-05-05
+
+### 运行记录
+- 06:00 Hermes 原生 subagent lane 架构完成生产运行：先 collect signals，再 prepare lane packages，再逐 lane 调用真实 Hermes subagent 写 `lane.md` / `lane-meta.json`。
+- Feishu 文档发布成功： https://www.feishu.cn/docx/BnjNd9JG2o3fa2xKY3ccLzbFn6g
+- knowledge-wiki 归档成功：`raw/inbound/ai-daily-report/2026/2026-05-05.md`（commit `cb5283dbaf92262c3877b8dbdfeec517a3d963d6`）。
+
+### 质量/链路观察
+- `x-feed` collect 命令返回 ok，但 lane package raw 为空，subagent 按合同输出 `- 无` / `empty`，没有 fallback 到旧 renderer。
+- final report 缺少统一 `## 来源` 时 output contract 会失败；本次用确定性 appendix 从正文链接生成来源附录后通过校验。
+- 卡片/音频未在本次 wrapper 发布中尝试；`publish_report.py` 只创建 Feishu doc。
+
