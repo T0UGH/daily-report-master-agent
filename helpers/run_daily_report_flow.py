@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -71,6 +72,9 @@ READOUT_INTRO = "以下是今天的 AI Agent 日报语音简报。"
 READOUT_OUTRO = "以上就是今天的重点内容，感谢收听。"
 READOUT_PLACEHOLDER_SNIPPETS = ("原文围绕", "具体变化见来源", "值得关注")
 READOUT_DROP_LINK_LABELS = {"原帖", "release", "github", "product hunt", "polymarket"}
+PUBLISH_REQUIRED_OUTPUTS = ("doc", "card")
+PUBLISH_STAGE_STATUSES = {"succeeded", "failed", "skipped"}
+PUBLISH_TOP_LEVEL_STATUSES = {"succeeded", "degraded", "failed", "skipped"}
 READOUT_SECTION_TRANSITIONS = {
     "Reddit 社区": "下面是 Reddit 社区。",
     "Claude Code": "接着是 Claude Code。",
@@ -1670,6 +1674,138 @@ def write_json_log(log_path: Path, payload: Any) -> str:
     return str(log_path)
 
 
+def utc_timestamp() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _publish_state_path(path: Any, run_dir: Path) -> str | None:
+    if path is None:
+        return None
+    raw_path = str(path)
+    if not raw_path:
+        return None
+    candidate = Path(raw_path)
+    if not candidate.is_absolute():
+        return candidate.as_posix()
+    try:
+        return candidate.resolve().relative_to(run_dir.resolve()).as_posix()
+    except ValueError:
+        return raw_path
+
+
+def _publish_stage_status(value: Any) -> str:
+    status = str(value or "skipped")
+    if status in PUBLISH_STAGE_STATUSES:
+        return status
+    return "failed"
+
+
+def _publish_top_level_status(value: Any) -> str:
+    status = str(value or "failed")
+    if status in PUBLISH_TOP_LEVEL_STATUSES:
+        return status
+    return "failed"
+
+
+def _build_publish_state(
+    *,
+    report_date: str,
+    run_dir: Path,
+    publish_result: dict[str, Any],
+    updated_at: str,
+) -> dict[str, Any]:
+    doc_status = _publish_stage_status(publish_result.get("doc_status"))
+    card_status = _publish_stage_status(publish_result.get("card_status"))
+    audio_status = _publish_stage_status(publish_result.get("audio_status"))
+    publish_status = _publish_top_level_status(publish_result.get("status"))
+    if publish_status == "succeeded" and publish_result.get("card_degraded"):
+        publish_status = "degraded"
+    missing_required_outputs = [
+        output
+        for output, status in (("doc", doc_status), ("card", card_status))
+        if status != "succeeded"
+    ]
+    final_delivery_ok = (
+        doc_status == "succeeded"
+        and card_status == "succeeded"
+        and not missing_required_outputs
+    )
+
+    return {
+        "report_date": report_date,
+        "status": publish_status,
+        "doc": {
+            "status": doc_status,
+            "url": publish_result.get("doc_url"),
+            "log_path": _publish_state_path(publish_result.get("doc_log"), run_dir),
+            "error_summary": publish_result.get("doc_error_summary"),
+        },
+        "card": {
+            "status": card_status,
+            "message_id": publish_result.get("card_message_id"),
+            "payload_path": _publish_state_path(publish_result.get("card_payload_path"), run_dir),
+            "preflight_path": _publish_state_path(publish_result.get("card_preflight_log"), run_dir),
+            "log_path": _publish_state_path(publish_result.get("card_message_log"), run_dir),
+            "error_summary": publish_result.get("card_error_summary"),
+        },
+        "audio": {
+            "status": audio_status,
+            "message_id": publish_result.get("audio_message_id"),
+            "opus_path": _publish_state_path(publish_result.get("audio_opus_path"), run_dir),
+            "log_path": _publish_state_path(
+                publish_result.get("audio_message_log")
+                or publish_result.get("audio_convert_log")
+                or publish_result.get("audio_tts_log"),
+                run_dir,
+            ),
+            "error_summary": publish_result.get("audio_error_summary"),
+        },
+        "required_outputs": list(PUBLISH_REQUIRED_OUTPUTS),
+        "missing_required_outputs": missing_required_outputs,
+        "final_delivery_ok": final_delivery_ok,
+        "updated_at": updated_at,
+    }
+
+
+def write_publish_delivery_state(
+    *,
+    report_date: str,
+    run_dir: Path,
+    publish_result: dict[str, Any],
+) -> dict[str, Any]:
+    updated_at = utc_timestamp()
+    state = _build_publish_state(
+        report_date=report_date,
+        run_dir=run_dir,
+        publish_result=publish_result,
+        updated_at=updated_at,
+    )
+    write_json_log(run_dir / "publish-state.json", state)
+    write_json_log(
+        run_dir / "stage-status" / "publish-doc.json",
+        {
+            "report_date": report_date,
+            "stage": "publish-doc",
+            **state["doc"],
+            "updated_at": updated_at,
+        },
+    )
+    write_json_log(
+        run_dir / "stage-status" / "publish-card.json",
+        {
+            "report_date": report_date,
+            "stage": "publish-card",
+            **state["card"],
+            "updated_at": updated_at,
+        },
+    )
+    return state
+
+
+def write_card_payload_artifact(*, run_dir: Path, card_payload: dict[str, Any]) -> str:
+    return write_json_log(run_dir / "artifacts" / "feishu-card.json", card_payload)
+
+
 def post_http_request(*, url: str, body: bytes, headers: dict[str, str]) -> tuple[int, str, Any | None]:
     request = Request(url, data=body, headers=headers, method="POST")
     try:
@@ -1937,10 +2073,13 @@ def publish_report_bundle(
         "doc_status": doc_result["status"],
         "doc_log": doc_result.get("log"),
         "doc_url": doc_result.get("doc_url"),
+        "doc_error_summary": doc_result.get("error_summary"),
         "card_status": "skipped",
         "card_payload": None,
+        "card_payload_path": None,
         "card_message_log": None,
         "card_message_id": None,
+        "card_error_summary": None,
         "audio_generation_status": "skipped",
         "audio_status": "skipped",
         "audio_readout_path": None,
@@ -1949,12 +2088,24 @@ def publish_report_bundle(
         "audio_opus_path": None,
         "audio_tts_log": None,
         "audio_convert_log": None,
+        "audio_message_log": None,
+        "audio_message_id": None,
+        "audio_error_summary": None,
     }
+
+    def finish_publish() -> dict[str, Any]:
+        write_publish_delivery_state(
+            report_date=report_date,
+            run_dir=run_dir,
+            publish_result=publish_result,
+        )
+        return publish_result
 
     if doc_result["status"] != "succeeded":
         publish_result["status"] = "failed"
         publish_result["error_summary"] = doc_result.get("error_summary") or "Feishu doc import failed"
-        return publish_result
+        publish_result["doc_error_summary"] = publish_result["error_summary"]
+        return finish_publish()
 
     card_result: dict[str, Any]
     if doc_result.get("doc_url"):
@@ -1963,6 +2114,10 @@ def publish_report_bundle(
             doc_url=str(doc_result["doc_url"]),
         )
         publish_result["card_payload"] = card_payload
+        publish_result["card_payload_path"] = write_card_payload_artifact(
+            run_dir=run_dir,
+            card_payload=card_payload,
+        )
         card_result = send_curated_card_to_feishu(
             card_payload=card_payload,
             run_dir=run_dir,
@@ -1973,9 +2128,18 @@ def publish_report_bundle(
             "status": "failed",
             "error_summary": "Missing Feishu doc URL for curated card delivery",
         }
+
+    if card_result.get("status") == "succeeded" and not card_result.get("message_id"):
+        card_result = {
+            **card_result,
+            "status": "failed",
+            "error_summary": "Feishu curated card send succeeded without message_id",
+        }
+
     publish_result["card_status"] = card_result["status"]
     publish_result["card_message_log"] = card_result.get("log")
     publish_result["card_message_id"] = card_result.get("message_id")
+    publish_result["card_error_summary"] = card_result.get("error_summary")
     if card_result.get("degraded"):
         publish_result["card_degraded"] = True
     if card_result.get("preflight_log"):
@@ -1999,11 +2163,13 @@ def publish_report_bundle(
 
     failures: list[str] = []
     if card_result["status"] != "succeeded":
-        failures.append(card_result.get("error_summary") or "Feishu curated card send failed")
+        publish_result["card_error_summary"] = card_result.get("error_summary") or "Feishu curated card send failed"
+        failures.append(publish_result["card_error_summary"])
 
     if audio_result["status"] != "succeeded":
         publish_result["audio_status"] = "failed"
-        failures.append(audio_result.get("error_summary") or "Audio bundle generation failed")
+        publish_result["audio_error_summary"] = audio_result.get("error_summary") or "Audio bundle generation failed"
+        failures.append(publish_result["audio_error_summary"])
     else:
         sent_audio = send_audio_to_feishu(
             opus_path=Path(audio_result["opus_path"]),
@@ -2015,15 +2181,16 @@ def publish_report_bundle(
         publish_result["audio_message_log"] = sent_audio.get("log")
         publish_result["audio_message_id"] = sent_audio.get("message_id")
         if sent_audio["status"] != "succeeded":
-            failures.append(sent_audio.get("error_summary") or "Feishu audio send failed")
+            publish_result["audio_error_summary"] = sent_audio.get("error_summary") or "Feishu audio send failed"
+            failures.append(publish_result["audio_error_summary"])
 
     if failures:
         publish_result["status"] = "degraded"
         publish_result["error_summary"] = " | ".join(failures)
-        return publish_result
+        return finish_publish()
 
     publish_result["status"] = "succeeded"
-    return publish_result
+    return finish_publish()
 
 
 def main() -> int:

@@ -836,6 +836,41 @@ def test_publish_report_bundle_succeeds(monkeypatch, tmp_path: Path) -> None:
         "opus_path": str(opus_path),
         "doc_url": "https://feishu.example/doc",
     }
+    state = json.loads((tmp_path / "publish-state.json").read_text(encoding="utf-8"))
+    assert state["report_date"] == "2026-04-16"
+    assert state["status"] == "succeeded"
+    assert state["doc"] == {
+        "status": "succeeded",
+        "url": "https://feishu.example/doc",
+        "log_path": "logs/feishu-import.log",
+        "error_summary": None,
+    }
+    assert state["card"] == {
+        "status": "succeeded",
+        "message_id": "om_card_success",
+        "payload_path": "artifacts/feishu-card.json",
+        "preflight_path": None,
+        "log_path": "logs/feishu-card.log",
+        "error_summary": None,
+    }
+    assert state["audio"] == {
+        "status": "succeeded",
+        "message_id": "om_audio_success",
+        "opus_path": "2026-04-16-feishu.opus",
+        "log_path": "logs/feishu-audio.log",
+        "error_summary": None,
+    }
+    assert state["required_outputs"] == ["doc", "card"]
+    assert state["missing_required_outputs"] == []
+    assert state["final_delivery_ok"] is True
+    assert state["updated_at"].endswith("Z")
+    assert json.loads((tmp_path / "artifacts" / "feishu-card.json").read_text(encoding="utf-8")) == result[
+        "card_payload"
+    ]
+    doc_stage = json.loads((tmp_path / "stage-status" / "publish-doc.json").read_text(encoding="utf-8"))
+    card_stage = json.loads((tmp_path / "stage-status" / "publish-card.json").read_text(encoding="utf-8"))
+    assert doc_stage["status"] == "succeeded"
+    assert card_stage["status"] == "succeeded"
 
 
 def test_publish_report_bundle_succeeds_when_card_send_degraded(monkeypatch, tmp_path: Path) -> None:
@@ -912,6 +947,14 @@ def test_publish_report_bundle_succeeds_when_card_send_degraded(monkeypatch, tmp
     assert result["card_degraded"] is True
     assert result["card_preflight_log"] == str(tmp_path / "logs" / "feishu-card-preflight.json")
     assert result["card_preflight_issues"] == ["elements[0] lark_md content exceeds limit"]
+
+    state = json.loads((tmp_path / "publish-state.json").read_text(encoding="utf-8"))
+    assert state["status"] == "degraded"
+    assert state["card"]["status"] == "succeeded"
+    assert state["card"]["message_id"] == "om_card_success"
+    assert state["card"]["preflight_path"] == "logs/feishu-card-preflight.json"
+    assert state["missing_required_outputs"] == []
+    assert state["final_delivery_ok"] is True
 
 
 def test_publish_report_bundle_degrades_when_card_send_fails_but_audio_still_succeeds(
@@ -993,6 +1036,174 @@ def test_publish_report_bundle_degrades_when_card_send_fails_but_audio_still_suc
     assert result["error_summary"] == "Feishu curated card send failed"
     assert call_order == ["doc", "card_build", "card_send", "audio_bundle", "audio_send"]
 
+    state = json.loads((tmp_path / "publish-state.json").read_text(encoding="utf-8"))
+    assert state["status"] == "degraded"
+    assert state["doc"]["status"] == "succeeded"
+    assert state["doc"]["url"] == "https://feishu.example/doc"
+    assert state["card"]["status"] == "failed"
+    assert state["card"]["message_id"] is None
+    assert state["card"]["payload_path"] == "artifacts/feishu-card.json"
+    assert state["card"]["log_path"] == "logs/feishu-card.log"
+    assert state["card"]["error_summary"] == "Feishu curated card send failed"
+    assert state["audio"]["status"] == "succeeded"
+    assert state["missing_required_outputs"] == ["card"]
+    assert state["final_delivery_ok"] is False
+
+
+def test_publish_report_bundle_degrades_when_card_send_has_no_message_id(
+    monkeypatch, tmp_path: Path
+) -> None:
+    report_path = _write_report(tmp_path)
+    report_markdown = report_path.read_text(encoding="utf-8")
+    opus_path = tmp_path / "2026-04-16-feishu.opus"
+
+    monkeypatch.setattr(
+        flow,
+        "generate_audio_bundle",
+        lambda **_: {
+            "status": "succeeded",
+            "readout_path": str(tmp_path / "2026-04-16-readout.txt"),
+            "intermediate_path": str(tmp_path / "2026-04-16-tts.mp3"),
+            "intermediate_format": "mp3",
+            "opus_path": str(opus_path),
+            "tts_log": str(tmp_path / "logs" / "audio-tts.log"),
+            "convert_log": str(tmp_path / "logs" / "audio-opus.log"),
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "import_to_feishu",
+        lambda report_path, title, run_dir: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-import.log"),
+            "doc_url": "https://feishu.example/doc",
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_curated_card_payload",
+        lambda **_: {
+            "config": {"wide_screen_mode": True},
+            "header": {"title": {"tag": "plain_text", "content": "AI Agent 日报（2026-04-16）"}},
+            "elements": [
+                {"tag": "div", "text": {"tag": "lark_md", "content": "[查看完整文档](https://feishu.example/doc)"}}
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "send_curated_card_to_feishu",
+        lambda **_: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-card.log"),
+            "message_id": None,
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "send_audio_to_feishu",
+        lambda **_: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-audio.log"),
+            "message_id": "om_audio_success",
+        },
+    )
+
+    result = flow.publish_report_bundle(
+        report_path=report_path,
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "degraded"
+    assert result["card_status"] == "failed"
+    assert result["error_summary"] == "Feishu curated card send succeeded without message_id"
+
+    state = json.loads((tmp_path / "publish-state.json").read_text(encoding="utf-8"))
+    assert state["card"]["status"] == "failed"
+    assert state["card"]["message_id"] is None
+    assert state["missing_required_outputs"] == ["card"]
+    assert state["final_delivery_ok"] is False
+
+
+def test_publish_report_bundle_audio_failure_keeps_final_delivery_ok_true(
+    monkeypatch, tmp_path: Path
+) -> None:
+    report_path = _write_report(tmp_path)
+    report_markdown = report_path.read_text(encoding="utf-8")
+
+    monkeypatch.setattr(
+        flow,
+        "generate_audio_bundle",
+        lambda **_: {
+            "status": "failed",
+            "readout_path": str(tmp_path / "2026-04-16-readout.txt"),
+            "intermediate_path": str(tmp_path / "2026-04-16-tts.mp3"),
+            "intermediate_format": "mp3",
+            "opus_path": str(tmp_path / "2026-04-16-feishu.opus"),
+            "tts_log": str(tmp_path / "logs" / "audio-tts.log"),
+            "convert_log": str(tmp_path / "logs" / "audio-opus.log"),
+            "error_summary": "MiniMax TTS failed",
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "import_to_feishu",
+        lambda report_path, title, run_dir: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-import.log"),
+            "doc_url": "https://feishu.example/doc",
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "build_curated_card_payload",
+        lambda **_: {
+            "config": {"wide_screen_mode": True},
+            "header": {"title": {"tag": "plain_text", "content": "AI Agent 日报（2026-04-16）"}},
+            "elements": [
+                {"tag": "div", "text": {"tag": "lark_md", "content": "[查看完整文档](https://feishu.example/doc)"}}
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        flow,
+        "send_curated_card_to_feishu",
+        lambda **_: {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-card.log"),
+            "message_id": "om_card_success",
+        },
+    )
+
+    result = flow.publish_report_bundle(
+        report_path=report_path,
+        report_markdown=report_markdown,
+        report_date="2026-04-16",
+        title="AI 日报（2026-04-16）",
+        run_dir=tmp_path,
+        config=_runtime_config(),
+    )
+
+    assert result["status"] == "degraded"
+    assert result["doc_status"] == "succeeded"
+    assert result["card_status"] == "succeeded"
+    assert result["audio_status"] == "failed"
+    assert result["error_summary"] == "MiniMax TTS failed"
+
+    state = json.loads((tmp_path / "publish-state.json").read_text(encoding="utf-8"))
+    assert state["status"] == "degraded"
+    assert state["doc"]["status"] == "succeeded"
+    assert state["card"]["status"] == "succeeded"
+    assert state["audio"]["status"] == "failed"
+    assert state["audio"]["log_path"] == "logs/audio-opus.log"
+    assert state["audio"]["error_summary"] == "MiniMax TTS failed"
+    assert state["missing_required_outputs"] == []
+    assert state["final_delivery_ok"] is True
+
 
 def test_publish_report_bundle_fails_when_doc_import_fails(monkeypatch, tmp_path: Path) -> None:
     report_path = _write_report(tmp_path)
@@ -1043,6 +1254,14 @@ def test_publish_report_bundle_fails_when_doc_import_fails(monkeypatch, tmp_path
     assert result["audio_status"] == "skipped"
     assert result["error_summary"] == "Feishu doc import failed"
     assert send_calls == 0
+
+    state = json.loads((tmp_path / "publish-state.json").read_text(encoding="utf-8"))
+    assert state["status"] == "failed"
+    assert state["doc"]["status"] == "failed"
+    assert state["card"]["status"] == "skipped"
+    assert state["audio"]["status"] == "skipped"
+    assert state["missing_required_outputs"] == ["doc", "card"]
+    assert state["final_delivery_ok"] is False
 
 
 def test_archive_report_to_knowledge_wiki_pulls_writes_commits_and_pushes(
