@@ -1720,14 +1720,16 @@ def _build_publish_state(
     publish_status = _publish_top_level_status(publish_result.get("status"))
     if publish_status == "succeeded" and publish_result.get("card_degraded"):
         publish_status = "degraded"
-    missing_required_outputs = [
-        output
-        for output, status in (("doc", doc_status), ("card", card_status))
-        if status != "succeeded"
-    ]
+    card_message_id = publish_result.get("card_message_id")
+    missing_required_outputs = []
+    if doc_status != "succeeded":
+        missing_required_outputs.append("doc")
+    if card_status != "succeeded" or not card_message_id:
+        missing_required_outputs.append("card")
     final_delivery_ok = (
         doc_status == "succeeded"
         and card_status == "succeeded"
+        and bool(card_message_id)
         and not missing_required_outputs
     )
 
