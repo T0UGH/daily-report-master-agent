@@ -9,7 +9,8 @@ def test_cron_prompt_requires_hermes_lane_subagents() -> None:
 
     assert "delegate_task" in prompt
     assert "Hermes 原生 subagent lane 架构" in prompt
-    assert "不得运行 `helpers/run_daily_report_flow.py`" in prompt
+    assert "旧链路" in prompt
+    assert "helpers/" + "run_daily_" + "report_flow.py" not in prompt
     assert "prepare_lane_packages.py" in prompt
     assert "validate_lane_outputs.py" in prompt
     assert "assemble_lane_markdown.py" in prompt

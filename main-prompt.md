@@ -10,7 +10,7 @@
 - 每个 lane 的选择、取舍、判断、中文正文写作，必须由 Hermes lane subagent 完成。
 - Python 只能做确定性基础设施：collect、copy/package raw evidence、validate、assemble existing lane.md、publish/archive。
 - Python 不得选择、排序、总结、改写或渲染 reader-facing lane 内容。
-- 不得运行 `helpers/run_daily_report_flow.py` 作为日报正文生成入口；这是旧链路，会回到 renderer/local fallback。
+- 不得运行旧链路作为日报正文生成入口；旧链路会回到 renderer/local fallback。
 - 不得把 Python worker / subprocess wrapper 称为 subagent；本项目里的 subagent 只指 Hermes master 通过 `delegate_task` 拉起的子 agent。
 - 若 lane subagent 失败，标记 degraded/blocked；绝不静默 fallback 到旧 renderer 或 selected_items 模板输出。
 

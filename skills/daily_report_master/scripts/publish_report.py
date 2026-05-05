@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Sequence
 
-from helpers.run_daily_report_flow import (
+from helpers.publish_delivery import (
     build_curated_card_payload,
     import_to_feishu,
     send_curated_card_to_feishu,

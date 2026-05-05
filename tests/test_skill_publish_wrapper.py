@@ -77,6 +77,13 @@ def test_build_lark_create_command_uses_markdown_file() -> None:
     assert "@report.md" in cmd
 
 
+def test_publish_wrapper_imports_publish_delivery_not_legacy_flow() -> None:
+    source = Path(publish_report.__file__).read_text(encoding="utf-8")
+
+    assert "helpers.publish_delivery" in source
+    assert "helpers." + "run_daily_" + "report_flow" not in source
+
+
 def test_main_writes_publish_state_when_doc_and_card_succeed(monkeypatch, tmp_path: Path) -> None:
     run_dir = tmp_path / "2026-04-16"
     report_path = _write_report(run_dir)
