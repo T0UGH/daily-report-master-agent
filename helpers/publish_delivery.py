@@ -47,7 +47,9 @@ def run_and_capture(
         env=env,
     )
     rendered = f"$ {' '.join(command)}\n\nSTDOUT:\n{completed.stdout}\n\nSTDERR:\n{completed.stderr}"
-    output_path.write_text(rendered, encoding="utf-8")
+    # Some CLI outputs may contain malformed surrogate pairs from upstream JSON/emoji rendering.
+    # Preserve the log without letting encoding errors abort publish delivery.
+    output_path.write_text(rendered, encoding="utf-8", errors="replace")
     return CommandResult(
         command=command,
         exit_code=completed.returncode,

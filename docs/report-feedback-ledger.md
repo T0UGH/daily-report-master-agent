@@ -270,17 +270,13 @@
 - final report 缺少统一 `## 来源` 时 output contract 会失败；本次用确定性 appendix 从正文链接生成来源附录后通过校验。
 - 卡片/音频未在本次 wrapper 发布中尝试；`publish_report.py` 只创建 Feishu doc。
 
+
 ## 2026-05-06
 
-### 运行记录
-- 06:00 Hermes 原生 subagent lane 架构完成生产运行：先按 Asia/Shanghai 日期执行 deterministic collect/diagnose/retry，再 prepare lane packages，再由 13 个真实 Hermes lane subagent 写 `lane.md` / `lane-meta.json`。
-- collect 结果：`github-trending-weekly` 成功收集 14 条 raw signals；`x-feed`/`x-following` collect 命令返回 ok 但因缺少 `/Users/haha/.signal-engine/x-cookies.json` raw 为空；`product-hunt-watch` 因 `PH_API_TOKEN` 未设置为空；多个 reader lanes 在当前 signals-engine registry 中无 collector，经 diagnose 记录后按 raw missing 降级。
-- validation：`validate_lane_outputs.py` passed；`assemble_lane_markdown.py` 生成 report；确定性补 `## 来源` 附录后 `validate_report_markdown(..., report_date="2026-05-06")` passed。
-- lane status：13 total；2 ok（`github-ai-projects`, `github-trending`）；11 degraded；0 blocked；0 empty；compat selected_item_count=2。
-- Feishu 文档发布成功： https://www.feishu.cn/docx/SX1AdQjHqoCf8gxkMVrcUsPQnDc；精选卡片 user-send 成功：`om_x100b5092ff1af8a4c3867ac350ae1d7`。
-- knowledge-wiki 归档成功：`raw/inbound/ai-daily-report/2026/2026-05-06.md`（commit `aea7081780780e3ad16d22ef8a8e7b1a8765ddb5`）。
+### 当天运行记录
+- 06:00 Hermes 原生 subagent lane 架构运行成功：collect、prepare lane packages、13 个 lane subagent、validate、assemble、final contract、Feishu doc/card publish 均完成。
+- 当天修复 `helpers/publish_delivery.py`：`lark-cli` 输出日志中出现 malformed surrogate 时，写 `feishu-import.log` 使用 `errors="replace"`，避免发布链路因日志编码中断。
+- 归档：最终 `report.md` 已复制到 `~/.daily-lane-data/reports/2026-05-06.md` 与 knowledge-wiki `raw/inbound/ai-daily-report/2026-05-06.md`。
 
-### 质量/链路观察
-- 今日可读内容主要来自 GitHub Trending raw corpus；除 GitHub 相关两栏外，其他栏目因 collector/config/token/cookie 缺失输出 `- 无`，没有 fallback 到旧 renderer 或 selected_items。
-- `publish_report.py` 返回了 doc/card 成功，但仍按本次 prompt 额外生成并发送了基于最终 `report.md` 的 interactive 精选卡片，card preflight 记录在 runtime `logs/feishu-card-preflight.json`。
-
+### 待观察
+- 多个 lane subagent 反馈在 `~/.hermes` 中未直接找到同名 skill 文件，但本次 package 指令与系统已注入 skill 内容足够完成输出；后续可继续检查 skill sync 是否需要强化。
