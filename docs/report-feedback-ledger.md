@@ -290,3 +290,16 @@
 - doc_url: 
 - card_message_id: 
 - status: succeeded
+
+## 2026-05-08
+
+### 当天运行记录
+- 06:00 Hermes 原生 subagent lane 架构完成生产运行：collect、prepare lane packages、13 个 lane subagent、validate、assemble、Feishu doc/card publish 均成功。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`，生产 config `/Users/haha/.signal-engine/config/lanes.yaml`，data-dir `/Users/haha/.daily-lane-data`；lane registry 包含 weather、Reddit、HN、Claude、Codex、OpenClaw、Polymarket 等全量 collector。
+- Polymarket collect 首次和 retry 均有部分 query 网络失败，但 retry 写出 6 条 raw evidence；lane subagent 基于 raw evidence 生成 `ok` 输出。
+- 最终 13 lanes 全部 `ok`，subagent selected_count 合计 74。
+- Feishu 文档：https://www.feishu.cn/docx/QExJdW5IuoWGOfxrURqchD87nsd；精选卡片 message_id：`om_x100b50e4b65eb4a4b3ff66c757210ab`；audio skipped。
+
+### 待观察
+- 继续观察 Polymarket API/网络稳定性；如果连续多日部分 query SSL EOF/connection reset，应在 signals-engine 层加更稳健的重试或降级记录。
+
