@@ -41,6 +41,7 @@ def _lane_input() -> dict:
                         "and documents OpenAI plus Anthropic provider setup."
                     ),
                     "source_url": "https://github.com/codex-labs/agent-skills",
+                    "stars": 240,
                 },
             },
             {
@@ -55,6 +56,7 @@ def _lane_input() -> dict:
                         "It manages purchase orders, supplier onboarding, and invoice approvals."
                     ),
                     "source_url": "https://github.com/procureco/vendor-portal",
+                    "stars": 1000,
                 },
             },
             {
@@ -69,6 +71,7 @@ def _lane_input() -> dict:
                         "The README highlights LLM retrieval, workflow traces, and editor handoff."
                     ),
                     "source_url": "https://github.com/deepwiki-labs/context-engine",
+                    "stars": 360,
                 },
             },
         ],
@@ -142,6 +145,43 @@ def test_build_lane_output_dispatches_github_trending_to_specialized_worker() ->
 
     assert "42 reusable skills" in output["markdown"]
     assert "当前可作为" not in output["markdown"]
+
+
+def test_build_github_trending_output_filters_repos_below_100_stars() -> None:
+    lane_input = _lane_input()
+    lane_input["signals"] = [
+        {
+            "id": "repo:tiny/agent-memory",
+            "title": "tiny/agent-memory",
+            "url": "https://github.com/tiny/agent-memory",
+            "source_lane": "github-trending-weekly",
+            "source_urls": ["https://github.com/tiny/agent-memory"],
+            "raw": {
+                "source_snippet": "tiny/agent-memory is an MCP memory server for Claude Code agents.",
+                "source_url": "https://github.com/tiny/agent-memory",
+                "stars": 99,
+            },
+        },
+        {
+            "id": "repo:solid/agent-memory",
+            "title": "solid/agent-memory",
+            "url": "https://github.com/solid/agent-memory",
+            "source_lane": "github-trending-weekly",
+            "source_urls": ["https://github.com/solid/agent-memory"],
+            "raw": {
+                "source_snippet": "solid/agent-memory is an MCP memory server for Claude Code agents.",
+                "source_url": "https://github.com/solid/agent-memory",
+                "stars": 100,
+            },
+        },
+    ]
+
+    output = build_github_trending_output(lane_input)
+
+    assert output["quality"]["item_count"] == 1
+    assert "tiny/agent-memory" not in output["markdown"]
+    assert "solid/agent-memory" in output["markdown"]
+    assert output["items"][0]["stars"] == 100
 
 
 def test_build_lane_output_requires_lane_input_for_github_trending() -> None:

@@ -20,7 +20,7 @@ def _lane_input(*, recent_repo_ids: list[str] | None = None) -> dict:
                 "url": "https://github.com/owner/trending-agent",
                 "source_lane": "github-trending-weekly",
                 "source_urls": ["https://github.com/owner/trending-agent"],
-                "raw": {"summary": "A local-first agent orchestration toolkit with MCP tools."},
+                "raw": {"summary": "A local-first agent orchestration toolkit with MCP tools.", "stars": 250},
             },
             {
                 "id": "x:1",
@@ -36,7 +36,7 @@ def _lane_input(*, recent_repo_ids: list[str] | None = None) -> dict:
                 "url": "https://news.ycombinator.com/item?id=1",
                 "source_lane": "hacker-news-watch",
                 "source_urls": ["https://news.ycombinator.com/item?id=1"],
-                "raw": {"source_snippet": "repo: https://github.com/other/new-agent"},
+                "raw": {"source_snippet": "repo: https://github.com/other/new-agent", "stars": 180},
             },
         ],
         "timezone": "Asia/Shanghai",
@@ -83,7 +83,7 @@ def test_build_github_ai_projects_output_includes_memory_markdown() -> None:
                 "url": "https://github.com/owner/name",
                 "source_lane": "github-trending-weekly",
                 "source_urls": ["https://github.com/owner/name"],
-                "raw": {"summary": "agent tool"},
+                "raw": {"summary": "agent tool", "stars": 120},
             }
         ],
         "timezone": "Asia/Shanghai",
@@ -146,4 +146,33 @@ def test_build_github_ai_projects_output_rejects_false_positive_bare_repos() -> 
     assert "APK/XAPK" not in output["markdown"]
     assert "JAR/AAR" not in output["markdown"]
     assert "JavaScript/TypeScript" not in output["markdown"]
+
+
+def test_build_github_ai_projects_output_filters_repos_below_100_stars() -> None:
+    lane_input = _lane_input()
+    lane_input["signals"] = [
+        {
+            "id": "repo:tiny/memory-tool",
+            "title": "tiny/memory-tool",
+            "url": "https://github.com/tiny/memory-tool",
+            "source_lane": "hacker-news-watch",
+            "source_urls": ["https://news.ycombinator.com/item?id=2"],
+            "raw": {"source_snippet": "https://github.com/tiny/memory-tool is an agent memory MCP server", "stars": 99},
+        },
+        {
+            "id": "repo:solid/memory-tool",
+            "title": "solid/memory-tool",
+            "url": "https://github.com/solid/memory-tool",
+            "source_lane": "hacker-news-watch",
+            "source_urls": ["https://news.ycombinator.com/item?id=3"],
+            "raw": {"source_snippet": "https://github.com/solid/memory-tool is an agent memory MCP server", "stars": 100},
+        },
+    ]
+
+    output = build_github_ai_projects_output(lane_input)
+
+    assert output["quality"]["item_count"] == 1
+    assert "tiny/memory-tool" not in output["markdown"]
+    assert "solid/memory-tool" in output["markdown"]
+    assert output["items"][0]["stars"] == 100
 

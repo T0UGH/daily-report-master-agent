@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import json
 import re
+import subprocess
 from collections import defaultdict
 from typing import Any
 
 from helpers.lane_contracts import validate_lane_input_artifact, validate_lane_output_artifact
+
+MIN_GITHUB_REPO_STARS = 100
 
 GITHUB_URL_RE = re.compile(
     r"https?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)",
@@ -43,6 +47,107 @@ REJECTED_BARE_REPO_NAMES = {
     "typescript",
     "xapk",
 }
+
+
+def _parse_star_count(value: Any) -> int | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, int):
+        return value if value >= 0 else None
+    if isinstance(value, float):
+        return int(value) if value >= 0 else None
+    text = str(value).strip().lower().replace(",", "")
+    if not text:
+        return None
+    if not re.fullmatch(r"\d+(?:\.\d+)?\s*[km]?", text):
+        return None
+    number_match = re.fullmatch(r"(\d+(?:\.\d+)?)\s*([km])?", text)
+    if not number_match:
+        return None
+    number = float(number_match.group(1))
+    suffix = number_match.group(2)
+    if suffix == "k":
+        number *= 1000
+    elif suffix == "m":
+        number *= 1_000_000
+    return int(number)
+
+
+def _parse_star_count_from_text(text: Any) -> int | None:
+    normalized = str(text or "").lower().replace(",", "")
+    matches = re.findall(r"(\d+(?:\.\d+)?)\s*([km])?\s*(?:stars?|stargazers?|⭐|星)", normalized)
+    if not matches:
+        return None
+    values: list[int] = []
+    for number_text, suffix in matches:
+        number = float(number_text)
+        if suffix == "k":
+            number *= 1000
+        elif suffix == "m":
+            number *= 1_000_000
+        values.append(int(number))
+    return max(values) if values else None
+
+
+def _signal_star_count(signal: dict[str, Any]) -> int | None:
+    candidates: list[Any] = [
+        signal.get("stars"),
+        signal.get("stargazerCount"),
+        signal.get("stargazers"),
+        signal.get("star_count"),
+        signal.get("repo_stars"),
+    ]
+    raw = signal.get("raw")
+    if isinstance(raw, dict):
+        candidates.extend(
+            [
+                raw.get("stars"),
+                raw.get("stargazerCount"),
+                raw.get("stargazers"),
+                raw.get("star_count"),
+                raw.get("repo_stars"),
+            ]
+        )
+        text_candidates = [raw.get(key) for key in ("summary", "source_snippet", "excerpt")]
+    else:
+        text_candidates = []
+    parsed = [_parse_star_count(value) for value in candidates]
+    parsed.extend(_parse_star_count_from_text(value) for value in text_candidates)
+    parsed = [value for value in parsed if value is not None]
+    return max(parsed) if parsed else None
+
+
+def _repo_star_count_from_github(repo: str) -> int | None:
+    try:
+        completed = subprocess.run(
+            ["gh", "repo", "view", repo, "--json", "stargazerCount"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if completed.returncode != 0:
+        return None
+    try:
+        payload = json.loads(completed.stdout or "{}")
+    except json.JSONDecodeError:
+        return None
+    return _parse_star_count(payload.get("stargazerCount"))
+
+
+def _repo_star_count(repo: str, evidence_items: list[dict[str, Any]]) -> int | None:
+    from_signals = [_signal_star_count(item) for item in evidence_items]
+    from_signals = [value for value in from_signals if value is not None]
+    if from_signals:
+        return max(from_signals)
+    return _repo_star_count_from_github(repo)
+
+
+def _meets_min_star_threshold(repo: str, evidence_items: list[dict[str, Any]]) -> tuple[bool, int | None]:
+    stars = _repo_star_count(repo, evidence_items)
+    return stars is not None and stars >= MIN_GITHUB_REPO_STARS, stars
 
 
 def _normalize_repo_id(owner: str, repo: str) -> str | None:
@@ -182,19 +287,25 @@ def build_github_ai_projects_output(lane_input: dict[str, Any]) -> dict[str, Any
                 continue
             grouped[repo].append(signal)
 
-    ranked = sorted(
+    ranked_candidates = sorted(
         grouped.items(),
         key=lambda pair: (
             -len(pair[1]),
             0 if any(item.get("source_lane") == "github-trending-weekly" for item in pair[1]) else 1,
             pair[0].lower(),
         ),
-    )[:target_count]
+    )
 
     output_items: list[dict[str, Any]] = []
     source_map: dict[str, dict[str, str]] = {}
+    filtered_low_star_repos: list[str] = []
     markdown_lines = ["## GitHub AI 项目", ""]
-    for repo, evidence_items in ranked:
+    for repo, evidence_items in ranked_candidates:
+        meets_threshold, stars = _meets_min_star_threshold(repo, evidence_items)
+        if not meets_threshold:
+            star_label = "unknown" if stars is None else str(stars)
+            filtered_low_star_repos.append(f"{repo}:{star_label}")
+            continue
         repo_url = f"https://github.com/{repo}"
         source_lanes = sorted({str(item.get("source_lane")) for item in evidence_items if item.get("source_lane")})
         why_today = _lane_reason(source_lanes)
@@ -208,10 +319,13 @@ def build_github_ai_projects_output(lane_input: dict[str, Any]) -> dict[str, Any
                 "url": repo_url,
                 "summary": summary,
                 "why_today": why_today,
+                "stars": stars,
                 "source_urls": source_urls,
             }
         )
         source_map.setdefault(repo_url, {"label": repo, "url": repo_url})
+        if len(output_items) >= target_count:
+            break
 
     if not output_items:
         markdown_lines.append("- 无")
@@ -229,7 +343,8 @@ def build_github_ai_projects_output(lane_input: dict[str, Any]) -> dict[str, Any
         "sources": list(source_map.values()),
         "quality": {
             "item_count": len(output_items),
-            "warnings": [] if output_items else ["no_repo_candidates"],
+            "warnings": ([] if output_items else ["no_repo_candidates"])
+            + (["filtered_repos_below_100_stars"] if filtered_low_star_repos else []),
         },
         "validation": {"status": "passed" if output_items else "empty", "errors": []},
         "side_artifacts": {"memory_markdown": _build_memory_markdown(report_date, output_items)},

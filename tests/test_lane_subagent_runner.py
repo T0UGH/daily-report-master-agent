@@ -35,6 +35,7 @@ def _github_trending_lane_input() -> dict:
                         "and documents OpenAI plus Anthropic provider setup."
                     ),
                     "source_url": "https://github.com/codex-labs/agent-skills",
+                    "stars": 240,
                 },
             }
         ],

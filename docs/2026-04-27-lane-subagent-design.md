@@ -349,13 +349,13 @@ github-ai-projects
 
 2. **GitHub Search API**
    - query examples:
-     - `ai agent pushed:>=YYYY-MM-DD stars:>20`
-     - `claude code stars:>10`
-     - `codex agent stars:>10`
-     - `mcp server stars:>10`
-     - `agent memory stars:>10`
-     - `coding agent stars:>10`
-     - `llm eval agent stars:>10`
+     - `ai agent pushed:>=YYYY-MM-DD stars:>=100`
+     - `claude code stars:>=100`
+     - `codex agent stars:>=100`
+     - `mcp server stars:>=100`
+     - `agent memory stars:>=100`
+     - `coding agent stars:>=100`
+     - `llm eval agent stars:>=100`
 
 3. **跨 lane repo mentions**
    - X 帖子里的 GitHub URL。
@@ -437,7 +437,7 @@ github-ai-projects
 
 - Top items 默认 5 条。
 - 每条必须有 GitHub repo URL。
-- 每条必须有 stars 或明确说明 stars 未取到。
+- 每条必须有 stars，且 `stars >= 100`；低于 100 stars 或无法确认 stars 的仓库不得进入 GitHub 趋势项目 / GitHub AI 项目日报正文。
 - 每条必须说明：项目做什么 + 为什么今天值得看。
 - 至少覆盖一个输入来源；多源交叉出现的项目加权。
 - 过滤掉：
