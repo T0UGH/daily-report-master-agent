@@ -303,3 +303,11 @@
 ### 待观察
 - 继续观察 Polymarket API/网络稳定性；如果连续多日部分 query SSL EOF/connection reset，应在 signals-engine 层加更稳健的重试或降级记录。
 
+## 2026-05-09
+
+- status: published
+- doc_url: https://www.feishu.cn/docx/MxYJddQLtoJaOexLSGFcjOo1nTh
+- card_message_id: om_x100b50d245c634a4b2486a73de51bc7
+- lanes: total=13 ok=12 degraded=0 blocked=0 empty=1
+- runtime: /Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-09
+- archive: /Users/haha/workspace/daily-report-master-agent/reports/2026-05-09
