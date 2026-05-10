@@ -316,4 +316,13 @@
 - Feishu doc: https://www.feishu.cn/docx/VhIudcqXSoGD1gxPYAfcHwrFn5c
 - Card message: om_x100b50cf6ccb7ca4b15683cc361e48c
 - Knowledge-wiki archive commit: 31beca08afb4288ba9315bf0191e7f09e305c616
+## 2026-05-11
+
+### 运行记录
+- 06:00 cron 按 Hermes 原生 subagent lane 架构执行：repo-local `signals-engine` preflight、逐 lane collect、prepare lane packages、13 个 lane subagent 写 `lane.md` / `lane-meta.json`、validator + final output contract 通过。
+- `github-ai-projects` 继续按 derived lane 处理，不作为直接 signals-engine collector；collect artifact 中规范化为 skipped/derived。
+- Feishu 发布成功：文档和精选卡片均返回成功；音频未在当前 publish wrapper 中生成，状态为 skipped。
+
+### 待观察
+- 继续观察 X browser-session diagnose 偶发 `Execution context was destroyed`，本次 collect 命令最终成功且 raw corpus 非空。
 
