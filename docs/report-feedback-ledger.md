@@ -326,3 +326,8 @@
 ### 待观察
 - 继续观察 X browser-session diagnose 偶发 `Execution context was destroyed`，本次 collect 命令最终成功且 raw corpus 非空。
 
+## 2026-05-12 cron run
+- Hermes native subagent lane architecture completed.
+- Feishu doc/card publish succeeded; archive committed to knowledge-wiki `d8ad43b06e863d75e7faa9046904efb5fa90de07`.
+- Note: x-feed preflight diagnose initially reported browser-session native API probe failure, but collect succeeded on same repo-local CLI/config/data-dir.
+
