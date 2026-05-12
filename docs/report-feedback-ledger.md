@@ -331,3 +331,10 @@
 - Feishu doc/card publish succeeded; archive committed to knowledge-wiki `d8ad43b06e863d75e7faa9046904efb5fa90de07`.
 - Note: x-feed preflight diagnose initially reported browser-session native API probe failure, but collect succeeded on same repo-local CLI/config/data-dir.
 
+## 2026-05-13 cron delivery
+- runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-13`
+- report: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-13/report.md`
+- Feishu doc: https://www.feishu.cn/docx/TZaudQT7zogM33xW2ugcA3SInOc
+- card: succeeded / `om_x100b6f0e30de2ca0b307db7b3440bd7`
+- audio: skipped
+
