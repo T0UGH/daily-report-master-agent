@@ -338,3 +338,11 @@
 - card: succeeded / `om_x100b6f0e30de2ca0b307db7b3440bd7`
 - audio: skipped
 
+
+
+## 2026-05-14 cron run
+
+- Feishu doc: https://www.feishu.cn/docx/NR73dwUA2oW80vxhttQcsVP5n8d
+- Card: succeeded; message_id=om_x100b6f7bd9bcd4a0b32ebb82cd2f0d0
+- Runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-14`
+- Contract: passed after lane-output repair loop.
