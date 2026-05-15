@@ -353,3 +353,11 @@
 - Feishu doc: https://www.feishu.cn/docx/JYCgdUthGoLWGNxn9Fect2qInUc
 - Feishu card_message_id: `om_x100b6f50ef13c8a0b3d8f3121a31a5e`
 - Final delivery ok: `True`
+
+## 2026-05-16 cron run
+- runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-16`
+- report: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-16/report.md`
+- archive: `/Users/haha/.daily-lane-data/archive/daily-report-master/2026-05-16`
+- publish-state: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-16/publish-state.json`
+- notes: Hermes subagent lane architecture; collect used repo-local signals-engine with production config/data root; Feishu doc+card succeeded; audio skipped.
+
