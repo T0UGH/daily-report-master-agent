@@ -360,4 +360,9 @@
 - archive: `/Users/haha/.daily-lane-data/archive/daily-report-master/2026-05-16`
 - publish-state: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-16/publish-state.json`
 - notes: Hermes subagent lane architecture; collect used repo-local signals-engine with production config/data root; Feishu doc+card succeeded; audio skipped.
+## 2026-05-17 cron run
+- Hermes native subagent lane architecture completed: collect -> package -> lane subagents -> validate -> assemble -> Feishu publish.
+- Collect used repo-local signals-engine with /Users/haha/.signal-engine/config/lanes.yaml and /Users/haha/.daily-lane-data. HN search initially timed out, diagnose healthy, retry succeeded.
+- Metadata normalization repaired several lane-meta schema aliases/missing keys before validation. Weather lane needed explicit H2 for final contract.
+- Final report contract passed after appending deterministic ## 来源 appendix.
 
