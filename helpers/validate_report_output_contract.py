@@ -19,6 +19,7 @@ FIXED_SECTION_ORDER = [
     "openclaw-watch",
     "github-ai-projects",
     "github-trending-weekly",
+    "rize-watch",
     "product-hunt-watch",
     "polymarket-watch",
 ]
@@ -34,6 +35,7 @@ FIXED_SECTION_TITLES = {
     "openclaw-watch": "OpenClaw",
     "github-ai-projects": "GitHub AI 项目",
     "github-trending-weekly": "GitHub 趋势项目",
+    "rize-watch": "Rize AI 工具榜",
     "product-hunt-watch": "Product Hunt 新品",
     "polymarket-watch": "Polymarket 市场",
     "weather-watch": "天气",

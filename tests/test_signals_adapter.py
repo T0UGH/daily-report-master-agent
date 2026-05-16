@@ -18,6 +18,7 @@ from helpers.signals_adapter import (
     build_reader_excerpt,
     build_reddit_detail,
     build_report_artifact,
+    build_rize_detail,
     build_selected_items,
     build_validation_bundle,
     build_x_post_detail,
@@ -311,6 +312,56 @@ created_at: '2026-04-12T10:58:00Z'
         self.assertIn("No: 82.0%", market_item["source_snippet"])
         self.assertIn("24h volume: 13,577.3", market_item["source_snippet"])
         self.assertIn("Liquidity: 6,870.6", market_item["source_snippet"])
+
+    def test_rize_watch_selected_items_and_report_section(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            signals_root = Path(temp_dir)
+            self.write_signal_bundle(
+                signals_root,
+                lane="rize-watch",
+                signal_text_by_name={
+                    "open-design.md": """---
+type: rize_ai_tools_rank
+lane: rize-watch
+source: rize
+entity_type: github_repo
+entity_id: nexu-io/open-design
+title: '#1 open-design — Rize AI tools weekly ranking'
+url: https://github.com/nexu-io/open-design
+fetched_at: 2026-04-12T10:58:49+0000
+position: 1
+external_url: https://rize.io/ai-tools
+---
+
+## Rize AI Tools Ranking
+
+Local-first design system for Claude Code, Codex, Cursor, Gemini and OpenCode agents.
+
+## Snapshot
+
+- Rank: #1
+- Repository: https://github.com/nexu-io/open-design
+- Ranking page: https://rize.io/ai-tools
+""",
+                },
+            )
+            collect_result = build_collect_result(signals_root=signals_root, report_date=REPORT_DATE, lane_names=["rize-watch"])
+            selected_items = build_selected_items(signals_root=signals_root, report_date=REPORT_DATE, lane_names=["rize-watch"])
+            artifact = build_report_artifact(collect_result=collect_result, selected_items=selected_items)
+
+        self.assertEqual(collect_result["lanes"][0]["useful_item_count"], 1)
+        self.assertEqual(selected_items["summary"]["lane_counts"], [{"lane": "rize-watch", "selected_item_count": 1}])
+        self.assertIn("Rize AI 工具榜", artifact["body_markdown"])
+        self.assertIn("nexu-io/open-design", artifact["body_markdown"])
+        validate_report_markdown(artifact["body_markdown"], report_date=REPORT_DATE)
+
+    def test_build_rize_detail_keeps_ranking_context(self) -> None:
+        detail = build_rize_detail(
+            title="#1 open-design — Rize AI tools weekly ranking",
+            source_text="Local-first design system for Claude Code, Codex, Cursor, Gemini and OpenCode agents.",
+        )
+        self.assertIn("Rize 把它列入本周 AI 工具榜", detail)
+        self.assertIn("coding-agent 工作流", detail)
 
     def test_build_selected_items_dense_claude_release_source_snippet_keeps_more_release_points(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1917,12 +1968,12 @@ Design context for AI agents
             {
                 lane_name: limit
                 for lane_name, limit in DEFAULT_LANE_ITEM_LIMITS.items()
-                if lane_name != "weather-watch"
+                if lane_name not in {"weather-watch", "rize-watch"}
             },
             {
                 lane_name: 10
                 for lane_name in DEFAULT_LANE_ITEM_LIMITS
-                if lane_name != "weather-watch"
+                if lane_name not in {"weather-watch", "rize-watch"}
             },
         )
 

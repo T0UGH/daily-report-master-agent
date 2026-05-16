@@ -45,6 +45,7 @@ FALLBACK_SOURCE_URL_TEMPLATES = {
     "openclaw-watch": "https://github.com/example/openclaw-watch/{report_date}",
     "github-ai-projects": "https://github.com/example/github-ai-projects/{report_date}",
     "github-trending-weekly": "https://github.com/example/github-trending-weekly/{report_date}",
+    "rize-watch": "https://rize.io/ai-tools",
     "product-hunt-watch": "https://www.producthunt.com/posts/product-hunt-watch-{report_date}",
     "polymarket-watch": "https://polymarket.com/event/polymarket-watch-{report_date}",
     "weather-watch": "https://weather.example.com/weather-watch/{report_date}",
@@ -60,6 +61,7 @@ LINK_LABELS = {
     "openclaw-watch": "Release",
     "github-ai-projects": "GitHub",
     "github-trending-weekly": "GitHub",
+    "rize-watch": "Rize",
     "product-hunt-watch": "Product Hunt",
     "polymarket-watch": "Polymarket",
     "weather-watch": "天气",
@@ -75,6 +77,7 @@ DEFAULT_LANE_ITEM_LIMITS = {
     "openclaw-watch": 10,
     "github-ai-projects": 10,
     "github-trending-weekly": 10,
+    "rize-watch": 8,
     "product-hunt-watch": 10,
     "polymarket-watch": 10,
     "weather-watch": 2,
@@ -84,6 +87,7 @@ SECONDARY_ITEM_SCORE_FLOORS = {
     "codex-watch": 10,
     "github-ai-projects": 8,
     "github-trending-weekly": 8,
+    "rize-watch": 8,
 }
 TOPIC_TOKEN_STOPWORDS = {
     "about",
@@ -155,6 +159,7 @@ CONTENT_SECTION_PREFERENCES = {
     "openclaw-watch": ("summary", "release notes", "post"),
     "github-ai-projects": ("summary", "readme", "post"),
     "github-trending-weekly": ("summary", "readme", "post"),
+    "rize-watch": ("rize ai tools ranking", "snapshot", "preview"),
     "product-hunt-watch": ("preview", "snapshot", "post"),
     "polymarket-watch": ("expectation", "outcome probabilities", "market strength"),
     "weather-watch": ("weather", "forecast", "summary"),
@@ -2850,6 +2855,8 @@ def build_lane_fact_summary(
         return build_openclaw_release_detail(title=title, source_text=cleaned_source)
     if lane_name == "github-trending-weekly":
         return build_github_trending_detail(title=title, source_text=cleaned_source)
+    if lane_name == "rize-watch":
+        return build_rize_detail(title=title, source_text=cleaned_source)
     if lane_name == "product-hunt-watch":
         return build_product_hunt_detail(title=title, source_text=cleaned_source)
     if lane_name == "polymarket-watch":
@@ -3197,6 +3204,8 @@ def build_minimal_reader_fact_fallback(
         return build_reddit_detail(title=title, source_text=cleaned_source)
     if lane_name == "github-trending-weekly":
         return build_github_trending_detail(title=title, source_text=cleaned_source)
+    if lane_name == "rize-watch":
+        return build_rize_detail(title=title, source_text=cleaned_source)
     if lane_name == "product-hunt-watch":
         return build_product_hunt_detail(title=title, source_text=cleaned_source)
     if lane_name == "codex-watch":
@@ -4883,6 +4892,27 @@ def localize_product_hunt_reader_title(title: str) -> str:
     if name and translated_tagline and translated_tagline != tagline:
         return f"{name}：{translated_tagline}"
     return ""
+
+
+def build_rize_detail(*, title: str, source_text: str) -> str:
+    """Build Chinese reader-facing copy for Rize weekly AI tools ranking items."""
+    sentences = [sentence for sentence in simple_sentences(source_text) if sentence.strip()]
+    facts: list[str] = []
+    if sentences:
+        facts.append(f"Rize 把它列入本周 AI 工具榜，页面描述是：{sentences[0]}")
+    lowered = source_text.lower()
+    signals = []
+    if "claude code" in lowered or "codex" in lowered or "cursor" in lowered or "opencode" in lowered:
+        signals.append("明确和 coding-agent 工作流相关")
+    if "agent" in lowered or "agents" in lowered:
+        signals.append("属于 agent / multi-agent 方向")
+    if "mcp" in lowered:
+        signals.append("涉及 MCP 生态")
+    if signals:
+        facts.append("可跟踪点是" + "、".join(dict.fromkeys(signals)) + "。")
+    if not facts:
+        return ""
+    return compose_fact_sentences(intro=f"`{title}` 进入 Rize 本周 AI 工具榜，值得看的是：", facts=facts[:2], group_sizes=(1, 1))
 
 
 def build_product_hunt_detail(*, title: str, source_text: str) -> str:

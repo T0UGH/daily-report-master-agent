@@ -25,6 +25,7 @@ selection:
     openclaw-watch: 10
     github-ai-projects: 5
     github-trending-weekly: 10
+    rize-watch: 8
     product-hunt-watch: 10
     polymarket-watch: 10
     weather-watch: 2
@@ -60,6 +61,7 @@ reader_facing:
     - openclaw-watch
     - github-ai-projects
     - github-trending-weekly
+    - rize-watch
     - product-hunt-watch
     - polymarket-watch
 runtime:

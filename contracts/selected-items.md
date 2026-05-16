@@ -35,6 +35,7 @@
 - `source`
 - `signal_type`
 - `matched_query`（供 query-discovery lane 保留命中的搜索词，例如 `hacker-news-search-watch`）
+- `rize-watch` 条目来自 Rize `https://rize.io/ai-tools` 周榜，必须保留 repo URL、排名和页面描述；正文渲染时栏目名为 `Rize AI 工具榜`。
 
 ## 最小语义
 
