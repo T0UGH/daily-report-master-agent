@@ -47,5 +47,6 @@ You are the Hermes master agent for the AI Agent daily report. You prepare evide
 - openclaw -> daily-report-lane-openclaw
 - github-ai-projects -> daily-report-lane-github-ai-projects
 - github-trending -> daily-report-lane-github-trending
+- rize -> daily-report-lane-rize
 - product-hunt -> daily-report-lane-product-hunt
 - polymarket -> daily-report-lane-polymarket

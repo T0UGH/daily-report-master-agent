@@ -1,6 +1,6 @@
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ["daily-report-master","daily-report-lane-weather","daily-report-lane-x-feed","daily-report-lane-x-following","daily-report-lane-reddit","daily-report-lane-hacker-news","daily-report-lane-hacker-news-search","daily-report-lane-claude-code","daily-report-lane-codex","daily-report-lane-openclaw","daily-report-lane-github-ai-projects","daily-report-lane-github-trending","daily-report-lane-product-hunt","daily-report-lane-polymarket"]
+SKILLS = ["daily-report-master","daily-report-lane-weather","daily-report-lane-x-feed","daily-report-lane-x-following","daily-report-lane-reddit","daily-report-lane-hacker-news","daily-report-lane-hacker-news-search","daily-report-lane-claude-code","daily-report-lane-codex","daily-report-lane-openclaw","daily-report-lane-github-ai-projects","daily-report-lane-github-trending","daily-report-lane-rize","daily-report-lane-product-hunt","daily-report-lane-polymarket"]
 FORBIDDEN_IN_SKILLS = ["Python decides what to select", "use selected_items as primary input", "fallback to renderer"]
 def read_skill(name: str) -> str:
     return (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")

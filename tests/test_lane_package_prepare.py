@@ -126,6 +126,32 @@ def test_prepare_lane_packages_derives_github_ai_projects_from_selected_items_re
     assert 'owner/not-derived' not in text
     assert 'No repo here' not in text
 
+
+def test_prepare_lane_packages_includes_rize_ranking_lane(tmp_path):
+    lane_dir=tmp_path/'signals'/'rize-watch'/'2026-05-17'/'signals'
+    lane_dir.mkdir(parents=True)
+    (lane_dir/'01-open-design.md').write_text(
+        '# #1 open-design — Rize AI tools weekly ranking\n\n'
+        '- GitHub repo: https://github.com/nexu-io/open-design\n'
+        '- Rize page: https://rize.io/ai-tools\n'
+        '- Description: AI design workflow tool.',
+        encoding='utf-8',
+    )
+
+    packages=prepare_lane_packages('2026-05-17',tmp_path/'signals',tmp_path/'runtime',None)
+
+    package=packages['rize']
+    context=json.loads((package/'context.json').read_text(encoding='utf-8'))
+    text=(package/'input.md').read_text(encoding='utf-8')
+    assert context['lane']=='rize'
+    assert context['signal_lane']=='rize-watch'
+    assert context['skill']=='daily-report-lane-rize'
+    assert context['raw_corpus_status']=='ok'
+    assert context['raw_file_count']==1
+    assert context['raw_corpus_mode']=='direct_signal_lane'
+    assert 'Rize AI tools weekly ranking' in text
+    assert 'https://github.com/nexu-io/open-design' in text
+
 def test_prepare_lane_packages_copies_recent_reports_for_agent_dedup_reference(tmp_path):
     (tmp_path/'2026-04-25').mkdir()
     (tmp_path/'2026-04-25'/'report.md').write_text('# 2026-04-25\nYesterday report topic',encoding='utf-8')
