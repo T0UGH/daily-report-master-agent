@@ -366,3 +366,14 @@
 - Metadata normalization repaired several lane-meta schema aliases/missing keys before validation. Weather lane needed explicit H2 for final contract.
 - Final report contract passed after appending deterministic ## 来源 appendix.
 
+## 2026-05-18
+
+### 生产运行记录
+- Hermes 原生 subagent lane 架构完成当日生产运行：collect / package / delegate lane subagents / validate / assemble / Feishu publish / knowledge-wiki archive 全链路完成。
+- Lane 状态：total 14 / ok 13 / degraded 0 / blocked 0 / empty 1；最终 selected_count=68。
+- Collect preflight 使用 repo-local signals-engine：`uvx --from /Users/haha/workspace/signals-engine signals-engine`，config `/Users/haha/.signal-engine/config/lanes.yaml`，data-dir `/Users/haha/.daily-lane-data`；lane registry 包含 weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket。
+- Feishu 文档：https://www.feishu.cn/docx/NBVJdhRuRoz9bkxtdKpcVc7FnXg；卡片状态 `succeeded`，message_id `om_x100b6f97baf190acb14c3c8cd9b1a15`；音频 `skipped`。
+- 归档：knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-18.md`，commit `36c614548f07`。
+
+### 待观察
+- Claude Code lane 因近两日报告已覆盖当前 raw releases，本日为 `empty`；后续需继续观察 release freshness 与去重是否符合 MT 对“固定保留”的预期。
