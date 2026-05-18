@@ -377,3 +377,12 @@
 
 ### 待观察
 - Claude Code lane 因近两日报告已覆盖当前 raw releases，本日为 `empty`；后续需继续观察 release freshness 与去重是否符合 MT 对“固定保留”的预期。
+
+
+### 2026-05-19 production run
+- lane totals: total=14, ok=13, degraded=0, blocked=0, empty=1, selected_count=63.
+- collect preflight: repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`; config `/Users/haha/.signal-engine/config/lanes.yaml`; data-dir `/Users/haha/.daily-lane-data`; registry complete for weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket. collect summary: ok=13, partial=1, error=0, useful=345.
+- Feishu: doc=https://www.feishu.cn/docx/GF5cdjALQo7xtkxzAlvcKK8snUc; card_status=succeeded; card_message_id=om_x100b6f8d44f864a4b3439ce44b7b124; audio_status=skipped.
+- Artifacts: runtime `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-19`; report `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-19/report.md`; collect log `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-19/logs/collect.log`.
+- Archive: knowledge-wiki `raw/inbound/ai-daily-report/2026-05-19.md`, commit `77a4f8d`.
+- Follow-up: Claude Code lane empty because same raw releases were already covered in recent reports; github-ai-projects remained a derived lane with no direct collector and was packaged from upstream evidence.
