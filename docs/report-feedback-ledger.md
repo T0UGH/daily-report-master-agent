@@ -395,3 +395,14 @@
 - Archive: local `/Users/haha/.daily-lane-data/archive/daily-report-master/2026-05-20`; knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-20.md`, commit `1ada166`.
 - Follow-up: codex/openclaw/x-following lane-meta required schema-key normalization before validation; subagent-written lane markdown was not rewritten.
 
+## 2026-05-21 生产运行记录
+
+- runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-21`；collect 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、config `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`。
+- collect preflight: lane registry 覆盖 weather / reddit / HackerNews / Claude Code / Codex / OpenClaw / Polymarket / Rize；`product-hunt-watch` 与 `x-feed` diagnose 均 HEALTHY。
+- collect/retry: `hacker-news-watch` 首次因 SSL handshake timeout 失败，同一 run 内 diagnose 后 retry 成功；最终 collect-result 13 ok + `github-ai-projects` derived partial，0 error，useful_item_count=350。
+- Hermes lane subagents: 14 个 lane package 均为 `raw_corpus_status=ok` 且 `raw_file_count>0`；14 个 lane-output 均由 subagent 写入 `lane.md` + `lane-meta.json`。
+- lane totals: total=14, ok=13, empty=1, degraded=0, blocked=0；Reddit 因 raw 缺评论 substance 且近两日重复，状态 empty。selected_count=73。
+- validation/assembly: `validate_lane_outputs.py` passed；最终 report `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-21/report.md`。
+- Feishu: doc succeeded `https://www.feishu.cn/docx/BGPmd2FeuoQyQJxf8bQchDObnXf`；card succeeded `om_x100b6fd7757c64a0b228ff4b1e30a40`，并在 Rook DM recent history 中验证为 user-sent interactive card；audio skipped。
+- archive: knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-21.md` committed and pushed at `336e6117d0e4da6d5c2f5f374535d0dbda392b56`。
+
