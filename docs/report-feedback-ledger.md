@@ -406,3 +406,18 @@
 - Feishu: doc succeeded `https://www.feishu.cn/docx/BGPmd2FeuoQyQJxf8bQchDObnXf`；card succeeded `om_x100b6fd7757c64a0b228ff4b1e30a40`，并在 Rook DM recent history 中验证为 user-sent interactive card；audio skipped。
 - archive: knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-21.md` committed and pushed at `336e6117d0e4da6d5c2f5f374535d0dbda392b56`。
 
+
+## 2026-05-22 production run
+
+### 运行记录
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、config `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`；lane registry 包含 weather / reddit / HN / Claude / Codex / OpenClaw / Polymarket 等生产 lane。
+- collect result：14 lanes，13 ok、1 partial（`github-ai-projects` 为 derived lane，无 direct collector），0 error；`useful_item_count=347`。
+- lane packages：`/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-22/lane-packages`，14 个 package 均 `raw_corpus_status=ok` 且 `raw_file_count>0`。
+- Hermes lane subagents：14 个 lane 均重新生成 `lane.md` + `lane-meta.json`；validation passed；assembled report path `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-22/report.md`。
+- lane status：14 total / 13 ok / 0 degraded / 0 blocked / 1 empty（reddit 按去重与评论 substance 不足输出 empty）。selected_count=69。
+- Feishu：doc succeeded `https://www.feishu.cn/docx/Gi2Qd4Zk8oOqdLxUtWUc4pX8n8f`；interactive card succeeded，message_id `om_x100b6fcc089638a0b283a90ce521207`，已在 Rook DM chat history 中验证；audio skipped。
+- archive：最终 report 已归档到 knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-22.md`。
+
+### 观察 / 待跟进
+- Reddit raw 仍能 collect，但 subagent 判断近两日重复且缺少评论正文 substance，输出 empty；后续若继续保留 Reddit，需要 collector 拉取可引用评论正文，否则容易“有 raw 但不可写”。
+- 多个 delegated subagent 报 skill 不在本地可见，但凭 package prompt 和 lane contract 仍完成输出；后续可检查 Hermes skill 同步，降低 audit 风险。
