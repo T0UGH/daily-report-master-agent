@@ -421,3 +421,14 @@
 ### 观察 / 待跟进
 - Reddit raw 仍能 collect，但 subagent 判断近两日重复且缺少评论正文 substance，输出 empty；后续若继续保留 Reddit，需要 collector 拉取可引用评论正文，否则容易“有 raw 但不可写”。
 - 多个 delegated subagent 报 skill 不在本地可见，但凭 package prompt 和 lane contract 仍完成输出；后续可检查 Hermes skill 同步，降低 audit 风险。
+
+## 2026-05-25 production run
+
+- lanes: total=14, ok=12, degraded=0, blocked=2, empty=0, selected_count=64
+- collect preflight: repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`; config `/Users/haha/.signal-engine/config/lanes.yaml`; data-dir `/Users/haha/.daily-lane-data`; registry included weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket/Product Hunt/Rize.
+- collect artifacts: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-25/collect-result.json`, `selected-items.json`, `validation-bundle.json`; collect summary useful_item_count=309, non_ok=3.
+- lane evidence: packages `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-25/lane-packages`, outputs `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-25/lane-outputs`; validation confirmed 14 `lane.md` + 14 `lane-meta.json`.
+- degraded/blocked: rize blocked after diagnose/retry (`UNEXPECTED_EOF_WHILE_READING`, and diagnose showed missing lane config); polymarket blocked after diagnose/retry (SSL certificate verify failed on all configured queries).
+- final report: lane validation passed; assembled `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-25/report.md`; selected_count=64.
+- Feishu: doc `https://www.feishu.cn/docx/TgiGd975Zow0NAxDzEtcxC2KnOg`; card status=succeeded, message_id=om_x100b6e03c665a4a0b2ca05ee89760f9; audio=skipped; chat history verified returned message id from user sender.
+- archive: knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-25.md`, commit `1c9695c`.
