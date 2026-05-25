@@ -432,3 +432,13 @@
 - final report: lane validation passed; assembled `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-25/report.md`; selected_count=64.
 - Feishu: doc `https://www.feishu.cn/docx/TgiGd975Zow0NAxDzEtcxC2KnOg`; card status=succeeded, message_id=om_x100b6e03c665a4a0b2ca05ee89760f9; audio=skipped; chat history verified returned message id from user sender.
 - archive: knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-25.md`, commit `1c9695c`.
+
+
+## 2026-05-26 production run
+
+- lanes: total 14 / ok 13 / degraded 0 / blocked 0 / empty 1; selected_count=70.
+- collect preflight: repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`; config `/Users/haha/.signal-engine/config/lanes.yaml`; data-dir `/Users/haha/.daily-lane-data`; lane registry included weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket. `x-feed` diagnose still reported browser-session probe BROKEN, but collect/retry produced 100 raw files and package status ok.
+- artifacts: `collect-result.json`, `selected-items.json`, `validation-bundle.json`; packages `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-26/lane-packages`; outputs `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-26/lane-outputs`. All lanes had `lane.md` + `lane-meta.json`; validation passed; `report.md` assembled.
+- degraded/blocked: none. Empty: claude-code (today's raw releases were repeats of 2026-05-25 coverage, so lane agent left it empty rather than duplicating).
+- Feishu: doc `https://www.feishu.cn/docx/Br9jdQ8TpoDFDUxflcxczlsinNg`; card `succeeded` message `om_x100b6e78d10370a0b37e13aeda3f940`; audio `skipped`.
+- archive: knowledge-wiki `raw/inbound/ai-daily-report/2026-05-26.md`, commit `578fee4`.
