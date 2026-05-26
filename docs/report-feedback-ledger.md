@@ -442,3 +442,14 @@
 - degraded/blocked: none. Empty: claude-code (today's raw releases were repeats of 2026-05-25 coverage, so lane agent left it empty rather than duplicating).
 - Feishu: doc `https://www.feishu.cn/docx/Br9jdQ8TpoDFDUxflcxczlsinNg`; card `succeeded` message `om_x100b6e78d10370a0b37e13aeda3f940`; audio `skipped`.
 - archive: knowledge-wiki `raw/inbound/ai-daily-report/2026-05-26.md`, commit `578fee4`.
+
+
+## 2026-05-27 production run
+
+- lanes: total 14 / ok 12 / degraded 0 / blocked 0 / empty 2; selected_count=60. Empty: claude-code（raw releases 与近两日报告重复，无新增用户可见变化）、rize（weekly ranking 与 2026-05-26 高度重复，无新增可验证事实）。
+- collect preflight: repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`; config `/Users/haha/.signal-engine/config/lanes.yaml`; data-dir `/Users/haha/.daily-lane-data`; lane registry included weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket/Product Hunt/Rize. `x-feed` diagnose browser-session probe still reported BROKEN, but collect succeeded with 100 raw files.
+- collect artifacts: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-27/collect-result.json`, `selected-items.json`, `validation-bundle.json`; collect useful_item_count=355, non_ok=1 (`github-ai-projects` derived lane has no direct collector).
+- lane evidence: packages `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-27/lane-packages`, outputs `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-27/lane-outputs`; all 14 lanes have fresh `lane.md` + `lane-meta.json`; validation passed; report assembled at `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-27/report.md`.
+- degraded/blocked: none.
+- Feishu: doc `https://www.feishu.cn/docx/NRdtdPUEboU3UAxCCiXcnF0jnkc`; card `succeeded` message `om_x100b6e558cf520a0b3bf35f955213e6`, verified in Rook DM recent history as user-sent interactive card; audio `skipped`.
+- archive: knowledge-wiki `raw/inbound/ai-daily-report/2026-05-27.md`, commit `c9ec567`.
