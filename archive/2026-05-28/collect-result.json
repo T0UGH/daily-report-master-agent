@@ -1,0 +1,80 @@
+{
+  "report_date": "2026-05-28",
+  "source": "signals-engine",
+  "lanes": [
+    {
+      "name": "weather-watch",
+      "status": "ok",
+      "useful_item_count": 2
+    },
+    {
+      "name": "x-feed",
+      "status": "ok",
+      "useful_item_count": 100
+    },
+    {
+      "name": "x-following",
+      "status": "ok",
+      "useful_item_count": 100
+    },
+    {
+      "name": "reddit-watch",
+      "status": "ok",
+      "useful_item_count": 32
+    },
+    {
+      "name": "hacker-news-watch",
+      "status": "ok",
+      "useful_item_count": 10
+    },
+    {
+      "name": "hacker-news-search-watch",
+      "status": "ok",
+      "useful_item_count": 14
+    },
+    {
+      "name": "claude-code-watch",
+      "status": "ok",
+      "useful_item_count": 4
+    },
+    {
+      "name": "codex-watch",
+      "status": "ok",
+      "useful_item_count": 23
+    },
+    {
+      "name": "github-ai-projects",
+      "status": "partial",
+      "useful_item_count": 77,
+      "reason": "derived_lane_no_direct_collector",
+      "errors": []
+    },
+    {
+      "name": "github-trending-weekly",
+      "status": "ok",
+      "useful_item_count": 20
+    },
+    {
+      "name": "rize-watch",
+      "status": "ok",
+      "useful_item_count": 20
+    },
+    {
+      "name": "product-hunt-watch",
+      "status": "ok",
+      "useful_item_count": 21
+    },
+    {
+      "name": "polymarket-watch",
+      "status": "ok",
+      "useful_item_count": 12
+    }
+  ],
+  "summary": {
+    "useful_item_count": 435,
+    "partial_lane_count": 1
+  },
+  "errors": [
+    "github-ai-projects: 缺少目录 /Users/haha/.daily-lane-data/signals/github-ai-projects/2026-05-28"
+  ]
+}

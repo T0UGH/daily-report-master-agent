@@ -453,3 +453,11 @@
 - degraded/blocked: none.
 - Feishu: doc `https://www.feishu.cn/docx/NRdtdPUEboU3UAxCCiXcnF0jnkc`; card `succeeded` message `om_x100b6e558cf520a0b3bf35f955213e6`, verified in Rook DM recent history as user-sent interactive card; audio `skipped`.
 - archive: knowledge-wiki `raw/inbound/ai-daily-report/2026-05-27.md`, commit `c9ec567`.
+
+## 2026-05-28 cron delivery
+
+- status: succeeded
+- doc: https://www.feishu.cn/docx/B2did6kgCoLFuwxL0XvcLB0Wnxh
+- card: succeeded / om_x100b6e42aebdd4a4b11804e1d3939ae
+- runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-28`
+- updated: 2026-05-27T22:20:16.478191+00:00
