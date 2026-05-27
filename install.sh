@@ -45,7 +45,6 @@ skill_names = [
     'daily-report-lane-hacker-news-search',
     'daily-report-lane-claude-code',
     'daily-report-lane-codex',
-    'daily-report-lane-openclaw',
     'daily-report-lane-github-ai-projects',
     'daily-report-lane-github-trending',
     'daily-report-lane-product-hunt',

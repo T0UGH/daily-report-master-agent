@@ -8,3 +8,13 @@ def test_assemble_report_concatenates_lane_markdown_without_rewrite(tmp_path):
 def test_assemble_report_skips_missing_lane_with_note(tmp_path):
     runtime=tmp_path/'runtime'; out=runtime/'lane-outputs'/'weather'; out.mkdir(parents=True); (out/'lane.md').write_text('## 天气\n\n北京晴。',encoding='utf-8')
     text=assemble_report(runtime,'2026-04-26').read_text(encoding='utf-8'); assert '## 天气' in text; assert '未生成' in text
+
+
+def test_assemble_report_ignores_openclaw_lane_by_default(tmp_path):
+    runtime=tmp_path/'runtime'
+    openclaw=runtime/'lane-outputs'/'openclaw'
+    openclaw.mkdir(parents=True)
+    (openclaw/'lane.md').write_text('## OpenClaw\n- should not publish by default',encoding='utf-8')
+    report=assemble_report(runtime,'2026-05-28')
+    text=report.read_text(encoding='utf-8')
+    assert '## OpenClaw' not in text

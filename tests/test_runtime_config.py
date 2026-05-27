@@ -25,6 +25,13 @@ class RuntimeConfigTest(unittest.TestCase):
         self.assertEqual(targets["x-feed"], {"min_paragraphs": 6, "max_paragraphs": 10})
         self.assertEqual(targets["x-following"], {"min_paragraphs": 6, "max_paragraphs": 10})
 
+    def test_openclaw_is_not_in_default_reader_facing_config(self) -> None:
+        config = load_runtime_config(self.config_path)
+        lane_limits = resolve_lane_item_limits(config)
+        fixed_order = config["reader_facing"]["fixed_section_order"]
+        self.assertNotIn("openclaw-watch", lane_limits)
+        self.assertNotIn("openclaw-watch", fixed_order)
+
 
 if __name__ == "__main__":
     unittest.main()

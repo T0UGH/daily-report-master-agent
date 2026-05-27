@@ -23,7 +23,7 @@ description: 将最终 reader-facing 日报发布到 Feishu，并记录主交付
 - 文档发布继续走 `feishu-cli doc import`
 - 发布顺序固定为：先发文档，再发 Feishu 精选卡片，最后发 Feishu 原生音频
 - 精选卡片顶部必须带文档链接；天气模块默认排第一，至少覆盖北京和上海（上海默认杨浦）
-- `Claude Code` 与 `Codex` 是卡片固定保留栏目；`OpenClaw` 只有当天有有效内容时才进卡片；`Product Hunt` 默认 2~3 条
+- `Claude Code` 与 `Codex` 是卡片固定保留栏目；`OpenClaw` 默认不进卡片，除非 MT 明确要求临时查看；`Product Hunt` 默认 2~3 条
 - 音频必须先转成 `.opus`（Ogg/Opus），再以 Feishu 原生音频消息发送
 - 不要用外链、说明页或普通文件附件代替原生可播音频
 - publish 状态语义固定：

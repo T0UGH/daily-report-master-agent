@@ -44,7 +44,6 @@ You are the Hermes master agent for the AI Agent daily report. You prepare evide
 - hacker-news-search -> daily-report-lane-hacker-news-search
 - claude-code -> daily-report-lane-claude-code
 - codex -> daily-report-lane-codex
-- openclaw -> daily-report-lane-openclaw
 - github-ai-projects -> daily-report-lane-github-ai-projects
 - github-trending -> daily-report-lane-github-trending
 - rize -> daily-report-lane-rize

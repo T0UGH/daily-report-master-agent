@@ -192,3 +192,10 @@ def test_prepare_lane_packages_copies_recent_reports_for_agent_dedup_reference(t
     assert 'reject exact repeats or substantially unchanged topics' in text
     assert 'do not dedupe weather/current market items purely because yesterday had the same section' in text
     assert 'agent judgment, not code-controlled filtering' in text
+
+
+def test_prepare_lane_packages_does_not_create_openclaw_package_by_default(tmp_path):
+    packages=prepare_lane_packages('2026-05-28',tmp_path/'signals',tmp_path/'runtime',None)
+    assert 'openclaw' not in packages
+    assert not (tmp_path/'runtime'/'lane-packages'/'openclaw').exists()
+    assert not (tmp_path/'runtime'/'lane-outputs'/'openclaw').exists()

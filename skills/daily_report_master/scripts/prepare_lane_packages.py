@@ -2,8 +2,8 @@ from __future__ import annotations
 import argparse, json, re, shutil
 from datetime import date, timedelta
 from pathlib import Path
-LANES=['weather','x-feed','x-following','reddit','hacker-news','hacker-news-search','claude-code','codex','openclaw','github-ai-projects','github-trending','rize','product-hunt','polymarket']
-SIGNAL_LANE_MAP={'weather':'weather-watch','x-feed':'x-feed','x-following':'x-following','reddit':'reddit-watch','hacker-news':'hacker-news-watch','hacker-news-search':'hacker-news-search-watch','claude-code':'claude-code-watch','codex':'codex-watch','openclaw':'openclaw-watch','github-ai-projects':'github-ai-projects','github-trending':'github-trending-weekly','rize':'rize-watch','product-hunt':'product-hunt-watch','polymarket':'polymarket-watch'}
+LANES=['weather','x-feed','x-following','reddit','hacker-news','hacker-news-search','claude-code','codex','github-ai-projects','github-trending','rize','product-hunt','polymarket']
+SIGNAL_LANE_MAP={'weather':'weather-watch','x-feed':'x-feed','x-following':'x-following','reddit':'reddit-watch','hacker-news':'hacker-news-watch','hacker-news-search':'hacker-news-search-watch','claude-code':'claude-code-watch','codex':'codex-watch','github-ai-projects':'github-ai-projects','github-trending':'github-trending-weekly','rize':'rize-watch','product-hunt':'product-hunt-watch','polymarket':'polymarket-watch'}
 LANE_SKILL_MAP={lane:f'daily-report-lane-{lane}' for lane in LANES}
 DERIVED_LANE_NO_DIRECT_COLLECTOR_REASON='derived_lane_no_direct_collector'
 GITHUB_AI_PROJECTS_UPSTREAM_LANES=['github-trending-weekly','x-feed','x-following','reddit-watch','hacker-news-watch','hacker-news-search-watch','product-hunt-watch']

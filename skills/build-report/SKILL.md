@@ -44,7 +44,6 @@ reader-facing 产物必须遵守 `contracts/report-output-contract.md` 的固定
   - `reddit-watch` -> `Reddit 社区`
   - `claude-code-watch` -> `Claude Code`
   - `codex-watch` -> `Codex`
-  - `openclaw-watch` -> `OpenClaw`
   - `github-trending-weekly` -> `GitHub 趋势项目`
   - `product-hunt-watch` -> `Product Hunt 新品`
   - `polymarket-watch` -> `Polymarket 市场`
@@ -52,19 +51,19 @@ reader-facing 产物必须遵守 `contracts/report-output-contract.md` 的固定
   额外 reader-facing 约束：
   - `weather-watch` 作为天气模块，默认至少覆盖北京和上海两条天气信号
   - `claude-code-watch` 与 `codex-watch` 固定保留，只要当天有有效信号就必须进 reader-facing 输出
-  - `openclaw-watch` 不固定保留，只有当天确有值得看的信号才进入 reader-facing 输出
+  - `openclaw-watch` 默认不进入 reader-facing 输出；只有 MT 明确要求临时查看 OpenClaw 时，才作为一次性补充处理
   - `product-hunt-watch` 默认保留 2~3 条，而不是只留 1 条
 - `github-watch` 不进入 reader-facing 输出
 - 最终正文栏目必须是固定顺序下的非空子序列
 - 标题后直接进入第一个非空栏目，不生成 `今日要点`、`正文`、`编辑结论`
-- repo-specific lane 直接渲染为 `## Claude Code`、`## Codex`、`## OpenClaw`，不再挂到总 `GitHub` 栏位下
+- repo-specific lane 直接渲染为 `## Claude Code`、`## Codex`，不再挂到总 `GitHub` 栏位下
 - 栏目内部使用条目式 bullet / 短段落，不再生成 `###` repo 小节壳或跨 lane 主题总论
 - 日报默认是“忠实原文的中文转写/整理优先，判断总结次之”
 - 默认正文输入优先级为 `source_snippet > excerpt > editor_summary`；不要默认优先吃 `editor_headline/editor_summary`
 - 禁止使用“值得跟踪”“更清楚了”“更成型了”“更像工作流了”“更偏向真实使用场景”之类空心模板句充当正文；这类判断句只能补充，不能替代事实
 - 当单个 lane 的信号很多时，优先把相关 signal 合并成更完整的主题项，而不是堆更多低信息密度条目
 - `X 推荐流`、`X 关注流` 的条目必须写出帖子到底说了什么，至少交代核心观点、做法、实验结果、批评点、争议点中的一项
-- `Claude Code`、`Codex`、`OpenClaw`、`GitHub 趋势项目` 以及其他 GitHub / release / repo 类内容，必须展开具体更新点，例如版本号、repo、产品名、功能点、接口变化、发布内容、作者说明；不能只剩一句方向判断
+- `Claude Code`、`Codex`、`GitHub 趋势项目` 以及其他 GitHub / release / repo 类内容，必须展开具体更新点，例如版本号、repo、产品名、功能点、接口变化、发布内容、作者说明；不能只剩一句方向判断
 - 当 `source_snippet` 已经带出多个功能点、概率或项目定位时，正文默认应整理成 2~3 句连续事实，不要再缩成一句概括
 
 ### 2. Humanizer

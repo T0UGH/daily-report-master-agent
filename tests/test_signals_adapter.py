@@ -3438,12 +3438,8 @@ matched_query: Claude Code
         self.assertIn("model output", codex_line)
         self.assertGreaterEqual(len(codex_line), 120)
 
-        openclaw_line = body_line_for("openclaw 2026.4.11")
-        self.assertIn("ChatGPT import ingestion", openclaw_line)
-        self.assertIn("Imported Insights", openclaw_line)
-        self.assertIn("Memory Palace", openclaw_line)
-        self.assertIn("structured chat bubbles", openclaw_line)
-        self.assertGreaterEqual(len(openclaw_line), 150)
+        self.assertNotIn("## OpenClaw", body_markdown)
+        self.assertNotIn("**openclaw 2026.4.11**", body_markdown)
 
         archon_line = body_line_for("Archon")
         self.assertIn("harness builder", archon_line)
@@ -3562,8 +3558,8 @@ matched_query: Claude Code
         self.assertIn("CLAUDE_CODE_CERT_STORE=bundled", body_markdown)
         self.assertIn("17406", body_markdown)
         self.assertIn("MCP tool wall time", body_markdown)
-        self.assertIn("Imported Insights", body_markdown)
-        self.assertIn("Memory Palace", body_markdown)
+        self.assertNotIn("Imported Insights", body_markdown)
+        self.assertNotIn("Memory Palace", body_markdown)
         self.assertIn("Anthropic", body_markdown)
         self.assertIn("90.0%", body_markdown)
         self.assertNotIn("这版更新把 onboarding、云环境、证书和 brief mode 一起推进", body_markdown)
@@ -3991,13 +3987,8 @@ matched_query: Claude Code
         self.assertIn("MCP tool", codex_line)
         self.assertIn("app-server notification path", codex_line)
 
-        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14-beta.1**" in line)
-        self.assertIn("Telegram", openclaw_line)
-        self.assertIn("markdown-it", openclaw_line)
-        self.assertIn("ReDoS", openclaw_line)
-        self.assertIn('sendPolicy: "deny"', openclaw_line)
-        self.assertTrue("hook:wake" in openclaw_line or "SSRF" in openclaw_line or "sender allowlist" in openclaw_line)
-        self.assertNotIn("原文围绕 openclaw 2026.4.14-beta.1 展开，具体变化见来源", openclaw_line)
+        self.assertNotIn("## OpenClaw", body_markdown)
+        self.assertNotIn("**openclaw", body_markdown)
 
         market_line = next(
             line
@@ -4961,11 +4952,8 @@ matched_query: Claude Code
         self.assertTrue("thinking hints" in claude_release_line or "release" in claude_release_line.lower())
         self.assertNotIn("原文围绕 v2.1.107 展开，具体变化见来源", claude_release_line)
 
-        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14**" in line)
-        self.assertIn("OpenClaw", openclaw_line)
-        self.assertIn("2026.4.14", openclaw_line)
-        self.assertTrue("GPT-5" in openclaw_line or "model provider" in openclaw_line or "release" in openclaw_line.lower())
-        self.assertNotIn("原文围绕 openclaw 2026.4.14 展开，具体变化见来源", openclaw_line)
+        self.assertNotIn("## OpenClaw", body_markdown)
+        self.assertNotIn("**openclaw", body_markdown)
 
     def test_build_report_artifact_dense_live_like_claude_and_openclaw_entries_keep_more_groups(self) -> None:
         collect_result = {
@@ -5039,12 +5027,8 @@ matched_query: Claude Code
         self.assertIn("queued messages", claude_line)
         self.assertGreaterEqual(len(claude_line), 260)
 
-        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14**" in line)
-        self.assertIn("gpt-5.4-pro", openclaw_line)
-        self.assertIn("Telegram/forum topics", openclaw_line)
-        self.assertIn("apiKey", openclaw_line)
-        self.assertTrue("allowFrom" in openclaw_line or "config.patch" in openclaw_line)
-        self.assertGreaterEqual(len(openclaw_line), 240)
+        self.assertNotIn("## OpenClaw", body_markdown)
+        self.assertNotIn("**openclaw", body_markdown)
 
     def test_build_report_artifact_live_report_remaining_x_placeholders_turn_into_minimal_fact_sentences(self) -> None:
         collect_result = {
@@ -5534,12 +5518,8 @@ matched_query: Claude Code
         self.assertNotIn("Show thinking hints sooner during long operations", claude_line)
         self.assertNotIn("原文围绕 v2.1.107 展开，具体变化见来源", claude_line)
 
-        openclaw_line = next(line for line in body_markdown.splitlines() if "**openclaw 2026.4.14**" in line)
-        self.assertIn("OpenClaw", openclaw_line)
-        self.assertTrue("GPT-5" in openclaw_line or "model provider" in openclaw_line or "质量" in openclaw_line)
-        self.assertTrue("性能" in openclaw_line or "provider" in openclaw_line or "channel" in openclaw_line)
-        self.assertNotIn("is another broad quality release focused on model provider", openclaw_line)
-        self.assertNotIn("原文围绕 openclaw 2026.4.14 展开，具体变化见来源", openclaw_line)
+        self.assertNotIn("## OpenClaw", body_markdown)
+        self.assertNotIn("**openclaw", body_markdown)
 
     def test_build_report_artifact_deduplicates_same_url_within_section(self) -> None:
         collect_result = {
