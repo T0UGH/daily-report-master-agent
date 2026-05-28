@@ -461,3 +461,14 @@
 - card: succeeded / om_x100b6e42aebdd4a4b11804e1d3939ae
 - runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-28`
 - updated: 2026-05-27T22:20:16.478191+00:00
+
+
+## 2026-05-29 production run
+
+- lanes: total 13 / ok 12 / degraded 1 / blocked 0 / empty 0; selected_count=64.
+- collect preflight: repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`; config `/Users/haha/.signal-engine/config/lanes.yaml`; data-dir `/Users/haha/.daily-lane-data`; lane registry included weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket/Product Hunt/Rize.
+- collect artifacts: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-29/collect-result.json`, `selected-items.json`, `validation-bundle.json`; collect useful_item_count=321, non_ok=2.
+- lane evidence: packages `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-29/lane-packages`, outputs `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-29/lane-outputs`; all 13 lanes have `lane.md` + `lane-meta.json`; validation passed; report assembled at `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-05-29/report.md`.
+- degraded/blocked: reddit degraded because Reddit public JSON search returned HTTP 403 during collect; diagnose reported registered/enabled lane and retry still wrote 0 raw files. `github-ai-projects` was treated as derived/no direct collector, not a blocking collect failure.
+- Feishu: doc `https://www.feishu.cn/docx/FA8FdUnmToUjLWxG7IZcdF8bnwf`; card `succeeded` message `om_x100b6ebfa8adc0a0b27764d63d50693` (resent with `Rook｜` title and live-verified); audio `skipped`.
+- archive: knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-29.md`, commit `ee791fa`.
