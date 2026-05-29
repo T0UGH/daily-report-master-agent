@@ -129,6 +129,72 @@ def utc_timestamp() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def set_feishu_doc_public_readable(doc_token: str, run_dir: Path) -> dict[str, Any]:
+    """Set a Feishu docx to “互联网获得链接的人可阅读”."""
+    permission_payload = {
+        "link_share_entity": "anyone_readable",
+        "external_access": True,
+        "security_entity": "anyone_can_view",
+        "comment_entity": "anyone_can_view",
+        "share_entity": "anyone",
+    }
+    patch_result = run_and_capture(
+        [
+            "lark-cli",
+            "api",
+            "PATCH",
+            f"/open-apis/drive/v1/permissions/{doc_token}/public",
+            "--params",
+            json.dumps({"type": "docx"}, ensure_ascii=False),
+            "--data",
+            json.dumps(permission_payload, ensure_ascii=False),
+            "--as",
+            "bot",
+        ],
+        run_dir / "logs" / "feishu-permission-public.log",
+    )
+    if patch_result.exit_code != 0:
+        return {
+            "status": "failed",
+            "log": patch_result.output_path,
+            "error_summary": "Feishu doc public permission update failed",
+        }
+
+    verify_result = run_and_capture(
+        [
+            "lark-cli",
+            "api",
+            "GET",
+            f"/open-apis/drive/v1/permissions/{doc_token}/public",
+            "--params",
+            json.dumps({"type": "docx"}, ensure_ascii=False),
+            "--as",
+            "bot",
+        ],
+        run_dir / "logs" / "feishu-permission-public-verify.log",
+    )
+    if verify_result.exit_code != 0:
+        return {
+            "status": "failed",
+            "log": verify_result.output_path,
+            "error_summary": "Feishu doc public permission verification failed",
+        }
+
+    payload = extract_json_payload(verify_result.stdout)
+    permission_public = ((payload or {}).get("data") or {}).get("permission_public") or {}
+    verified = (
+        permission_public.get("external_access") is True
+        and permission_public.get("link_share_entity") == "anyone_readable"
+    )
+    return {
+        "status": "succeeded" if verified else "failed",
+        "log": patch_result.output_path,
+        "verify_log": verify_result.output_path,
+        "permission_public": permission_public,
+        **({} if verified else {"error_summary": "Feishu doc public permission verification mismatch"}),
+    }
+
+
 def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, Any]:
     report_path = report_path.resolve()
 
@@ -137,7 +203,7 @@ def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, 
         "docs",
         "+create",
         "--as",
-        "user",
+        "bot",
         "--title",
         title,
         "--markdown",
@@ -191,6 +257,18 @@ def import_to_feishu(report_path: Path, title: str, run_dir: Path) -> dict[str, 
         response["doc_token"] = doc_token
     if doc_id is not None:
         response["doc_id"] = doc_id
+
+    permission_token = doc_token or doc_id
+    if permission_token is not None:
+        public_permission = set_feishu_doc_public_readable(permission_token, run_dir)
+        response["public_permission"] = public_permission
+        if public_permission.get("status") != "succeeded":
+            response["status"] = "failed"
+            response["error_summary"] = public_permission.get(
+                "error_summary",
+                "Feishu doc public permission update failed",
+            )
+
     return response
 
 

@@ -37,7 +37,7 @@ def _runtime_config() -> dict:
 
 def test_import_to_feishu_uses_lark_cli_and_parses_json_stdout(monkeypatch, tmp_path: Path) -> None:
     report_path = _write_report(tmp_path)
-    seen: dict[str, object] = {}
+    seen: dict[str, list] = {}
 
     def fake_run_and_capture(
         command: list[str],
@@ -47,20 +47,34 @@ def test_import_to_feishu_uses_lark_cli_and_parses_json_stdout(monkeypatch, tmp_
         env: dict[str, str] | None = None,
     ) -> publish_delivery.CommandResult:
         del env
-        seen["command"] = command
-        seen["output_path"] = output_path
-        seen["cwd"] = cwd
+        seen.setdefault("commands", []).append(command)
+        seen.setdefault("output_paths", []).append(output_path)
+        seen.setdefault("cwds", []).append(cwd)
+        stdout = json.dumps(
+            {
+                "url": "https://feishu.example/wiki/doc-url",
+                "token": "doc-token-123",
+                "id": "doc-id-456",
+            }
+        )
+        if "GET" in command:
+            stdout = json.dumps(
+                {
+                    "code": 0,
+                    "data": {
+                        "permission_public": {
+                            "external_access": True,
+                            "link_share_entity": "anyone_readable",
+                        }
+                    },
+                    "msg": "Success",
+                }
+            )
         return publish_delivery.CommandResult(
             command=command,
             exit_code=0,
             output_path=str(output_path),
-            stdout=json.dumps(
-                {
-                    "url": "https://feishu.example/wiki/doc-url",
-                    "token": "doc-token-123",
-                    "id": "doc-id-456",
-                }
-            ),
+            stdout=stdout,
             stderr="",
         )
 
@@ -73,25 +87,61 @@ def test_import_to_feishu_uses_lark_cli_and_parses_json_stdout(monkeypatch, tmp_
     )
 
     resolved_report_path = report_path.resolve()
-    assert seen["command"] == [
+    commands = seen["commands"]
+    output_paths = seen["output_paths"]
+    cwds = seen["cwds"]
+    assert commands[0] == [
         "lark-cli",
         "docs",
         "+create",
         "--as",
-        "user",
+        "bot",
         "--title",
         "AI 日报（2026-04-16）",
         "--markdown",
         f"@./{resolved_report_path.name}",
     ]
-    assert seen["output_path"] == tmp_path / "logs" / "feishu-import.log"
-    assert seen["cwd"] == resolved_report_path.parent
+    assert commands[1] == [
+        "lark-cli",
+        "api",
+        "PATCH",
+        "/open-apis/drive/v1/permissions/doc-token-123/public",
+        "--params",
+        '{"type": "docx"}',
+        "--data",
+        '{"link_share_entity": "anyone_readable", "external_access": true, "security_entity": "anyone_can_view", "comment_entity": "anyone_can_view", "share_entity": "anyone"}',
+        "--as",
+        "bot",
+    ]
+    assert commands[2] == [
+        "lark-cli",
+        "api",
+        "GET",
+        "/open-apis/drive/v1/permissions/doc-token-123/public",
+        "--params",
+        '{"type": "docx"}',
+        "--as",
+        "bot",
+    ]
+    assert output_paths[0] == tmp_path / "logs" / "feishu-import.log"
+    assert output_paths[1] == tmp_path / "logs" / "feishu-permission-public.log"
+    assert output_paths[2] == tmp_path / "logs" / "feishu-permission-public-verify.log"
+    assert cwds[0] == resolved_report_path.parent
     assert result == {
         "status": "succeeded",
         "log": str(tmp_path / "logs" / "feishu-import.log"),
         "doc_url": "https://feishu.example/wiki/doc-url",
         "doc_token": "doc-token-123",
         "doc_id": "doc-id-456",
+        "public_permission": {
+            "status": "succeeded",
+            "log": str(tmp_path / "logs" / "feishu-permission-public.log"),
+            "verify_log": str(tmp_path / "logs" / "feishu-permission-public-verify.log"),
+            "permission_public": {
+                "external_access": True,
+                "link_share_entity": "anyone_readable",
+            },
+        },
     }
 
 
