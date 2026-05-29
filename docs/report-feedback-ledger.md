@@ -472,3 +472,14 @@
 - degraded/blocked: reddit degraded because Reddit public JSON search returned HTTP 403 during collect; diagnose reported registered/enabled lane and retry still wrote 0 raw files. `github-ai-projects` was treated as derived/no direct collector, not a blocking collect failure.
 - Feishu: doc `https://www.feishu.cn/docx/FA8FdUnmToUjLWxG7IZcdF8bnwf`; card `succeeded` message `om_x100b6ebfa8adc0a0b27764d63d50693` (resent with `Rook｜` title and live-verified); audio `skipped`.
 - archive: knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-05-29.md`, commit `ee791fa`.
+## 2026-05-30
+
+### 运行记录
+- 06:00 Hermes 原生 subagent lane 架构完成当日日报；13 个 lane package 均由 lane subagent 写出 `lane.md` + `lane-meta.json`。
+- Reddit collect 因 Reddit public JSON HTTP 403 阻断，已在同一 run 内 diagnose + retry，最终 Reddit lane 标记为 blocked，未用旧 renderer 或历史内容 fallback。
+- Feishu 文档发布成功；首次卡片 header 缺少 `Rook｜`，live verification 后已重发修正版卡片并更新 runtime `publish-state.json`。
+
+### 待观察
+- Reddit public JSON 403 是否需要继续在 `signals-engine` 层修复或移出默认 reader-facing flow。
+- `publish_report.py` 默认卡片标题仍会生成非自说明 header，后续应把 `Rook｜` 标题要求固化到发布脚本测试里。
+
