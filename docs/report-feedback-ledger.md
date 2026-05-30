@@ -482,4 +482,9 @@
 ### 待观察
 - Reddit public JSON 403 是否需要继续在 `signals-engine` 层修复或移出默认 reader-facing flow。
 - `publish_report.py` 默认卡片标题仍会生成非自说明 header，后续应把 `Rook｜` 标题要求固化到发布脚本测试里。
+## 2026-05-31
+
+- Cron run completed with Hermes native subagent lanes.
+- Degraded/blocked: Reddit collection blocked by Reddit HTTP 403 after diagnose/retry; lane output marked blocked. GitHub AI projects treated as derived lane.
+- Feishu card live-corrected to self-identifying header `Rook｜AI Agent 日报（2026-05-31）`.
 

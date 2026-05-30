@@ -1,0 +1,626 @@
+{
+  "report_date": "2026-05-31",
+  "collect_result": {
+    "report_date": "2026-05-31",
+    "source": "signals-engine",
+    "lanes": [
+      {
+        "name": "weather-watch",
+        "status": "ok",
+        "useful_item_count": 2
+      },
+      {
+        "name": "x-feed",
+        "status": "ok",
+        "useful_item_count": 100
+      },
+      {
+        "name": "x-following",
+        "status": "ok",
+        "useful_item_count": 100
+      },
+      {
+        "name": "reddit-watch",
+        "status": "error",
+        "useful_item_count": 0
+      },
+      {
+        "name": "hacker-news-watch",
+        "status": "ok",
+        "useful_item_count": 10
+      },
+      {
+        "name": "hacker-news-search-watch",
+        "status": "ok",
+        "useful_item_count": 14
+      },
+      {
+        "name": "claude-code-watch",
+        "status": "ok",
+        "useful_item_count": 4
+      },
+      {
+        "name": "codex-watch",
+        "status": "ok",
+        "useful_item_count": 19
+      },
+      {
+        "name": "github-ai-projects",
+        "status": "partial",
+        "useful_item_count": 0,
+        "reason": "derived_lane_no_direct_collector",
+        "errors": []
+      },
+      {
+        "name": "github-trending-weekly",
+        "status": "ok",
+        "useful_item_count": 19
+      },
+      {
+        "name": "rize-watch",
+        "status": "ok",
+        "useful_item_count": 20
+      },
+      {
+        "name": "product-hunt-watch",
+        "status": "ok",
+        "useful_item_count": 5
+      },
+      {
+        "name": "polymarket-watch",
+        "status": "ok",
+        "useful_item_count": 12
+      }
+    ],
+    "summary": {
+      "useful_item_count": 305,
+      "partial_lane_count": 2,
+      "total_lane_count": 13,
+      "ok_lane_count": 11,
+      "error_lane_count": 1
+    },
+    "errors": [
+      "reddit-watch: errors=query 'Claude Code workflows' failed: HTTP 403 for https://www.reddit.com/r/ClaudeAI/search.json?q=Claude+Code+workflows&restrict_sr=on&sort=relevance&t=month&limit=10; query 'Codex agent' failed: HTTP 403 for https://www.reddit.com/r/ClaudeAI/search.json?q=Codex+agent&restrict_sr=on&sort=relevance&t=month&limit=10; query 'OpenClaw' failed: HTTP 403 for https://www.reddit.com/r/ClaudeAI/search.json?q=OpenClaw&restrict_sr=on&sort=relevance&t=month&limit=10; query 'AI coding agents' failed: HTTP 403 for https://www.reddit.com/r/ClaudeAI/search.json?q=AI+coding+agents&restrict_sr=on&sort=relevance&t=month&limit=10",
+      "reddit-watch: run.status='failed'",
+      "github-ai-projects: 缺少目录 /Users/haha/.daily-lane-data/signals/github-ai-projects/2026-05-31"
+    ]
+  },
+  "selected_items": {
+    "report_date": "2026-05-31",
+    "source": "signals-engine",
+    "selected_items": [
+      {
+        "lane": "weather-watch",
+        "title": "上海·杨浦 2026-05-31 weather: Partly cloudy, 17°C to 29.2°C",
+        "source_url": "https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-05-31&end_date=2026-05-31",
+        "signal_path": "weather-watch/2026-05-31/signals/shanghai-yangpu__daily_weather__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:01:26+0000",
+        "source_snippet": "Date: 2026-05-31 Location: 上海·杨浦 Condition: Partly cloudy Temperature: 17°C to 29.2°C Precipitation: 0% chance, 0 mm Wind: up to 13.2 km/h SE (115°)",
+        "excerpt": "Date: 2026-05-31 Location: 上海·杨浦 Condition: Partly cloudy Temperature: 17°C to 29.2°C Precipitation: 0% chance, 0 mm Wind: up to 13.2 km/h SE (115°)",
+        "source": "weather",
+        "signal_type": "daily_weather",
+        "editor_headline": "上海·杨浦 2026-05-31 weather: Partly cloudy, 17°C to 29.2°C 进入了今天的日报。",
+        "editor_summary": "原文围绕 上海·杨浦 2026-05-31 weather: Partly cloudy, 17°C to 29.2°C 展开，具体变化见来源。"
+      },
+      {
+        "lane": "weather-watch",
+        "title": "北京·海淀 2026-05-31 weather: Overcast, 22.1°C to 35.1°C",
+        "source_url": "https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-05-31&end_date=2026-05-31",
+        "signal_path": "weather-watch/2026-05-31/signals/beijing-haidian__daily_weather__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:01:25+0000",
+        "source_snippet": "Date: 2026-05-31 Location: 北京·海淀 Condition: Overcast Temperature: 22.1°C to 35.1°C Precipitation: 2% chance, 0 mm Wind: up to 14.8 km/h SW (217°)",
+        "excerpt": "Date: 2026-05-31 Location: 北京·海淀 Condition: Overcast Temperature: 22.1°C to 35.1°C Precipitation: 2% chance, 0 mm Wind: up to 14.8 km/h SW (217°)",
+        "source": "weather",
+        "signal_type": "daily_weather",
+        "editor_headline": "北京·海淀 2026-05-31 weather: Overcast, 22.1°C to 35.1°C 进入了今天的日报。",
+        "editor_summary": "原文围绕 北京·海淀 2026-05-31 weather: Overcast, 22.1°C to 35.1°C 展开，具体变化见来源。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@GoSailGlobal #32",
+        "source_url": "https://x.com/GoSailGlobal/status/2060677695886000170",
+        "signal_path": "x-feed/2026-05-31/signals/GoSailGlobal__feed__2060677695886000170.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "一句 prompt，Claude Code 自动拉起一整个工程团队 Opus 4.8 的 agent swarm 会自己拆任务、分配角色、写代码、跑测试、交叉验证 AI编程已经从帮你写代码进化到替你管项目了，开发者的角色在从执行者变成审",
+        "excerpt": "一句 prompt，Claude Code 自动拉起一整个工程团队 Opus 4.8 的 agent swarm 会自己拆任务、分配角色、写代码、跑测试、交叉验证 AI编程已经从帮你写代码进化到替你管项目了，开发者的角色在从执行者变成审",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "一句 prompt，Claude Code 自动拉起一整个工程团队 Opus 4.8 的 agent swarm 会自己拆任务、分配角色、写代码、跑测试、交叉验证 AI编程已经从帮你写代码进化到替你管项目了，开发者的角色。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@gaoqian2580 #7",
+        "source_url": "https://x.com/gaoqian2580/status/2060667204681810356",
+        "signal_path": "x-feed/2026-05-31/signals/gaoqian2580__feed__2060667204681810356.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "不到 2 小时狂揽 Vibe Coding 核心精髓！OpenAI 官方认可的 Codex + GPT-5.5 顶配通关课来了！ 🤯别再用老一套思维吭哧吭哧死磕代码了，把这篇保姆级“AI 开发外挂”实战指南 【收藏】 留底，随时翻出来抄作",
+        "excerpt": "不到 2 小时狂揽 Vibe Coding 核心精髓！OpenAI 官方认可的 Codex + GPT-5.5 顶配通关课来了！ 🤯别再用老一套思维吭哧吭哧死磕代码了，把这篇保姆级“AI 开发外挂”实战指南 【收藏】 留底，随时翻出来抄作",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "不到 2 小时狂揽 Vibe Coding 核心精髓。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@0xluffy_eth #43",
+        "source_url": "https://x.com/0xluffy_eth/status/2060579507569102892",
+        "signal_path": "x-feed/2026-05-31/signals/0xluffy_eth__feed__2060579507569102892.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "AI 做网页终于不再一股“紫色渐变初创风”了。 Anthropic 官方出了一个 Claude Code 技能：Frontend Design，GitHub 已有 13.6 万星标，专门让 AI 先确定审美方向，再生成前端页面。",
+        "excerpt": "AI 做网页终于不再一股“紫色渐变初创风”了。 Anthropic 官方出了一个 Claude Code 技能：Frontend Design，GitHub 已有 13.6 万星标，专门让 AI 先确定审美方向，再生成前端页面。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "AI 做网页终于不再一股“紫色渐变初创风”了。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@gkxspace #39",
+        "source_url": "https://x.com/gkxspace/status/2060631362680283482",
+        "signal_path": "x-feed/2026-05-31/signals/gkxspace__feed__2060631362680283482.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "Codex 桌面端用 CC Switch 可以接第三方模型了😋 之前想用想 DeepSeek、Kimi 这些，配置折腾得要命。CC Switch 新版解决了这个问题，填个 API key 就能跑 Codex 本身就很好用，插件也好用，就",
+        "excerpt": "Codex 桌面端用 CC Switch 可以接第三方模型了😋 之前想用想 DeepSeek、Kimi 这些，配置折腾得要命。CC Switch 新版解决了这个问题，填个 API key 就能跑 Codex 本身就很好用，插件也好用，就",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "Codex 桌面端用 CC Switch 可以接第三方模型了😋 之前想用想 DeepSeek、Kimi 这些，配置折腾得要命。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@Youngxxxxu #15",
+        "source_url": "https://x.com/Youngxxxxu/status/2060410918098587788",
+        "signal_path": "x-feed/2026-05-31/signals/Youngxxxxu__feed__2060410918098587788.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "OpenCodex — 为 Codex Desktop 解锁第三方 API 的本地网关。 • ⚡️零配置启动，自动注入配置 • 🎛️ Web 控制面板：填 Key、输模型名、保存即用 • 🖱️ CU 引擎，截图压缩 + 视觉描述延迟极低",
+        "excerpt": "OpenCodex — 为 Codex Desktop 解锁第三方 API 的本地网关。 • ⚡️零配置启动，自动注入配置 • 🎛️ Web 控制面板：填 Key、输模型名、保存即用 • 🖱️ CU 引擎，截图压缩 + 视觉描述延迟极低",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "OpenCodex — 为 Codex Desktop 解锁第三方 API 的本地网关。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@runes_leo #89",
+        "source_url": "https://x.com/runes_leo/status/2060607807800389791",
+        "signal_path": "x-feed/2026-05-31/signals/runes_leo__feed__2060607807800389791.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "我现在的 AI 配置大概是三块： ① Grok 4.3 — X Premium+ 长期订的，Hermes 里能用，这档我会一直留着。 ② Codex Pro $200/月 — 写代码、跑 CLI agent 的主力之一，每月肯定续。",
+        "excerpt": "我现在的 AI 配置大概是三块： ① Grok 4.3 — X Premium+ 长期订的，Hermes 里能用，这档我会一直留着。 ② Codex Pro $200/月 — 写代码、跑 CLI agent 的主力之一，每月肯定续。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "我现在的 AI 配置大概是三块： ① Grok 4.3 — X Premium+ 长期订的，Hermes 里能用，这档我会一直留着。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@Xudong07452910 #23",
+        "source_url": "https://x.com/Xudong07452910/status/2060575427492503600",
+        "signal_path": "x-feed/2026-05-31/signals/Xudong07452910__feed__2060575427492503600.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "看到浙工大研究生课开始讲「全自动科研工具」，挺开心的。 这个视频主要讲的是：怎么用 AI Agent 把科研里的数据处理、代码执行、结果整理、论文写作和复现包串成一条可追溯的工作流。 很多研究生还在手工整理文献、跑实验、做表格的时候，有",
+        "excerpt": "看到浙工大研究生课开始讲「全自动科研工具」，挺开心的。 这个视频主要讲的是：怎么用 AI Agent 把科研里的数据处理、代码执行、结果整理、论文写作和复现包串成一条可追溯的工作流。 很多研究生还在手工整理文献、跑实验、做表格的时候，有",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "X 推荐流 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "看到浙工大研究生课开始讲「全自动科研工具」，挺开心的。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@Codex_Changelog #4",
+        "source_url": "https://x.com/Codex_Changelog/status/2060435154481664384",
+        "signal_path": "x-feed/2026-05-31/signals/Codex_Changelog__feed__2060435154481664384.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "🚀 Codex app 26.527 is out! 🖥 Computer Use on Windows 📱 Remote Windows control from iOS, Android &amp; Mac 👤 Profile sec",
+        "excerpt": "🚀 Codex app 26.527 is out! 🖥 Computer Use on Windows 📱 Remote Windows control from iOS, Android &amp; Mac 👤 Profile sec",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "`Codex computer use` 配合 iPhone Mirror app 已可操作手机上的任意 App。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@XiaohuiAI666 #60",
+        "source_url": "https://x.com/XiaohuiAI666/status/2060561549861986793",
+        "signal_path": "x-feed/2026-05-31/signals/XiaohuiAI666__feed__2060561549861986793.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "国内用 Codex 不想充 Plus？ 感谢苍何老师把所有方案都踩了一遍，总结出三种最靠谱的接入方法。 小白首选 Codex++，一键配置还支持插件。 重度玩家上 CCX + CC Switch。 最推荐直接看方案二，省心又丝滑。",
+        "excerpt": "国内用 Codex 不想充 Plus？ 感谢苍何老师把所有方案都踩了一遍，总结出三种最靠谱的接入方法。 小白首选 Codex++，一键配置还支持插件。 重度玩家上 CCX + CC Switch。 最推荐直接看方案二，省心又丝滑。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "国内用 Codex 不想充 Plus？ 感谢苍何老师把所有方案都踩了一遍，总结出三种最靠谱的接入方法。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@op7418 #30",
+        "source_url": "https://x.com/op7418/status/2060549911960293704",
+        "signal_path": "x-feed/2026-05-31/signals/op7418__feed__2060549911960293704.md",
+        "fetched_at": "2026-05-30T22:01:33+0000",
+        "source_snippet": "Windows 有救了？ Codex 昨晚又发布了大量体验更新，很多都超级有用，尤其是对 Windows 用户。 大家最期待的支持了 Windows 的 computer Use，以及通过移动端的 ChatGPT 远程控制 Window",
+        "excerpt": "Windows 有救了？ Codex 昨晚又发布了大量体验更新，很多都超级有用，尤其是对 Windows 用户。 大家最期待的支持了 Windows 的 computer Use，以及通过移动端的 ChatGPT 远程控制 Window",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "Windows 有救了？ Codex 昨晚又发布了大量体验更新，很多都超级有用，尤其是对 Windows 用户。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@OpenAIDevs",
+        "source_url": "https://x.com/OpenAIDevs/status/2060768476386689253",
+        "signal_path": "x-following/2026-05-31/signals/OpenAIDevs__post__2060768476386689253.md",
+        "fetched_at": "2026-05-30T22:01:37+0000",
+        "source_snippet": "🧵 Our Voice Hack Night finalists are here. 4 projects. 6 hours. Realtime voice agents in real-world builds. Now it’s",
+        "excerpt": "🧵 Our Voice Hack Night finalists are here. 4 projects. 6 hours. Realtime voice agents in real-world builds. Now it’s",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "OpenAI 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "原帖围绕 `OpenAI` 给出一个具体点：Realtime voice agents in real-world builds。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@op7418",
+        "source_url": "https://x.com/op7418/status/2060549911960293704",
+        "signal_path": "x-following/2026-05-31/signals/op7418__post__2060549911960293704.md",
+        "fetched_at": "2026-05-30T22:01:37+0000",
+        "source_snippet": "Windows 有救了？ Codex 昨晚又发布了大量体验更新，很多都超级有用，尤其是对 Windows 用户。 大家最期待的支持了 Windows 的 computer Use，以及通过移动端的 ChatGPT 远程控制 Window",
+        "excerpt": "Windows 有救了？ Codex 昨晚又发布了大量体验更新，很多都超级有用，尤其是对 Windows 用户。 大家最期待的支持了 Windows 的 computer Use，以及通过移动端的 ChatGPT 远程控制 Window",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "Codex 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "Windows 有救了？ Codex 昨晚又发布了大量体验更新，很多都超级有用，尤其是对 Windows 用户。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@jungeAGI",
+        "source_url": "https://x.com/jungeAGI/status/2060838603513876634",
+        "signal_path": "x-following/2026-05-31/signals/jungeAGI__post__2060838603513876634.md",
+        "fetched_at": "2026-05-30T22:01:37+0000",
+        "source_snippet": "不是哥们，window 终于好了,Codex 这次真开始上桌了 Computer Use 正式支持 Windows，AI 能看屏幕、点鼠标、打字操作桌面。 更骚的是，安卓手机也能远程盯 Windows 主机干活。",
+        "excerpt": "不是哥们，window 终于好了,Codex 这次真开始上桌了 Computer Use 正式支持 Windows，AI 能看屏幕、点鼠标、打字操作桌面。 更骚的是，安卓手机也能远程盯 Windows 主机干活。",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "Codex 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "不是哥们，window 终于好了,Codex 这次真开始上桌了 Computer Use 正式支持 Windows，AI 能看屏幕、点鼠标、打字操作桌面。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@jungeAGI",
+        "source_url": "https://x.com/jungeAGI/status/2060840076888990187",
+        "signal_path": "x-following/2026-05-31/signals/jungeAGI__post__2060840076888990187.md",
+        "fetched_at": "2026-05-30T22:01:37+0000",
+        "source_snippet": "Codex app 26.527 已发布！ Windows 上的计算机使用 从 iOS、Android 和 Mac 远程控制 Windows",
+        "excerpt": "Codex app 26.527 已发布！ Windows 上的计算机使用 从 iOS、Android 和 Mac 远程控制 Windows",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "Codex 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "Codex app 26.527 已发布。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@geniusvczh",
+        "source_url": "https://x.com/geniusvczh/status/2060839670959984836",
+        "signal_path": "x-following/2026-05-31/signals/geniusvczh__post__2060839670959984836.md",
+        "fetched_at": "2026-05-30T22:01:37+0000",
+        "source_snippet": "那当然是Windows用msvc然后Linux用clang分开配置了。不过2026年，我已经教会codex用windbg和lldb了，vscode的debugger可以不配了🤪",
+        "excerpt": "那当然是Windows用msvc然后Linux用clang分开配置了。不过2026年，我已经教会codex用windbg和lldb了，vscode的debugger可以不配了🤪",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "Codex 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "那当然是Windows用msvc然后Linux用clang分开配置了。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@AI_jacksaku",
+        "source_url": "https://x.com/AI_jacksaku/status/2060190627019833816",
+        "signal_path": "x-following/2026-05-31/signals/AI_jacksaku__post__2060190627019833816.md",
+        "fetched_at": "2026-05-30T22:01:37+0000",
+        "source_snippet": "这次用一个“订单对账”小测试试了下 Claude Opus 4.8，最大的感受是：它更愿意把活做完整。 这次测试不靠联网、不靠写代码，就是用最贴合业务场景的，给了它三组数据：订单、付款、退款，然后要求按规则逐条核对。",
+        "excerpt": "这次用一个“订单对账”小测试试了下 Claude Opus 4.8，最大的感受是：它更愿意把活做完整。 这次测试不靠联网、不靠写代码，就是用最贴合业务场景的，给了它三组数据：订单、付款、退款，然后要求按规则逐条核对。",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "X 关注流 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "这次用一个“订单对账”小测试试了下 Claude Opus 4.8，最大的感受是：它更愿意把活做完整。"
+      },
+      {
+        "lane": "hacker-news-watch",
+        "title": "OpenRouter raises $113M Series B",
+        "source_url": "https://news.ycombinator.com/item?id=48338660",
+        "signal_path": "hacker-news-watch/2026-05-31/signals/hn__topstories__48338660__story__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:02:01+0000",
+        "source_snippet": "OpenRouter raises $113M Series B List: topstories Rank: #1 Created at: 2026-05-30T17:27:28Z Discussion URL: External article: It took me quite a while to come round to OpenRouter. Originally I didn't understand why anyone would put a proxy between them and an LLM, but it actually adds some quite significant value:1. By far the lowest friction way to support and try out all the models.2. They offer billing caps! Most model providers still don't do this [EDIT: maybe they do, see reply comment], but if you're going to run anything in public it's very useful to have hard limits so it doesn't cost you $1m overnight because someone started abusing it.3. Their rankings are one of the more interesting signals for which models are popular, despite their flaws (most OpenAI and Anthropic users don't go via OpenRouter, it's currently not possible to tell the difference between many users switching v.s. one \"whale\" changing their preferred model)Given how API costs are becoming meaningful for a lot of companies now, having a provider like OpenRouter to help measure your spend and easily experiment with and switch providers feels like a valuable service. Hi HN!",
+        "excerpt": "OpenRouter raises $113M Series B List: topstories Rank: #1 Created at: 2026-05-30T17:27:28Z Discussion URL: External article: It took me quite a while to come round to OpenRouter.",
+        "source": "hackernews",
+        "signal_type": "hackernews_story",
+        "editor_headline": "Anthropic 这条 Hacker News 热榜讨论已经落到更具体的实践细节。",
+        "editor_summary": "原文围绕 Anthropic 展开，具体变化见来源。"
+      },
+      {
+        "lane": "hacker-news-search-watch",
+        "title": "Show HN: Search Router – retrieval-ready web search for AI agents",
+        "source_url": "https://news.ycombinator.com/item?id=48309501",
+        "signal_path": "hacker-news-search-watch/2026-05-31/signals/hn__search__48309501__story__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:02:17+0000",
+        "source_snippet": "Search Router is a web search API built for AI agents and RAG systems.We built it internally at first, when working on AI tools. Got tired of messy web retrieval in most LLM workflows - and built our own stack for it.Right now, web search for AI means chaining together a search API, scraping, captcha handling, HTML cleanup, content extraction, prompt formatting. And the models still end up processing cookie banners/menus/nav text/junk. Cue inflated token usage, bad latency, and inconsistent results.Our Search Router is built specifically for AI agents and RAG systems. We made sure it is fast, the output is easy to work with, and raw HTML is avoided wherever possible. Recently we added a “Retrieved Context” endpoint that scrapes pages and extracts relevant content into structured JSON, saving time and tokens on cleanup.We also have native MCP support, so you can directly plug Search Router config into Claude Desktop and let it search through the tool without burning Anthropic limits.For launch, we have a free tier (no card required) with effectively unlimited usage - good for testing.Thanks in advance for feedback from people building agents, RAG pipelines, or other LLM products. What's your solution for AI web search now and how does Search Router compare? List: search:story Rank: #9 Created at: 2026-05-28T14:32:40Z Discussion URL: External article",
+        "excerpt": "Search Router is a web search API built for AI agents and RAG systems.We built it internally at first, when working on AI tools. Got tired of messy web retrieval in most LLM workflows - and built our own stack for it.Right now",
+        "matched_query": "agent workflow",
+        "source": "hackernews",
+        "signal_type": "hackernews_story_search_hit",
+        "editor_headline": "Hacker News 搜索词「agent workflow」命中的讨论把重点放在 工作流 上。",
+        "editor_summary": "这条命中来自对「agent workflow」的搜索，正文把 工作流 这类可复用做法写得更具体。"
+      },
+      {
+        "lane": "claude-code-watch",
+        "title": "v2.1.158",
+        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.158",
+        "signal_path": "claude-code-watch/2026-05-31/signals/anthropics__claude-code__release__v2.1.158.md",
+        "fetched_at": "2026-05-30T22:02:20+0000",
+        "source_snippet": "Auto mode is now available on Bedrock, Vertex, and Foundry for Opus 4.7 and Opus 4.8. Opt in by setting `CLAUDE_CODE_ENABLE_AUTO_MODE=1`",
+        "excerpt": "Auto mode is now available on Bedrock, Vertex, and Foundry for Opus 4.7 and Opus 4.8. Opt in by setting `CLAUDE_CODE_ENABLE_AUTO_MODE=1` claude-darwin-arm64.tar.gz (60.7 MB) claude-darwin-x64.tar.gz (62.7 MB) claude-linux-arm64-musl.tar.gz (67.9 MB) claude-linux-arm64.tar.gz",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "v2.1.158 这次更新更偏向补齐真实使用链路。",
+        "editor_summary": "原文围绕 v2.1.158 展开，具体变化见来源。"
+      },
+      {
+        "lane": "claude-code-watch",
+        "title": "v2.1.157",
+        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.157",
+        "signal_path": "claude-code-watch/2026-05-31/signals/anthropics__claude-code__release__v2.1.157.md",
+        "fetched_at": "2026-05-30T22:02:20+0000",
+        "source_snippet": "Plugins in `.claude/skills` directories are now automatically loaded, no marketplace required Added `claude plugin init <name>` to scaffold a new plugin in `.claude/skills` Added autocomplete for `/plugin` arguments: subcommands, installed plugin names, and plugins from known marketplaces `claude agents`: the `agent` field in `settings.json` is now honored for dispatched sessions, with `--agent <name>` to override it `EnterWorktree` can now switch between Claude-managed worktrees mid-session",
+        "excerpt": "Plugins in `.claude/skills` directories are now automatically loaded, no marketplace required Added `claude plugin init <name>` to scaffold a new plugin in `.claude/skills` Added autocomplete for `/plugin` arguments",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "v2.1.157 这次更新更偏向补齐真实使用链路。",
+        "editor_summary": "原文围绕 v2.1.157 展开，具体变化见来源。"
+      },
+      {
+        "lane": "claude-code-watch",
+        "title": "v2.1.156",
+        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.156",
+        "signal_path": "claude-code-watch/2026-05-31/signals/anthropics__claude-code__release__v2.1.156.md",
+        "fetched_at": "2026-05-30T22:02:20+0000",
+        "source_snippet": "Fixed an issue when using Opus 4.8 where thinking blocks were modified, leading to API errors.",
+        "excerpt": "Fixed an issue when using Opus 4.8 where thinking blocks were modified, leading to API errors. claude-darwin-arm64.tar.gz (60.7 MB) claude-darwin-x64.tar.gz (62.6 MB) claude-linux-arm64-musl.tar.gz (67.8 MB) claude-linux-arm64.tar.gz (69.9 MB) claude-linux-x64-musl.tar.gz (68.2",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "v2.1.156 这次更新更偏向补齐真实使用链路。",
+        "editor_summary": "原文围绕 v2.1.156 展开，具体变化见来源。"
+      },
+      {
+        "lane": "codex-watch",
+        "title": "[codex] Update remote connector suggestions",
+        "source_url": "https://github.com/openai/codex/pull/25172",
+        "signal_path": "codex-watch/2026-05-31/signals/openai__codex__merged_pr__25172.md",
+        "fetched_at": "2026-05-30T22:03:11+0000",
+        "source_snippet": "**Title:** [codex] Update remote connector suggestions **Author:** @ericning-o **Merged at:**",
+        "excerpt": "**Title:** [codex] Update remote connector suggestions **Author:** @ericning-o **Merged at:** 2026-05-30T00:57:35Z **Merge commit:** `e929bb5`",
+        "source": "github",
+        "signal_type": "merged_pr",
+        "editor_headline": "Codex 这次改动更像是在修执行链路里的关键语义。",
+        "editor_summary": "原文围绕 Codex 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "ECC",
+        "source_url": "https://github.com/affaan-m/ECC",
+        "signal_path": "github-trending-weekly/2026-05-31/signals/affaan-m__ECC__trending-weekly.md",
+        "fetched_at": "2026-05-30T22:03:22+0000",
+        "source_snippet": "The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond. **Author:** @affaan-m/ECC",
+        "excerpt": "The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond. **Author:** @affaan-m/ECC",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 这周上榜，不只是因为热度，更因为它把重点放在 harness 上。",
+        "editor_summary": "它能进趋势榜，不只是因为名字热，而是把 harness 讲成了更具体的产品定位。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "codegraph",
+        "source_url": "https://github.com/colbymchenry/codegraph",
+        "signal_path": "github-trending-weekly/2026-05-31/signals/colbymchenry__codegraph__trending-weekly.md",
+        "fetched_at": "2026-05-30T22:03:18+0000",
+        "source_snippet": "Pre-indexed code knowledge graph for Claude Code, Codex, Gemini, Cursor, OpenCode, AntiGravity, Kiro, and Hermes Agent — fewer tokens, fewer tool calls, 100% local **Author:** @colbymchenry/codegraph",
+        "excerpt": "Pre-indexed code knowledge graph for Claude Code, Codex, Gemini, Cursor, OpenCode, AntiGravity, Kiro, and Hermes Agent — fewer tokens, fewer tool calls, 100% local **Author:** @colbymchenry/codegraph",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "Anthropic-Cybersecurity-Skills",
+        "source_url": "https://github.com/mukul975/Anthropic-Cybersecurity-Skills",
+        "signal_path": "github-trending-weekly/2026-05-31/signals/mukul975__Anthropic-Cybersecurity-Skills__trending-weekly.md",
+        "fetched_at": "2026-05-30T22:03:19+0000",
+        "source_snippet": "754 structured cybersecurity skills for AI agents · Mapped to 5 frameworks: MITRE ATT&amp;CK, NIST CSF 2.0, MITRE ATLAS, D3FEND &amp; NIST AI RMF · agentskills.io standard · Works with Claude Code, Gi **Author:** @mukul975/Anthropic-Cybersecurity-Skills",
+        "excerpt": "754 structured cybersecurity skills for AI agents · Mapped to 5 frameworks: MITRE ATT&amp;CK, NIST CSF 2.0, MITRE ATLAS, D3FEND &amp; NIST AI RMF · agentskills.io standard · Works with Claude Code, Gi **Author:** @mukul975/Anthropic-Cybersecurity-Skills",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "Understand-Anything",
+        "source_url": "https://github.com/Lum1104/Understand-Anything",
+        "signal_path": "github-trending-weekly/2026-05-31/signals/Lum1104__Understand-Anything__trending-weekly.md",
+        "fetched_at": "2026-05-30T22:03:15+0000",
+        "source_snippet": "Graphs that teach &gt; graphs that impress. Turn any code into an interactive knowledge graph you can explore, search, and ask questions about. Works with Claude Code, Codex, Cursor, Copilot, Gemini C **Author:** @Lum1104/Understand-Anything",
+        "excerpt": "Graphs that teach &gt; graphs that impress. Turn any code into an interactive knowledge graph you can explore, search, and ask questions about. Works with Claude Code, Codex, Cursor, Copilot, Gemini C **Author:** @Lum1104/Understand-Anything",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "oh-my-pi",
+        "source_url": "https://github.com/can1357/oh-my-pi",
+        "signal_path": "github-trending-weekly/2026-05-31/signals/can1357__oh-my-pi__trending-weekly.md",
+        "fetched_at": "2026-05-30T22:03:27+0000",
+        "source_snippet": "⌥ AI Coding agent for the terminal — hash-anchored edits, optimized tool harness, LSP, Python, browser, subagents, and more **Author:** @can1357/oh-my-pi",
+        "excerpt": "⌥ AI Coding agent for the terminal — hash-anchored edits, optimized tool harness, LSP, Python, browser, subagents, and more **Author:** @can1357/oh-my-pi",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "harness 这周上榜，不只是因为热度，更因为它把重点放在 harness 上。",
+        "editor_summary": "它能进趋势榜，不只是因为名字热，而是把 harness 讲成了更具体的产品定位。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "dograh",
+        "source_url": "https://github.com/dograh-hq/dograh",
+        "signal_path": "github-trending-weekly/2026-05-31/signals/dograh-hq__dograh__trending-weekly.md",
+        "fetched_at": "2026-05-30T22:03:24+0000",
+        "source_snippet": "Open source voice AI platform. Self-hosted alternative to Vapi and Retell. On Prem, BYOK across Speech to Speech or LLM/STT/TTS, with a visual workflow builder, MCP native and telephony support. **Author:** @dograh-hq/dograh",
+        "excerpt": "Open source voice AI platform. Self-hosted alternative to Vapi and Retell. On Prem, BYOK across Speech to Speech or LLM/STT/TTS, with a visual workflow builder, MCP native and telephony support. **Author:** @dograh-hq/dograh",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "MCP 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 MCP 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "claude-code-harness",
+        "source_url": "https://github.com/Chachamaru127/claude-code-harness",
+        "signal_path": "github-trending-weekly/2026-05-31/signals/Chachamaru127__claude-code-harness__trending-weekly.md",
+        "fetched_at": "2026-05-30T22:03:28+0000",
+        "source_snippet": "Claude Code Dedicated Development Harness - Achieving High-Quality Development Through an Autonomous Plan→Work→Review Cycle **Author:** @Chachamaru127/claude-code-harness",
+        "excerpt": "Claude Code Dedicated Development Harness - Achieving High-Quality Development Through an Autonomous Plan→Work→Review Cycle **Author:** @Chachamaru127/claude-code-harness",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 这周上榜，不只是因为热度，更因为它把重点放在 harness 上。",
+        "editor_summary": "它能进趋势榜，不只是因为名字热，而是把 harness 讲成了更具体的产品定位。"
+      },
+      {
+        "lane": "rize-watch",
+        "title": "#11 Anthropic-Cybersecurity-Skills — Rize AI tools weekly ranking",
+        "source_url": "https://github.com/mukul975/Anthropic-Cybersecurity-Skills",
+        "signal_path": "rize-watch/2026-05-31/signals/11-mukul975-anthropic-cybersecurity-skills__rize_ai_tools_rank__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:03:30+0000",
+        "source_snippet": "754 structured cybersecurity skills for AI agents · Mapped to 5 frameworks: MITRE ATT&CK, NIST CSF 2.0, MITRE ATLAS, D3FEND & NIST AI RMF · agentskills.io standard · Works with Claude Code, GitHub Copilot, Codex CLI, Cursor, Gemini CLI & 20+ platforms · 26 security domains · Apache 2.0 Rank: #11 Repository: Ranking page",
+        "excerpt": "754 structured cybersecurity skills for AI agents · Mapped to 5 frameworks: MITRE ATT&CK, NIST CSF 2.0, MITRE ATLAS, D3FEND & NIST AI RMF · agentskills.io standard · Works with Claude Code, GitHub Copilot, Codex CLI, Cursor",
+        "source": "rize",
+        "signal_type": "rize_ai_tools_rank",
+        "editor_headline": "Claude Code 进入了今天的日报。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "product-hunt-watch",
+        "title": "Step 3.7 Flash — Flash-speed agents model that can see and act",
+        "source_url": "https://www.producthunt.com/products/step-3-5-flash?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+        "signal_path": "product-hunt-watch/2026-05-31/signals/step-3-7-flash__artificial-intelligence__producthunt_topic_hit__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:03:32+0000",
+        "source_snippet": "Flash-speed agents model that can see and act **Author:** @Step 3.7",
+        "excerpt": "Flash-speed agents model that can see and act **Author:** @Step 3.7",
+        "source": "producthunt",
+        "signal_type": "producthunt_topic_hit",
+        "editor_headline": "Step 3.7 Flash — Flash-speed agents model that can see and act 把 agent 工作流里的单一环节做成了产品。",
+        "editor_summary": "Step 3.7 Flash — Flash-speed agents model that can see and act 的卖点很集中，说明面向 agent 工作流单一环节的包装正在变成独立产品。"
+      },
+      {
+        "lane": "product-hunt-watch",
+        "title": "Openstatus MCP Health Checker — Test MCP servers like a real AI client, not just a",
+        "source_url": "https://www.producthunt.com/products/openstatus-2?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+        "signal_path": "product-hunt-watch/2026-05-31/signals/openstatus-mcp-health-checker__developer-tools__producthunt_topic_hit__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:03:32+0000",
+        "source_snippet": "Test MCP servers like a real AI client, not just a ping **Author:** @Openstatus MCP Health Checker",
+        "excerpt": "Test MCP servers like a real AI client, not just a ping **Author:** @Openstatus MCP Health Checker",
+        "source": "producthunt",
+        "signal_type": "producthunt_topic_hit",
+        "editor_headline": "MCP 正试图把 MCP 工作流包装 这类工作流环节直接做成产品。",
+        "editor_summary": "条目的卖点相当集中，核心就是把 MCP 工作流包装 这类 agent 工作流环节包装成单独可卖的成品。"
+      },
+      {
+        "lane": "product-hunt-watch",
+        "title": "Wingbits AI — AI agents for real-time aircraft monitoring and al",
+        "source_url": "https://www.producthunt.com/products/wingbits-ai?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+        "signal_path": "product-hunt-watch/2026-05-31/signals/wingbits-ai__artificial-intelligence__producthunt_topic_hit__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:03:32+0000",
+        "source_snippet": "AI agents for real-time aircraft monitoring and alerts **Author:** @Wingbits",
+        "excerpt": "AI agents for real-time aircraft monitoring and alerts **Author:** @Wingbits",
+        "source": "producthunt",
+        "signal_type": "producthunt_topic_hit",
+        "editor_headline": "Wingbits AI — AI agents for real-time aircraft monitoring and al 把 agent 工作流里的单一环节做成了产品。",
+        "editor_summary": "Wingbits AI — AI agents for real-time aircraft monitoring and al 的卖点很集中，说明面向 agent 工作流单一环节的包装正在变成独立产品。"
+      },
+      {
+        "lane": "polymarket-watch",
+        "title": "Will Google have the second-best Coding AI model at the end of May 2026?",
+        "source_url": "https://polymarket.com/event/which-company-has-the-second-best-coding-ai-model-end-of-may",
+        "signal_path": "polymarket-watch/2026-05-31/signals/pm__coding-ai__414042__prediction_market__2026-05-31.md",
+        "fetched_at": "2026-05-30T22:03:35+0000",
+        "source_snippet": "Market: Which company has the second-best Coding AI model end of May? Question: Will Google have the second-best Coding AI model at the end of May 2026? Current leader: Anthropic (98.9%) Anthropic: 98.9% xAI: 0.5% Google: 0.2% 24h volume: 1,690.1 30d volume: 17,779.8 Liquidity: 54,965.3 Price movement: down 7.8% this month",
+        "excerpt": "Market: Which company has the second-best Coding AI model end of May? Question: Will Google have the second-best Coding AI model at the end of May 2026? Current leader: Anthropic (98.9%)",
+        "matched_query": "coding AI",
+        "source": "polymarket",
+        "signal_type": "prediction_market",
+        "editor_headline": "市场对 Anthropic 在 coding AI 第二梯队的位置判断相当集中。",
+        "editor_summary": "这份 Polymarket 合约当前把 Anthropic 放在显著领先位置，反映出交易者对头部 coding model 分层的共识。"
+      }
+    ],
+    "summary": {
+      "selected_item_count": 36,
+      "lane_counts": [
+        {
+          "lane": "weather-watch",
+          "selected_item_count": 2
+        },
+        {
+          "lane": "x-feed",
+          "selected_item_count": 10
+        },
+        {
+          "lane": "x-following",
+          "selected_item_count": 6
+        },
+        {
+          "lane": "reddit-watch",
+          "selected_item_count": 0
+        },
+        {
+          "lane": "hacker-news-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "hacker-news-search-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "claude-code-watch",
+          "selected_item_count": 3
+        },
+        {
+          "lane": "codex-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "github-ai-projects",
+          "selected_item_count": 0
+        },
+        {
+          "lane": "github-trending-weekly",
+          "selected_item_count": 7
+        },
+        {
+          "lane": "rize-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "product-hunt-watch",
+          "selected_item_count": 3
+        },
+        {
+          "lane": "polymarket-watch",
+          "selected_item_count": 1
+        }
+      ]
+    }
+  },
+  "summary": {
+    "collect_useful_item_count": 305,
+    "selected_item_count": 36,
+    "is_subset": true
+  }
+}

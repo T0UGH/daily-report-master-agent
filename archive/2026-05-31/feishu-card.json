@@ -1,0 +1,281 @@
+{
+  "config": {
+    "wide_screen_mode": true,
+    "style": {
+      "text_size": {
+        "section_title": {
+          "default": "heading-2",
+          "pc": "heading-2",
+          "mobile": "heading-2"
+        }
+      }
+    }
+  },
+  "header": {
+    "title": {
+      "tag": "plain_text",
+      "content": "Rook｜AI Agent 日报（2026-05-31）"
+    },
+    "subtitle": {
+      "tag": "lark_md",
+      "content": "[查看完整文档](https://www.feishu.cn/docx/CT4tdoICsoQteXxnXlsc3RE4n9f)"
+    }
+  },
+  "elements": [
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "我不是贵平，我是 Rook。 [查看完整文档](https://www.feishu.cn/docx/CT4tdoICsoQteXxnXlsc3RE4n9f)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "天气",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **北京·海淀：阴，22.1°C–35.1°C。** 降水概率 2%、预计 0 mm，西南风最高 14.8 km/h；比昨天夜间低温明显抬升、最高温再高约 1°C，闷热感更强，出门重点防晒补水，基本不用带伞。 [天气](https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-05-31&end_date=2026-05-31)\n- **上海·杨浦：多云间晴，17°C–29.2°C。** 降水概率 0%、预计 0 mm，东南风最高 13.2 km/h；比昨天最高温升约 1.7°C、云量减少，通勤无需雨具，早晚仍较凉、午后偏热。 [天气](https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-05-31&end_date=2026-05-31)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "X Feed",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- Salesforce 发布了“going agentic with Claude Code”的详细实践复盘，Boris Cherny 摘出的关键点是：一次迁移先由 Claude Code 生成设计文档、测试计划和分阶段实现，再让人类在中间节点审查。对企业采用 coding agent，这比“让 AI 写代码”更接近可复制流程：先固化计划、测试和回滚点，再放大自动化执行。 https://x.com/bcherny/status/2060390852619272526\n- Cursor 官方推出 Auto-review mode：agent 可以在更少审批弹窗下运行工具调用，同时宣称有更安全的执行边界。它把前两天 HN 讨论的“权限疲劳”落到了 IDE 产品形态里：真正的竞争点不是完全免确认，而是哪些操作能自动、哪些必须阻断。 https://x.com/cursor_ai/status/2060406013098897765",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "X 关注",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Codex Chronicle 被用户点名为“长期屏幕上下文”能力：开启后会持续截图屏幕，让 Codex 拥有更完整的个人工作流背景。** 这不是单次截图问答，而是把日常操作痕迹变成 agent 可用上下文；收益是减少反复解释项目和环境，风险是隐私、存储和可审计边界必须先想清楚。https://x.com/lxfater/status/2060657201958543637\n- **Codex Mobile 的主机插件与相机输入开始被开发者当作远程 agent 入口使用。** Dimillian 提到移动端可访问 host plugins，并能把相机等输入发给 Codex；结合近期 Windows Computer Use，这条线索说明 coding agent 正从桌面 IDE 扩到“手机触发、远程主机执行、视觉输入补上下文”的形态。https://x.com/Dimillian/status/2060746623223742804",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Reddit 社区",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- 今日 Reddit 原始语料不可用：`reddit-watch` raw corpus 标记为 `missing`，raw 文件数为 0；采集日志显示 4 个 Reddit search.json 查询均返回 HTTP 403（Claude Code workflows、Codex agent、OpenClaw、AI coding agents），因此无法基于社区讨论做可靠筛选。本栏不使用 `selected_items.json`、外部 fallback 或近日报告补写，避免把去重参考当作今日证据。\n- **今日取舍：** 由于 Reddit 抓取被阻断且没有 raw 证据，本栏不选条目；仅阅读 2026-05-30、2026-05-29 报告作为去重参考，未复用其中 Reddit 内容。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 热榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **OpenRouter 完成 1.13 亿美元 B 轮融资，HN #1、307 分、131 评论；讨论焦点是多模型网关到底替用户解决了什么。** 评论区把价值落到低摩擦试模型、统一 API、billing caps 和模型流行度信号，也有人指出重度 agent 用 Claude Opus 这类高价模型时，5% surcharge 会很快变成成本问题。 [HN](https://news.ycombinator.com/item?id=48338660) / [OpenRouter](https://openrouter.ai/announcements/series-b)\n- **“Domain expertise has always been the real moat”登上 HN #2，69 分、34 评论；它把 AI 编程讨论拉回领域知识。** 高赞评论用海上天气应用举例：模型会抽象系统，但真实用户知道数据怎么被使用；对 coding-agent 团队，这意味着需求访谈、领域校验和人工验收仍是产品质量核心。 [HN](https://news.ycombinator.com/item?id=48340411) / [文章](https://www.brethorsting.com/blog/2026/05/domain-expertise-has-always-been-the-real-moat/)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 搜索观察：agent 记忆、空间 IDE 和真实 App 生产样本",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **有人把 agent memory 从“检索问题”改写成“数据建模问题”，用知识图谱/ontology 总结了一年踩坑。** 关键经验包括不要先套 LangGraph/CrewAI 这类框架、先用 POLE+O 起步而不是预设完美 ontology、区分名称归一化与实体去重，并补上 reasoning memory 记录每次运行的策略/工具/成败；这比单纯扩大上下文或做语义搜索更接近长期 agent 的可维护记忆层。来源：[HN](https://news.ycombinator.com/item?id=48337689)\n- **Jynx 把“Claude Code 做完整移动应用”给出了较完整生产样本：214k 行 Dart、23 个功能模块、Flutter + Firebase，上线 iOS/Android。** 作者列出 Claude Code/GLM、22 个 hooks、18 个 skills、13 个 instincts、rule files、custom subagents、slash commands、MCP servers/plugins、GitNexus 与 MemPalace；相比普通 vibe-coding 展示，这条更有价值的是把长期 agent 工程的脚手架和生产监控/安全栈一起暴露出来。来源：[HN](https://news.ycombinator.com/item?id=48336119) / [Jynx](https://jynx.app/)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Claude Code",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Claude Code `v2.1.158` 把 Auto mode 扩到 Bedrock、Vertex 和 Foundry 上的 Opus 4.7 / Opus 4.8，需设置 `CLAUDE_CODE_ENABLE_AUTO_MODE=1` 开启。** 企业或私有云端点用户可以先在非生产任务里复测自动模式的模型/成本路由；昨天已写过 `v2.1.157` 的插件、agents 和 worktree 修复，今天不重复。 [v2.1.158](https://github.com/anthropics/claude-code/releases/tag/v2.1.158)\n- **今日取舍：** raw corpus 有 `v2.1.156`、`v2.1.157`、`v2.1.158` 和 CHANGELOG。`v2.1.156` 的 Opus 4.8 thinking blocks API error 修复、`v2.1.157` 的插件自动加载、`claude agents`、worktree、粘贴/权限等已在 2026-05-30 日报展开；今天仅保留 `v2.1.158` 对 Auto mode 云端点支持的新增事实。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Codex",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Codex CLI 补上 `codex archive <thread>` / `codex unarchive <thread>`，可按 UUID 或精确线程名归档、恢复保存线程。** 这些命令会复用既有 app-server `thread/archive` 与 `thread/unarchive` RPC，也支持 scoped remote flags；同时 `codex resume <thread id>` 与 `codex fork <thread id>` 现在会拒绝 archived session，并提示先运行 `codex unarchive <thread id>`。 [PR #25021](https://github.com/openai/codex/pull/25021)\n- **Windows sandbox 现在可被 managed requirements 约束到 `elevated` 或 `unelevated` 实现。** 新增 `[windows].allowed_sandbox_implementations`，配置解析会把不被允许的选择回落到允许项；TUI 也会阻止用户继续使用被组织策略禁用的 unelevated fallback，或保存不符合要求的 sandbox mode。 [PR #23766](https://github.com/openai/codex/pull/23766)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "GitHub AI 项目",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **[vinhnx/VTCode](https://github.com/vinhnx/VTCode)（641 stars）是一个 Rust 写的开源终端 coding agent，强调 LLM-native code understanding、shell safety、多模型 provider failover 和高效上下文管理。** 今天以 Show HN 形式出现；相比又一个聊天壳，它的看点在于把终端执行安全、模型切换和代码理解层作为一体化 agent runner 来做。\n- **[revfactory/harness](https://github.com/revfactory/harness)（4,225 stars）把“设计领域专用 agent team”做成 meta-skill：生成专门 agents，并生成这些 agents 使用的 skills。** 今天进入 weekly trending；对多代理开发者，它对应的是把团队编排、角色定义和 skill 生产标准化，而不是每个项目手写一套 subagent 说明。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "GitHub 趋势项目",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **[revfactory/harness](https://github.com/revfactory/harness)（4,225 stars）把“搭 agent 团队”包装成 meta-skill：先设计领域专用 agent team，再定义专门代理，并生成它们要用的 skills。** 相比只给一个通用 coding agent 下任务，它对应的是把角色、交接和技能资产生成流程标准化；适合关注多代理工作流如何从临时提示变成可复用团队模板的读者。\n- **今日取舍：** 硬门槛为 GitHub API 校验 stars ≥ 100，并只选与 AI/coding-agent 工作流有明确关系、且近两日报告未实质展开的仓库。`affaan-m/ECC` 昨天已写；`microsoft/agent-governance-toolkit`、`anthropics/claude-plugins-official`、`Leonxlnx/taste-skill` 等在 2026-05-29/30 已实质覆盖或无新增事实；`codegraph`、`Understand-Anything`、`oh-my-pi`、`cursor/plugins`、`Anthropic-Cybersecurity-Skills`、`stop-slop` 等近日报告已去重说明；`MoneyPrinterTurbo` 偏短视频，`dograh` 偏语音平台，`markitdown` 偏通用文档转换，`ai-engineering-from-scratch` 偏学习资料，`heretic` 与本栏 coding-agent 工程工作流关联不够具体，因此未纳入。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Rize AI 工具榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **#10 [holaOS](https://github.com/holaboss-ai/holaOS)**：把重复工作转成持续运行的 AI work-streams；更像面向团队流程的 agent 执行/编排层，而不是单次聊天工具。榜单页：[Rize AI Tools](https://rize.io/ai-tools)\n- **#14 [browser-harness](https://github.com/browser-use/browser-harness)**：Browser Use 的自修复浏览器 harness，目标是让 LLM 完成任意浏览器任务；适合关注网页自动化、DOM/视觉失败恢复和 agent 浏览器执行层的人。榜单页：[Rize AI Tools](https://rize.io/ai-tools)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Product Hunt 新品",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Step 3.7 Flash** 是一个“能看见并行动”的高速 agent 模型。对 agent/coding-agent 用户，信号不在又一个聊天模型，而在 Product Hunt 新品开始直接把视觉理解、动作执行和低延迟作为 agent 模型卖点。 [Product Hunt](https://www.producthunt.com/products/step-3-5-flash?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)\n- **Openstatus MCP Health Checker** 用真实 AI client 方式测试 MCP server，而不是只做 ping。随着 MCP 连接层进入更多 agent 工作流，这类健康检查更接近生产必需品：要验证工具列表、调用路径和 client 兼容，而不只是端口在线。 [Product Hunt](https://www.producthunt.com/products/openstatus-2?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)\n- **Wandesk** 主打“Build Your Own AI Desktop”。原始信息很短，但方向贴近桌面 agent：把多个 AI 能力收进可操作的桌面工作区；真正价值要看它能否管理权限、上下文和跨应用动作，而不是只做一个 AI 启动器。 [Product Hunt](https://www.producthunt.com/products/wandesk-ai?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Polymarket AI 市场",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **5 月最佳 Coding AI 模型市场几乎收盘锁定 Anthropic：98.6%，OpenAI 0.5%、Google 0.5%；24h 成交量约 3,622.8，30d 约 49,530.9，流动性约 55,187.4。** 相比昨日报告的 98.2% 继续小幅上行；月底市场分歧已很低，但这仍只是交易者预期，不等于真实 coding benchmark 结论。 [Polymarket](https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-may)\n- **“任一 AI 模型 6 月 30 日前达到 Coding Arena 1550”给出约 64.5% 概率，30d 成交量约 4,681.1、流动性约 1,664.0，并显示本周上行 22.5%。** 这是今天 raw corpus 里少数直接面向编码模型能力门槛的盘口；由于原始 outcome 标签重复为 “any AI model”，这里只按题面 1550 门槛解读，不能外推到具体厂商领先。 [Polymarket](https://polymarket.com/event/will-any-ai-model-reach-coding-arena-score-by-june-30)",
+        "text_size": "normal"
+      }
+    }
+  ]
+}
