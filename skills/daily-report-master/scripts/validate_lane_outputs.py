@@ -1,6 +1,14 @@
 from pathlib import Path
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from skills.daily_report_master.scripts.validate_lane_outputs import main
+
+_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(_ROOT))
+try:
+    from skills.daily_report_master.scripts.validate_lane_outputs import main
+except ModuleNotFoundError as exc:
+    if not (exc.name == 'skills' or str(exc.name).startswith('skills.daily_report_master')):
+        raise
+    from productivity.daily_report_master.scripts.validate_lane_outputs import main
+
 if __name__ == '__main__':
     raise SystemExit(main())
