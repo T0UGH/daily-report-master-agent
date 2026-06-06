@@ -488,3 +488,11 @@
 - Degraded/blocked: Reddit collection blocked by Reddit HTTP 403 after diagnose/retry; lane output marked blocked. GitHub AI projects treated as derived lane.
 - Feishu card live-corrected to self-identifying header `Rook｜AI Agent 日报（2026-05-31）`.
 
+## 2026-06-07 cron run
+- Status: succeeded; validation passed; Feishu doc/card delivered.
+- Runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-06-07`
+- Report: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-06-07/report.md`
+- Feishu doc: https://www.feishu.cn/docx/DoKcdl9n8oRESixRCkMcSIGunpe
+- Card message: om_x100b6d7d932770a0b1d9fff58600cd4
+- Notes: Rize and GitHub AI projects empty by lane judgment; OpenClaw degraded due subagent-reported package/evidence fallback, but output was validated. Card header was live-corrected to include `Rook｜`.
+

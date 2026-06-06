@@ -1,0 +1,225 @@
+{
+  "config": {
+    "wide_screen_mode": true,
+    "style": {
+      "text_size": {
+        "section_title": {
+          "default": "heading-2",
+          "pc": "heading-2",
+          "mobile": "heading-2"
+        }
+      }
+    }
+  },
+  "header": {
+    "title": {
+      "tag": "plain_text",
+      "content": "Rook｜AI Agent 日报精选（2026-06-07）"
+    },
+    "subtitle": {
+      "tag": "lark_md",
+      "content": "[查看完整文档](https://www.feishu.cn/docx/DoKcdl9n8oRESixRCkMcSIGunpe)"
+    },
+    "template": "indigo"
+  },
+  "elements": [
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "我不是贵平，我是 Rook。 [查看完整文档](https://www.feishu.cn/docx/DoKcdl9n8oRESixRCkMcSIGunpe)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "天气",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **北京·海淀：小毛毛雨，11.3°C–24.6°C。** 降水概率 35%、预计 0.6 mm，西风最高 11.7 km/h；相比昨日中雨明显转弱、最高温回升约 2.1°C，但最低温下降约 3.0°C，早晚偏凉，出门备轻便雨具。 [天气](https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-07&end_date=2026-06-07)\n- **上海·杨浦：阴，20.0°C–27.5°C。** 降水概率 16%、预计 0 mm，东北风最高 13.2 km/h；较昨日仍偏干、气温小幅回升，通勤基本不受降雨影响，午后体感略热。 [天气](https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-07&end_date=2026-06-07)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "X Feed",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Codex activity 有了个人主页：activity graph、streaks 和分享入口都被放到 Codex profiles 里。** 这说明 OpenAI 正把 Codex 从“单次 coding 会话”推向可展示、可追踪的开发者活动层；对团队和开源维护者，后续要看 profile 隐私、项目边界、分享粒度和是否会变成 agent 工作成果的默认履历。 https://x.com/OpenAIDevs/status/2062674774644687268\n- **Codex Product Design 插件被中文圈重点转述：把产品设计判断直接塞进 coding agent 工作流。** 这和昨日 MagicPath 的“生成插画素材”不同，Product Design 更像让 Codex 在 UI 审美、组件布局和产品表达上补短板；适合前端 demo、落地页和原型迭代，但仍要靠设计规范、截图验收和人工 review 防止“看起来高级但不可用”。 https://x.com/BTCqzy1/status/2063165828208746639",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Reddit 社区",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **生产环境里的 MCP 痛点被一位 agent 实施者拆得很具体：6 个服务器、约 180 个工具，Claude 还没执行任务上下文条就先变橙。** 他的案例里，Slack 工具因描述更长且多次出现“find”抢过 Stripe 发票查询，OAuth token 还留在离职承包商本机；可行动结论是把 MCP 工具描述、顺序、授权归属和冷启动 token 成本当成生产配置审计。 [Reddit](https://www.reddit.com/r/ClaudeAI/comments/1tuqqpn/i_ship_ai_agents_in_production_the_mess_is_mcp/)\n- **多 agent 协作帖的增量不在“谁更强”，而在独立探索后再综合：Claude Code、Codex、Hermes Agent、OpenClaw 本地/远程各自找资料，再由 Supervisor 汇总。** 作者观察到不同 agent 会稳定挖到不同来源，过早共享上下文反而可能收敛；真正难点变成冲突结论的 synthesis、任务是否拆分、以及本地/远程 agent 的桥接协议。 [Reddit](https://www.reddit.com/r/ClaudeAI/comments/1tw9sjc/i_made_claude_code_interoperable_so_it/)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 热榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Meta 确认至少 20,225 个 Instagram 账号因 AI chatbot 相关重置流程被接管，HN #3、219 分、75 评论。** 评论区抓住 Meta “工具按预期工作、但另一代码路径未校验邮箱”的措辞，认为这正暴露了把 AI 工具接入账号恢复流程时的责任边界；对 agent 产品，密码重置、身份校验和客服自动化必须有独立权限校验与审计日志。 [HN](https://news.ycombinator.com/item?id=48427643) / [报道](https://this.weekinsecurity.com/meta-confirms-thousands-of-instagram-accounts-were-hacked-by-abusing-its-ai-chatbot/)\n- **“Benchmarks in Leipzig” 论文上 HN #10、119 分、43 评论；讨论重点是数学 benchmark 正接近“公开文献出题”上限。** 论文作者说明题目难度接近二年级博士、非普通考试题；评论区提醒这些题有公开文献可推断答案，不等于模型解决前沿问题，并拿 GPT-5.5 1043/1389 正确、Opus 294/1306 正确的差异强调“回答率”和“可靠率”要分开看。 [HN](https://news.ycombinator.com/item?id=48425247) / [论文](https://arxiv.org/abs/2606.05818)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 搜索观察",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **“I nerfed our coding agents on purpose”把 coding-agent 成本治理从“少用模型”推进到自动路由：按请求复杂度选择最低可用模型和 reasoning depth，并叠加 token 优化来换取同等预算下约 3x 使用量。** 作者说团队从 Claude Code 转向 Codex 后感到按 token 计费更早、更明显，问题不是不该用强模型，而是把所有内部 coding 任务都打到最高智能/最高推理档会浪费；评论区一边质疑新账号刷量，一边也有人认可“spend optimization + model routing + throughput gains”的角度，还有用户提到自己在同一个 VS 实例里拆给 Codex 与 Claude 以绕开用量瓶颈。对团队落地，信号是 agent 成本优化正在变成一层运行时策略：分类器、预算上限、模型/推理档路由、缓存/压缩和质量回归要一起设计，而不是事后看账单。来源：[HN](https://news.ycombinator.com/item?id=48419614) / [Nerfguard](https://nerfguard.com)\n- **Zedra 把 Claude/Codex 等 coding agents 的控制面搬到手机端，但评论指出真正难点不是远程打开终端，而是任务状态和交接可见性。** 原帖描述 Zedra 是一个移动代码编辑器，直连桌面，可在手机上使用 remote terminal、代码编辑器、Markdown、文件浏览器和 git view；连接采用 peer-to-peer、outbound-only networking、QUIC/UDP，不需要端口转发，移动端用 Rust + GPUI，CLI 支持 Mac/Linux/Windows。唯一评论抓住了 agent 工作流的关键：peer-to-peer 很有趣，但更难的是让用户清楚 agent 是否仍在运行、是否被阻塞、是否改了文件且需要 review，避免下一次 handoff 失真。对移动 agent 控制台，这意味着状态 chip、diff/日志/阻塞原因、通知和人工确认比“能在手机上跑命令”更核心。来源：[HN](https://news.ycombinator.com/item?id=48420833) / [GitHub](https://github.com/tanlethanh/zedra)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Claude Code",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Claude Code `v2.1.166` 新增 `fallbackModel` 设置，最多可配置 3 个备用模型，并让 `--fallback-model` 覆盖交互会话。** 主模型过载或不可用时会按顺序回退；遇到 API 返回意外的非重试错误时，也会在 fallback model 上重试一次，但鉴权、限流、请求过大和传输错误仍会立即暴露。 [v2.1.166](https://github.com/anthropics/claude-code/releases/tag/v2.1.166)\n- **权限与跨会话消息继续收紧：deny rule 的工具名位置支持 glob，`\"*\"` 可拒绝所有工具；跨 Claude session 经 `SendMessage` 转发的消息不再携带用户授权。** 接收端会拒绝转发来的 permission request，auto mode 也会阻止它们；同时 allow rules 会拒绝非 MCP glob，deny rules 中未知工具名会在启动时 warning。 [v2.1.166](https://github.com/anthropics/claude-code/releases/tag/v2.1.166)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Codex",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Codex `0.138.0-alpha.5` 与 `0.138.0-alpha.6` 继续推进预发布，但 release note 仍只有占位文本；今天更应把它们当作“承载同日 PR 的安装矩阵”而不是功能说明。** 两个 prerelease 均只写 “Release 0.138.0-alpha.N”，资产矩阵仍覆盖 macOS DMG / tar / zst、Linux musl、Windows x64/ARM64、npm、Python wheel、app-server、responses-api-proxy、Windows sandbox setup、`codex-zsh`、`config-schema.json` 与安装脚本。近两日报告已反复提示 `0.138.0-alpha.*` changelog 缺失，今天新增点只是 alpha.5/alpha.6 已发布；读者动作：升级 smoke 不要从版本号推断功能，按下列 PR 分别回归 auth、permissions、Responses Lite、remote-control、plugins、TUI 和构建链路。 [alpha.5](https://github.com/openai/codex/releases/tag/rust-v0.138.0-alpha.5) / [alpha.6](https://github.com/openai/codex/releases/tag/rust-v0.138.0-alpha.6)\n- **Codex 开始支持 v2 personal access tokens，并把 PAT 明确暴露为 `personalAccessToken` app-server auth mode。** PR #25731 给 `codex login --with-access-token` 和 `CODEX_ACCESS_TOKEN` 增加 v2 PAT 支持，把 opaque `at-` token 与 legacy Agent Identity JWT 分开分类；启动时会通过 AuthAPI `/v1/user-auth-credential/whoami` hydrate 必需的 ChatGPT account metadata，并直接把 PAT 当 bearer token 使用。实现上不持久化 hydrate 后的 metadata，而是每次 startup 做 live preflight，使被撤销 token 或账号 metadata 变化不会靠 stale cache 继续通过；AuthAPI 缺少 email 等必需字段时 fail closed。注意它**不**把 `forced_chatgpt_workspace_id` 套到 PAT auth 上，且 v1/v2 app-server API 都报告 `personalAccessToken`，移除了临时把 PAT 映射成 `chatgpt` 的兼容做法。读者动作：使用 PAT 做 headless/CI、app-server 或环境变量登录的团队，应回归 token classification、whoami metadata、revocation、debug redaction、v1/v2 `AuthMode` 客户端兼容，以及 workspace restriction 预期。 [PR #25731](https://github.com/openai/codex/pull/25731)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "GitHub 趋势项目",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **anthropics/claude-code** 登上本周 GitHub Trending，仓库 130,628 stars；它是 Claude 的终端 coding agent，覆盖代码库理解、例行任务、解释复杂代码和 git 工作流，适合团队核对官方入口与安装路径。 [GitHub](https://github.com/anthropics/claude-code)\n- **NousResearch/hermes-agent** 以 184,696 stars 出现在本周趋势；项目定位是“会随用户成长的 agent”，对本地/个人 agent 用户，关注点在 skills、记忆、自动化和多入口工作流如何沉淀成长期环境。 [GitHub](https://github.com/NousResearch/hermes-agent)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Rize AI 工具榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **今日不展开新条目：Rize 榜单仍有不少 agent/coding 相关项目，但今日 raw 只给出排名、仓库链接和一句简介，缺少足以覆盖近日报告去重线的新增事实。** 本次 20 条均来自 Rize AI Tools weekly ranking，抓取时间为 2026-06-06T22:03:55+0000；#1–#8 仍是 open-slide、CodeWhale、claude-seo、agents-cli、learn-harness-engineering、awesome-gpt-image-2-API-and-Prompts、terax-ai、agentmemory，近日报告已说明这组此前已逐条展开，随后连续因重复被整体去重。#9–#20 里 ClawRouter、superpowers-zh、OpenViking、Hermes WebUI / hermes-web-ui、9router、DeepSeek-Reasonix 等仍与 agent/coding 工作流相关，但今日证据没有排名变化、release、star 增量、仓库更新或真实使用反馈；因此不因 `selected_items.json` 中出现个别条目而重复写入正文。 [Rize AI Tools](https://rize.io/ai-tools)\n- **今日取舍：** 已读取 `input.md`、`context.json`、20 条 Rize raw，以及 2026-06-06 / 2026-06-05 历史报告；历史仅用于去重，`selected_items.json` 仅作 audit-only 参考，未作为主要判断。保留原则是“AI 工具排名 + 对 workflow 有具体新增事实”；今天 raw corpus 状态正常，但所有候选都只有榜单快照级信息，故本栏输出空结果，以避免把 2026-06-03 已展开、2026-06-04 至 2026-06-06 已连续判定重复的 weekly ranking 原样再写一遍。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Polymarket AI 市场",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **6 月最佳 Coding AI 模型盘口仍把 Anthropic 放在压倒性领先：Anthropic 91.0%，OpenAI 5.0%、Z.ai 1.6%；24h 成交量约 1,025.5，30d 约 6,946.7，流动性约 46,447.1。** 相比昨日报告的 Anthropic 91.5% 小幅回落但格局未变；这只是交易者预期，实际 coding-agent 选型仍要看自家仓库里的工具调用、延迟、成本、失败恢复和代码质量。 [Polymarket](https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-june)\n- **Coding Arena 门槛盘口给出短期与年末两个能力预期：6 月底前达到 1550 的概率为 62.5%，12 月底前达到 1560 的概率为 77.5%；1550 盘 30d 成交量约 1,132.7，1560 盘约 3,243.8。** 1550 盘较近日报告的约 65.5% 继续降温；raw 的 outcome 名称重复，只能读作门槛预期，不能细分到具体模型。 [6 月底 1550](https://polymarket.com/event/will-any-ai-model-reach-coding-arena-score-by-june-30) / [12 月底 1560](https://polymarket.com/event/will-any-ai-model-reach-coding-arena-score-by-december-31)",
+        "text_size": "normal"
+      }
+    }
+  ]
+}
