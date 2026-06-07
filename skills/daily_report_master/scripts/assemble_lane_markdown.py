@@ -1,7 +1,7 @@
 from __future__ import annotations
 import argparse
 from pathlib import Path
-LANES=['weather','x-feed','x-following','reddit','hacker-news','hacker-news-search','claude-code','codex','github-ai-projects','github-trending','rize','product-hunt','polymarket']
+LANES=['weather','x-feed','x-following','reddit','hacker-news','hacker-news-search','claude-code','codex','openclaw','github-ai-projects','github-trending','rize','product-hunt','polymarket']
 def assemble_report(runtime_root: Path, report_date: str, title_suffix: str='') -> Path:
     title=f'# AI Agent 日报（{report_date}）' + (f'{title_suffix}' if title_suffix else '')
     parts=[title,'']
