@@ -496,3 +496,5 @@
 - Card message: om_x100b6d7d932770a0b1d9fff58600cd4
 - Notes: Rize and GitHub AI projects empty by lane judgment; OpenClaw degraded due subagent-reported package/evidence fallback, but output was validated. Card header was live-corrected to include `Rook｜`.
 
+
+- 2026-06-08: Hermes subagent lane daily report delivered; validation passed; OpenClaw lane degraded due package gap; Feishu doc/card succeeded.
