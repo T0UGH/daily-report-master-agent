@@ -498,3 +498,14 @@
 
 
 - 2026-06-08: Hermes subagent lane daily report delivered; validation passed; OpenClaw lane degraded due package gap; Feishu corrected doc/card succeeded; assemble script patched to include OpenClaw lane.
+
+## 2026-06-09
+
+### 运行记录
+- 06:00 cron 使用 Hermes 原生 subagent lane 架构完成当日日报：先 repo-local `signals-engine` collect，再 prepare lane packages，再逐 lane `delegate_task` 写 `lane.md` / `lane-meta.json`，最后 validate / assemble / publish / archive。
+- Feishu card 首次发送后 live verification 发现 header 仍是 `AI Agent 日报（2026-06-09）`，同 run 已按卡片规范重发为 `Rook｜AI Agent 日报精选（2026-06-09）`，并撤回 superseded card。
+- OpenClaw reader lane 因 prepare package gap 使用 raw `openclaw-watch` evidence 降级生成；需要后续修复 package 映射，避免 lane subagent 依赖 raw fallback。
+
+### 待验证 / 后续
+- 修复 `prepare_lane_packages.py` 的 OpenClaw package 映射，让 `lane-packages/openclaw` 正常出现。
+- 检查 `publish_report.py` 是否仍会忽略传入 title 生成非自说明 card header；应在 helper 内固定 `Rook｜` header，避免每次 cron 后置重发。
