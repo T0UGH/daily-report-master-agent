@@ -509,3 +509,11 @@
 ### 待验证 / 后续
 - 修复 `prepare_lane_packages.py` 的 OpenClaw package 映射，让 `lane-packages/openclaw` 正常出现。
 - 检查 `publish_report.py` 是否仍会忽略传入 title 生成非自说明 card header；应在 helper 内固定 `Rook｜` header，避免每次 cron 后置重发。
+## 2026-06-10 cron run
+
+- Hermes native lane-subagent pipeline completed for 2026-06-10.
+- Collect used repo-local signals-engine (`uvx --from /Users/haha/workspace/signals-engine`) with `/Users/haha/.signal-engine/config/lanes.yaml` and data root `/Users/haha/.daily-lane-data`; lane registry contained weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket.
+- Lane outputs: 14 total, 12 ok, 1 degraded (`openclaw`: package-path anomaly handled with raw evidence), 0 blocked, 1 empty (`reddit`: no non-duplicative discussion substance).
+- Publish succeeded; original card header lacked `Rook｜`, corrected card was resent and the superseded message was recalled.
+- Knowledge-wiki archive commit: `21c1cc4`.
+
