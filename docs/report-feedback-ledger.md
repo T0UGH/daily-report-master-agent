@@ -517,3 +517,14 @@
 - Publish succeeded; original card header lacked `Rook｜`, corrected card was resent and the superseded message was recalled.
 - Knowledge-wiki archive commit: `21c1cc4`.
 
+
+## 2026-06-11
+
+### 运行记录 / 已采取改动
+- 06:00 Hermes master cron 按原生 subagent lane 架构完成：repo-local `signals-engine` preflight、逐 lane collect、lane package 准备、Hermes lane subagent 写作、validate/assemble、Feishu Docx + 精选卡片发布、knowledge-wiki 归档。
+- 发布后发现 helper 生成的 Feishu card header 仍是非自说明标题 `AI Agent 日报（2026-06-11）`；同 run 内已按既有规则重发 `Rook｜AI Agent 日报精选（2026-06-11）` 卡片、live verify，并撤回 superseded card。
+- `openclaw` package 阶段仍未生成标准 package，但 raw `openclaw-watch` 存在；本次以 degraded lane 输出保留并记录 packaging gap。
+
+### 待验证
+- 后续应修复 `openclaw-watch` -> `openclaw` package 映射，避免 lane subagent 需要走降级 raw 路径。
+- 发布 helper 应直接生成 `Rook｜...` card header，避免每次发布后再修正重发。
