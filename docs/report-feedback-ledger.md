@@ -528,3 +528,16 @@
 ### 待验证
 - 后续应修复 `openclaw-watch` -> `openclaw` package 映射，避免 lane subagent 需要走降级 raw 路径。
 - 发布 helper 应直接生成 `Rook｜...` card header，避免每次发布后再修正重发。
+
+## 2026-06-12
+
+### 运行记录
+- 06:00 Hermes master cron 按原生 subagent lane 架构完成：repo-local `signals-engine` preflight、逐 lane collect/diagnose/retry、lane package 准备、Hermes lane subagent 写作、validate/assemble、Feishu Docx + 精选卡片发布。
+- Collect preflight 使用 `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data root `/Users/haha/.daily-lane-data`；lane registry 包含 weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket。
+- Reddit collect 首次和 retry 均被 Reddit RSS HTTP 429 限流，最终 Reddit lane 输出为 blocked，不使用 fallback。
+- Rize 与 OpenClaw lane 均由 lane subagent 判定为 empty：Rize 排名快照与近两日实质一致；OpenClaw release 信号已被近两日报告覆盖。
+- 发布 helper 首次生成的 Feishu card header 仍缺 `Rook｜`；同 run 内已重发 corrected card `Rook｜AI Agent 日报精选（2026-06-12）` 并 live verify，`publish-state.json` 已指向 corrected `message_id`。
+
+### 待验证
+- 修复发布 helper 默认 card header，避免后置重发。
+- 继续观察 Reddit RSS 429；若持续发生，需要在 signals-engine 内改成更稳的 Reddit 数据源或更保守节流。
