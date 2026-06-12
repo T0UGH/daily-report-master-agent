@@ -541,3 +541,13 @@
 ### 待验证
 - 修复发布 helper 默认 card header，避免后置重发。
 - 继续观察 Reddit RSS 429；若持续发生，需要在 signals-engine 内改成更稳的 Reddit 数据源或更保守节流。
+
+
+## 2026-06-13
+
+### 运行记录 / 待跟踪
+- 06:00 Hermes 原生 subagent lane 架构完成：collect、prepare lane packages、13 个 lane subagent、validate、assemble、Feishu doc/card、knowledge-wiki archive。
+- Reddit collect 遇到 Reddit RSS HTTP 429；同 run 已 diagnose/retry，最终只有 8 个低信号 raw，lane subagent 输出 empty 并在正文记录降级原因。后续可继续跟踪 Reddit public lane 429 缓解。
+- `github-ai-projects` 继续按 derived lane 处理，无 direct collector；本次从 GitHub/cross-lane evidence 产出。
+- publish helper 首次 card header 仍生成非自说明 `AI Agent 日报（2026-06-13）`；同 run 已修正为 `Rook｜AI Agent 日报精选（2026-06-13）`、重发、live verify，并撤回 superseded card。后续仍应把 card header live verification 作为强制 gate。
+- 当前 runtime config 的 reader-facing order 不含 `openclaw`，assembler 在运维提示里标注“未生成 openclaw”。如果 MT 仍期望 OpenClaw 栏目，需要同步 config 与 package/assemble 规则，而不是让旧 renderer fallback。
