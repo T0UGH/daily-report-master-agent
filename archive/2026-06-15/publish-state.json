@@ -1,0 +1,37 @@
+{
+  "report_date": "2026-06-15",
+  "status": "succeeded",
+  "doc": {
+    "status": "succeeded",
+    "url": "https://www.feishu.cn/docx/QkCydFKnpoVkrMx5boDc0kbCnLd",
+    "log_path": "logs/feishu-import.log",
+    "error_summary": null
+  },
+  "card": {
+    "status": "succeeded",
+    "message_id": "om_x100b6dc6d52d54a0b3b3c466f4ea634",
+    "payload_path": "artifacts/feishu-card-corrected.json",
+    "preflight_path": "logs/feishu-card-preflight.json",
+    "log_path": "logs/feishu-card-corrected-send.log",
+    "error_summary": null,
+    "live_verify_path": "logs/feishu-card-corrected-live-verify.json",
+    "superseded_message_ids": [
+      "om_x100b6dc6d6c0e0a0b28a71319a0ea30"
+    ],
+    "superseded_recall_log": "logs/feishu-card-superseded-recall.log"
+  },
+  "audio": {
+    "status": "skipped",
+    "message_id": null,
+    "opus_path": null,
+    "log_path": null,
+    "error_summary": null
+  },
+  "required_outputs": [
+    "doc",
+    "card"
+  ],
+  "missing_required_outputs": [],
+  "final_delivery_ok": true,
+  "updated_at": "2026-06-14T22:23:15Z"
+}

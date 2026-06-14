@@ -1,0 +1,85 @@
+{
+  "report_date": "2026-06-15",
+  "source": "signals-engine",
+  "lanes": [
+    {
+      "name": "weather-watch",
+      "status": "ok",
+      "useful_item_count": 2
+    },
+    {
+      "name": "x-feed",
+      "status": "ok",
+      "useful_item_count": 100
+    },
+    {
+      "name": "x-following",
+      "status": "ok",
+      "useful_item_count": 100
+    },
+    {
+      "name": "reddit-watch",
+      "status": "error",
+      "useful_item_count": 0
+    },
+    {
+      "name": "hacker-news-watch",
+      "status": "ok",
+      "useful_item_count": 10
+    },
+    {
+      "name": "hacker-news-search-watch",
+      "status": "ok",
+      "useful_item_count": 15
+    },
+    {
+      "name": "claude-code-watch",
+      "status": "ok",
+      "useful_item_count": 3
+    },
+    {
+      "name": "codex-watch",
+      "status": "ok",
+      "useful_item_count": 18
+    },
+    {
+      "name": "github-ai-projects",
+      "status": "partial",
+      "useful_item_count": 0,
+      "reason": "derived_lane_no_direct_collector",
+      "errors": []
+    },
+    {
+      "name": "github-trending-weekly",
+      "status": "ok",
+      "useful_item_count": 19
+    },
+    {
+      "name": "rize-watch",
+      "status": "ok",
+      "useful_item_count": 20
+    },
+    {
+      "name": "product-hunt-watch",
+      "status": "ok",
+      "useful_item_count": 5
+    },
+    {
+      "name": "polymarket-watch",
+      "status": "ok",
+      "useful_item_count": 11
+    }
+  ],
+  "summary": {
+    "useful_item_count": 303,
+    "partial_lane_count": 2,
+    "total_lane_count": 13,
+    "ok_lane_count": 11,
+    "error_lane_count": 1
+  },
+  "errors": [
+    "reddit-watch: errors=query 'Claude Code workflows' failed: HTTP 429 for https://www.reddit.com/r/LocalLLaMA/search.rss?q=Claude+Code+workflows&restrict_sr=on&sort=relevance&t=month&limit=10; query 'Codex agent' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=Codex+agent&restrict_sr=on&sort=relevance&t=month&limit=10; query 'OpenClaw' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=OpenClaw&restrict_sr=on&sort=relevance&t=month&limit=10; query 'AI coding agents' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=AI+coding+agents&restrict_sr=on&sort=relevance&t=month&limit=10",
+    "reddit-watch: run.status='failed'",
+    "github-ai-projects: 缺少目录 /Users/haha/.daily-lane-data/signals/github-ai-projects/2026-06-15"
+  ]
+}

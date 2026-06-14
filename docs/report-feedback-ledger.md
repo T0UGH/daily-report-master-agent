@@ -551,3 +551,18 @@
 - `github-ai-projects` 继续按 derived lane 处理，无 direct collector；本次从 GitHub/cross-lane evidence 产出。
 - publish helper 首次 card header 仍生成非自说明 `AI Agent 日报（2026-06-13）`；同 run 已修正为 `Rook｜AI Agent 日报精选（2026-06-13）`、重发、live verify，并撤回 superseded card。后续仍应把 card header live verification 作为强制 gate。
 - 当前 runtime config 的 reader-facing order 不含 `openclaw`，assembler 在运维提示里标注“未生成 openclaw”。如果 MT 仍期望 OpenClaw 栏目，需要同步 config 与 package/assemble 规则，而不是让旧 renderer fallback。
+
+## 2026-06-15
+
+### 运行记录
+- Hermes 原生 subagent lane 架构完成 2026-06-15 日报：collect → prepare lane packages → 14 个 lane subagent → validate → assemble → Feishu Docx + 精选卡片发布。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`；lane registry 覆盖 weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket 等生产 lane。
+- Reddit collect 首次与 retry 均失败，diagnose 执行成功但 raw 文件仍为 0；日报中 Reddit lane 由 subagent 标记为 blocked/无 raw evidence，不用 selected_items 或旧 renderer 补写。
+- `config/runtime.yaml` 的 reader-facing order 未包含 OpenClaw，但 `openclaw-watch` collector 成功产出 raw；本轮手动准备 OpenClaw package 并交给 `daily-report-lane-openclaw` subagent 输出，避免栏目静默遗漏。
+- 发布 helper 首发卡片 header 仍为非自说明 `AI Agent 日报（2026-06-15）`；同 run 已修正为 `Rook｜AI Agent 日报精选（2026-06-15）`，live verified 后撤回 superseded card，并回写 runtime publish state。
+
+### 产物
+- runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-06-15/`
+- archive: `archive/2026-06-15/`
+- doc_url: `https://www.feishu.cn/docx/QkCydFKnpoVkrMx5boDc0kbCnLd`
+- final card message: `om_x100b6dc6d52d54a0b3b3c466f4ea634`
