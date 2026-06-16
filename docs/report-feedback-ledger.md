@@ -566,3 +566,10 @@
 - archive: `archive/2026-06-15/`
 - doc_url: `https://www.feishu.cn/docx/QkCydFKnpoVkrMx5boDc0kbCnLd`
 - final card message: `om_x100b6dc6d52d54a0b3b3c466f4ea634`
+
+## 2026-06-17 cron run
+
+- Hermes native lane run completed and published.
+- Delivery verified: Feishu Docx succeeded; corrected interactive card resent with self-identifying `Rook｜` header and superseded card revoked.
+- Degraded/blocked: Reddit raw collection failed after diagnose/retry due HTTP 429, so Reddit lane output is blocked/degraded with no fallback.
+- Notes: weather heading normalized before assemble; github-trending zero-selected metadata normalized to `empty`; product-hunt/x-following metadata canonicalized for validator.
