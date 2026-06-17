@@ -573,3 +573,9 @@
 - Delivery verified: Feishu Docx succeeded; corrected interactive card resent with self-identifying `Rook｜` header and superseded card revoked.
 - Degraded/blocked: Reddit raw collection failed after diagnose/retry due HTTP 429, so Reddit lane output is blocked/degraded with no fallback.
 - Notes: weather heading normalized before assemble; github-trending zero-selected metadata normalized to `empty`; product-hunt/x-following metadata canonicalized for validator.
+## 2026-06-18 cron run
+
+- Published via Hermes native subagent lane architecture.
+- Packaging gap observed: `openclaw` reader lane was omitted by deterministic package preparation despite successful `openclaw-watch` collect; master created a manual package from raw corpus and subagent judged it `empty` due no new publishable facts.
+- Publish helper still generated a non-self-identifying card header; master resent corrected card with `Rook｜AI Agent 日报精选（2026-06-18）` and revoked superseded cards.
+
