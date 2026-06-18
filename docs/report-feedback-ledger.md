@@ -579,3 +579,12 @@
 - Packaging gap observed: `openclaw` reader lane was omitted by deterministic package preparation despite successful `openclaw-watch` collect; master created a manual package from raw corpus and subagent judged it `empty` due no new publishable facts.
 - Publish helper still generated a non-self-identifying card header; master resent corrected card with `Rook｜AI Agent 日报精选（2026-06-18）` and revoked superseded cards.
 
+## 2026-06-19
+
+### 运行记录
+- 06:00 cron 使用 Hermes 原生 lane subagent 架构完成日报：collect → package → delegate lane → validate → assemble → publish → archive。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产 config `/Users/haha/.signal-engine/config/lanes.yaml`、data root `/Users/haha/.daily-lane-data`；lane registry 覆盖 weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket。
+- Reddit collect 首次和 retry 均遇到 Reddit RSS 429，最终保留部分 raw evidence；`github-ai-projects` 按 derived lane 规范化为 partial，不作为 direct collector failure。
+- 发布后发现 helper 首发 Feishu card header 仍是非自说明 `AI Agent 日报（2026-06-19）`，同 run 修正为 `Rook｜AI Agent 日报精选（2026-06-19）`，live verify 通过，并撤回 superseded card。
+- 最终文档：https://www.feishu.cn/docx/AEEgdq4P3ob0Bwx4w8Pc0etqnZc
+- 最终 card_message_id：om_x100b6c72b52c0d34c3200241367225b
