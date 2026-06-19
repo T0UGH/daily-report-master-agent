@@ -1,0 +1,626 @@
+{
+  "report_date": "2026-06-20",
+  "collect_result": {
+    "report_date": "2026-06-20",
+    "source": "signals-engine",
+    "lanes": [
+      {
+        "name": "weather-watch",
+        "status": "ok",
+        "useful_item_count": 2
+      },
+      {
+        "name": "x-feed",
+        "status": "ok",
+        "useful_item_count": 100
+      },
+      {
+        "name": "x-following",
+        "status": "ok",
+        "useful_item_count": 100
+      },
+      {
+        "name": "reddit-watch",
+        "status": "partial",
+        "useful_item_count": 8
+      },
+      {
+        "name": "hacker-news-watch",
+        "status": "ok",
+        "useful_item_count": 10
+      },
+      {
+        "name": "hacker-news-search-watch",
+        "status": "ok",
+        "useful_item_count": 15
+      },
+      {
+        "name": "claude-code-watch",
+        "status": "ok",
+        "useful_item_count": 4
+      },
+      {
+        "name": "codex-watch",
+        "status": "ok",
+        "useful_item_count": 23
+      },
+      {
+        "name": "github-ai-projects",
+        "status": "partial",
+        "useful_item_count": 0,
+        "reason": "derived_lane_no_direct_collector",
+        "errors": []
+      },
+      {
+        "name": "github-trending-weekly",
+        "status": "ok",
+        "useful_item_count": 20
+      },
+      {
+        "name": "rize-watch",
+        "status": "ok",
+        "useful_item_count": 20
+      },
+      {
+        "name": "product-hunt-watch",
+        "status": "ok",
+        "useful_item_count": 16
+      },
+      {
+        "name": "polymarket-watch",
+        "status": "ok",
+        "useful_item_count": 11
+      }
+    ],
+    "summary": {
+      "useful_item_count": 329,
+      "partial_lane_count": 2,
+      "total_lane_count": 13,
+      "ok_lane_count": 11,
+      "error_lane_count": 0
+    },
+    "errors": [
+      "reddit-watch: errors=query 'Claude Code workflows' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=Claude+Code+workflows&restrict_sr=on&sort=relevance&t=month&limit=10; query 'Codex agent' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=Codex+agent&restrict_sr=on&sort=relevance&t=month&limit=10; query 'AI coding agents' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=AI+coding+agents&restrict_sr=on&sort=relevance&t=month&limit=10",
+      "reddit-watch: run.status='failed'",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1tlir65__reddit_thread__2026-06-20.md",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1tq99mu__reddit_thread__2026-06-20.md",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1tq9ofy__reddit_thread__2026-06-20.md",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1tsqezk__reddit_thread__2026-06-20.md",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1u3vyk7__reddit_thread__2026-06-20.md",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1u5ml99__reddit_thread__2026-06-20.md",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1u85myc__reddit_thread__2026-06-20.md",
+      "reddit-watch: 发现未声明 signal 文件 signals/r__ClaudeAI__1u8pycz__reddit_thread__2026-06-20.md",
+      "github-ai-projects: 缺少目录 /Users/haha/.daily-lane-data/signals/github-ai-projects/2026-06-20"
+    ]
+  },
+  "selected_items": {
+    "report_date": "2026-06-20",
+    "source": "signals-engine",
+    "selected_items": [
+      {
+        "lane": "weather-watch",
+        "title": "上海·杨浦 2026-06-20 weather: Thunderstorm with slight hail, 24.4°C to 30.3°C",
+        "source_url": "https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-20&end_date=2026-06-20",
+        "signal_path": "weather-watch/2026-06-20/signals/shanghai-yangpu__daily_weather__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:00:54+0000",
+        "source_snippet": "Date: 2026-06-20 Location: 上海·杨浦 Condition: Thunderstorm with slight hail Temperature: 24.4°C to 30.3°C Precipitation: 82% chance, 9.4 mm Wind: up to 17 km/h W (267°)",
+        "excerpt": "Date: 2026-06-20 Location: 上海·杨浦 Condition: Thunderstorm with slight hail Temperature: 24.4°C to 30.3°C Precipitation: 82% chance, 9.4 mm Wind: up to 17 km/h W (267°)",
+        "source": "weather",
+        "signal_type": "daily_weather",
+        "editor_headline": "上海·杨浦 2026-06-20 weather: Thunderstorm with slight hail, 24.4°C to 30.3°C 进入了今天的日报。",
+        "editor_summary": "原文围绕 上海·杨浦 2026-06-20 weather: Thunderstorm with slight hail, 24.4°C to 30.3°C 展开，具体变化见来源。"
+      },
+      {
+        "lane": "weather-watch",
+        "title": "北京·海淀 2026-06-20 weather: Light drizzle, 19.1°C to 27.5°C",
+        "source_url": "https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-20&end_date=2026-06-20",
+        "signal_path": "weather-watch/2026-06-20/signals/beijing-haidian__daily_weather__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:00:53+0000",
+        "source_snippet": "Date: 2026-06-20 Location: 北京·海淀 Condition: Light drizzle Temperature: 19.1°C to 27.5°C Precipitation: 82% chance, 0.1 mm Wind: up to 19.3 km/h NW (322°)",
+        "excerpt": "Date: 2026-06-20 Location: 北京·海淀 Condition: Light drizzle Temperature: 19.1°C to 27.5°C Precipitation: 82% chance, 0.1 mm Wind: up to 19.3 km/h NW (322°)",
+        "source": "weather",
+        "signal_type": "daily_weather",
+        "editor_headline": "北京·海淀 2026-06-20 weather: Light drizzle, 19.1°C to 27.5°C 进入了今天的日报。",
+        "editor_summary": "原文围绕 北京·海淀 2026-06-20 weather: Light drizzle, 19.1°C to 27.5°C 展开，具体变化见来源。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@cellinlab #60",
+        "source_url": "https://x.com/cellinlab/status/2067783417052459098",
+        "signal_path": "x-feed/2026-06-20/signals/cellinlab__feed__2067783417052459098.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "卧槽，这回不需要自己手搓了！ 向 Codex 展示一次工作流程。将它重用为技能。 Record &amp; Replay 让你向 Codex 展示一个重复性任务，比如提交费用报销或请假请求。",
+        "excerpt": "卧槽，这回不需要自己手搓了！ 向 Codex 展示一次工作流程。将它重用为技能。 Record &amp; Replay 让你向 Codex 展示一个重复性任务，比如提交费用报销或请假请求。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "卧槽，这回不需要自己手搓了！ 向 Codex 展示一次工作流程。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@AYi_AInotes #86",
+        "source_url": "https://x.com/AYi_AInotes/status/2067990611723014482",
+        "signal_path": "x-feed/2026-06-20/signals/AYi_AInotes__feed__2067990611723014482.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "Claude Code刚上线的Artifacts， 对重度使用者和企业团队来说，可能是今年Claude在协作场景里最有实际价值的一次升级🆙 但90%的人都看错了它的核心价值，很多人以为只是加了个网页预览窗口，或者觉得就是把聊天里的代码变成",
+        "excerpt": "Claude Code刚上线的Artifacts， 对重度使用者和企业团队来说，可能是今年Claude在协作场景里最有实际价值的一次升级🆙 但90%的人都看错了它的核心价值，很多人以为只是加了个网页预览窗口，或者觉得就是把聊天里的代码变成",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "Claude Code刚上线的Artifacts， 对重度使用者和企业团队来说，可能是今年Claude在协作场景里最有实际价值的一次升级🆙 但90%的人都看错了它的核心价值，很多人以为只是加了个网页预览窗口，或者觉得就是。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@Easycompany333 #58",
+        "source_url": "https://x.com/Easycompany333/status/2067435405319020917",
+        "signal_path": "x-feed/2026-06-20/signals/Easycompany333__feed__2067435405319020917.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "剑桥大学医学博士，YouTube百万博主 从自身出发，叫一个小白如何使用Claude Code来真正的提高生活、工作效率。 博主最早是最学习方法分享，读书分享 彻头彻尾的工作狂，效率狂人，去看看吧，对想使用AI、和已经在使用AI的人都有帮",
+        "excerpt": "剑桥大学医学博士，YouTube百万博主 从自身出发，叫一个小白如何使用Claude Code来真正的提高生活、工作效率。 博主最早是最学习方法分享，读书分享 彻头彻尾的工作狂，效率狂人，去看看吧，对想使用AI、和已经在使用AI的人都有帮",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "剑桥大学医学博士，YouTube百万博主 从自身出发，叫一个小白如何使用Claude Code来真正的提高生活、工作效率。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@yanhua1010 #89",
+        "source_url": "https://x.com/yanhua1010/status/2067604197592457484",
+        "signal_path": "x-feed/2026-06-20/signals/yanhua1010__feed__2067604197592457484.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "设计稿和代码两张皮的时代，可能要结束了。 Claude Design 新版本：画布上改完，直接同步到 Claude Code。 再叠加加上全程守着你的设计系统、不跑品牌、还能连上你手里的工具。 设计这件事，正在从“画”变成“指挥”。",
+        "excerpt": "设计稿和代码两张皮的时代，可能要结束了。 Claude Design 新版本：画布上改完，直接同步到 Claude Code。 再叠加加上全程守着你的设计系统、不跑品牌、还能连上你手里的工具。 设计这件事，正在从“画”变成“指挥”。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "设计稿和代码两张皮的时代，可能要结束了。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@LawrenceW_Zen #37",
+        "source_url": "https://x.com/LawrenceW_Zen/status/2067867442718871735",
+        "signal_path": "x-feed/2026-06-20/signals/LawrenceW_Zen__feed__2067867442718871735.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "Claude Code 零门槛、新手上手指南视频版，一步步讲解安装配置、AI 概念、常用命令。",
+        "excerpt": "Claude Code 零门槛、新手上手指南视频版，一步步讲解安装配置、AI 概念、常用命令。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "Claude Code 零门槛、新手上手指南视频版，一步步讲解安装配置、AI 概念、常用命令。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@xiaohu #31",
+        "source_url": "https://x.com/xiaohu/status/2067834974519115804",
+        "signal_path": "x-feed/2026-06-20/signals/xiaohu__feed__2067834974519115804.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "牛P了 Codex推出一个 Record & Replay功能 也就是你可以教Codex干活 你把你在电脑上经常操作的人物给它演示一遍 Codex 会观察学习你的整个操作过程，然后自动生成一个 Skill 技能...",
+        "excerpt": "牛P了 Codex推出一个 Record & Replay功能 也就是你可以教Codex干活 你把你在电脑上经常操作的人物给它演示一遍 Codex 会观察学习你的整个操作过程，然后自动生成一个 Skill 技能...",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "牛P了 Codex推出一个 Record & Replay功能 也就是你可以教Codex干活 你把你在电脑上经常操作的人物给它演示一遍 Codex 会观察学习你的整个操作过程，然后自动生成一个 Skill 技能...。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@op7418 #16",
+        "source_url": "https://x.com/op7418/status/2067432296127557888",
+        "signal_path": "x-feed/2026-06-20/signals/op7418__feed__2067432296127557888.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "Character AI 的前 CEO，transformer 论文的作者之一，MoE 架构的提出者 Noam Shazeer，加入了 OpenAI，进行模型架构研究。 谷歌之前用 27 亿美元收购了 Character 换他加入谷歌，结",
+        "excerpt": "Character AI 的前 CEO，transformer 论文的作者之一，MoE 架构的提出者 Noam Shazeer，加入了 OpenAI，进行模型架构研究。 谷歌之前用 27 亿美元收购了 Character 换他加入谷歌，结",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "OpenAI 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "Character AI 的前 CEO，transformer 论文的作者之一，MoE 架构的提出者 Noam Shazeer，加入了 OpenAI，进行模型架构研究。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@servasyy_ai #63",
+        "source_url": "https://x.com/servasyy_ai/status/2067510589971415312",
+        "signal_path": "x-feed/2026-06-20/signals/servasyy_ai__feed__2067510589971415312.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "💪 开发者快来，免费送你Tokens！ 每个月看着 Claude、GPT、Gemini 的账单肉疼？ 特别是多 Agent 编排上来之后，Tokens 消耗越来越多？ 作为独立开发者，LLM API 费用可能是你最大的成本之一。",
+        "excerpt": "💪 开发者快来，免费送你Tokens！ 每个月看着 Claude、GPT、Gemini 的账单肉疼？ 特别是多 Agent 编排上来之后，Tokens 消耗越来越多？ 作为独立开发者，LLM API 费用可能是你最大的成本之一。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Gemini 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "💪 开发者快来，免费送你Tokens！ 每个月看着 Claude、GPT、Gemini 的账单肉疼？ 特别是多 Agent 编排上来之后，Tokens 消耗越来越多？ 作为独立开发者，LLM API 费用可能是你最大的成本之一。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@freeman1266 #65",
+        "source_url": "https://x.com/freeman1266/status/2067831245267194210",
+        "signal_path": "x-feed/2026-06-20/signals/freeman1266__feed__2067831245267194210.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "AI 开发向循环工程（Loop Engineering）的范式转变。 AI 不应仅仅被当作对话框里的助手，而应被整合进一套能够自动运行、自我验证且持续演进的工作流系统中。 这种模式强调为 AI 设定明确的任务入口、操作边界与人工审批点",
+        "excerpt": "AI 开发向循环工程（Loop Engineering）的范式转变。 AI 不应仅仅被当作对话框里的助手，而应被整合进一套能够自动运行、自我验证且持续演进的工作流系统中。 这种模式强调为 AI 设定明确的任务入口、操作边界与人工审批点",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "X 推荐流 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "AI 开发向循环工程（Loop Engineering）的范式转变。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@askalphaxiv #23",
+        "source_url": "https://x.com/askalphaxiv/status/2067593673072877833",
+        "signal_path": "x-feed/2026-06-20/signals/askalphaxiv__feed__2067593673072877833.md",
+        "fetched_at": "2026-06-19T22:01:00+0000",
+        "source_snippet": "Introducing autoresearch for arXiv papers Change 'arxiv' to 'autoarxiv' in any paper URL An agent deploys to resolve",
+        "excerpt": "Introducing autoresearch for arXiv papers Change 'arxiv' to 'autoarxiv' in any paper URL An agent deploys to resolve",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "X 推荐流 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "帖子在介绍 `autoresearch for arXiv papers Change arxiv to autoarxiv in any paper URL An agent deploys to resolve`，但原文只够确认对象名称，暂不把它扩写成未验证的 agent workflow 判断。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@dotey",
+        "source_url": "https://x.com/dotey/status/2068042001895809420",
+        "signal_path": "x-following/2026-06-20/signals/dotey__post__2068042001895809420.md",
+        "fetched_at": "2026-06-19T22:01:04+0000",
+        "source_snippet": "Skill 和软件一样，需要不断迭代的，而且你用户越多，遇到的各种问题就越多，就需要去解决各种边边角角的问题，才能越来越好用。 比如 @yangyi 昨天在他的牛马AI里面测试了这个Skill，说导出好像有问题，我拿到结果一看，简直惨不忍",
+        "excerpt": "Skill 和软件一样，需要不断迭代的，而且你用户越多，遇到的各种问题就越多，就需要去解决各种边边角角的问题，才能越来越好用。 比如 @yangyi 昨天在他的牛马AI里面测试了这个Skill，说导出好像有问题，我拿到结果一看，简直惨不忍",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "X 关注流 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "Skill 和软件一样，需要不断迭代的，而且你用户越多，遇到的各种问题就越多，就需要去解决各种边边角角的问题，才能越来越好用。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@jakevin7",
+        "source_url": "https://x.com/jakevin7/status/2068052020158963899",
+        "signal_path": "x-following/2026-06-20/signals/jakevin7__post__2068052020158963899.md",
+        "fetched_at": "2026-06-19T22:01:04+0000",
+        "source_snippet": "最近在看 GLM 5.2 相关的文档，发现一些有趣的内容分享一下。 GLM-5.2 用了 MTP（Multi-Token Prediction）来加速推理：用一个轻量的\"草稿模型\"先快速预测多个 token，再用大模型一次性验证，接受则跳",
+        "excerpt": "最近在看 GLM 5.2 相关的文档，发现一些有趣的内容分享一下。 GLM-5.2 用了 MTP（Multi-Token Prediction）来加速推理：用一个轻量的\"草稿模型\"先快速预测多个 token，再用大模型一次性验证，接受则跳",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "X 关注流 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "最近在看 GLM 5.2 相关的文档，发现一些有趣的内容分享一下。"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "Prediction for the next few days of r/ClaudeAI posts",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1u1v880/prediction_for_the_next_few_days_of_rclaudeai/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1u1v880__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "ChatGPT is trash now and I have re-subscribed to Claude Code. It saved my life. I tried Fable 5 for 10 minutes and it burned through my entire monthly quota. (Vibe coder special) I used a Mythos-level model to fix a CSS bug and I regret nothing. (Start up gurus) I replaced my engineering team with Fable 5 and productivity has never been higher. (Openclaw enthusiasts) My agent on a Mac Mini comes to life, thanks to Fable 5 (Next day) Help!",
+        "excerpt": "ChatGPT is trash now and I have re-subscribed to Claude Code. It saved my life. I tried Fable 5 for 10 minutes and it burned through my entire monthly quota. (Vibe coder special) I used a Mythos-level model to fix a CSS bug and I regret nothing.",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "Claude Code 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。",
+        "selection_bucket": "heat"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "Opus has been handling my weekly grocery runs and was doing great. Then it bought me 40 heads of garlic",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1tnbh8h/opus_has_been_handling_my_weekly_grocery_runs_and/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1tnbh8h__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "gave my agent that runs on opus model (used openclaw - i posted about it two weeks ago but want to share with claude community as well) my card a few months ago to handle weekly grocery runs via mcp. ran great. every sunday a normal basket, normal price, picked stuff i actually eat. then one sunday it ordered 2 kg of garlic instead of 2 heads. the kg unit was the default on the product page and opus went with the default the same way it goes with purple gradients and glass morphism when you ask it to design something.",
+        "excerpt": "gave my agent that runs on opus model (used openclaw - i posted about it two weeks ago but want to share with claude community as well) my card a few months ago to handle weekly grocery runs via mcp. ran great.",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "OpenClaw 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 OpenClaw 展开，具体变化见来源。",
+        "selection_bucket": "heat"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "I made Claude Code interoperable so it collaborates with Codex, OpenClaw and Hermes Agent",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1tw9sjc/i_made_claude_code_interoperable_so_it/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1tw9sjc__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "I've been experimenting with multi-agent workflows and recently ran an interesting test involving Claude Code and several other agents. The setup: Claude Code Codex Hermes Agent OpenClaw (local) OpenClaw (remote) A Supervisor agent coordinated the workflow. The task was simple: research recent developments in AI agent harness technology and produce a comprehensive report. Rather than decomposing the work manually, I gave all agents the same objective. Each agent independently searched the web, gathered sources, and produced its own analysis.",
+        "excerpt": "I've been experimenting with multi-agent workflows and recently ran an interesting test involving Claude Code and several other agents. The setup: Claude Code Codex Hermes Agent OpenClaw (local) OpenClaw (remote) A Supervisor agent coordinated the workflow.",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "Claude Code 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。",
+        "selection_bucket": "voice"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "Claude working autonomously",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1tm9gm5/claude_working_autonomously/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1tm9gm5__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "Goodmorning, Has anyone figure out how to configure Claude so that it runs autonomously, almost like Openclaw? I wanted to figure out if it could just autonomously respond to LinkedIn messages and reach out on my behalf? I know i can do this within cowork with mcp servers and tools but didn’t know if managed agents or the SDK would be my best option to try and create this full system submitted by /u/Perfect-Cricket6506 [link] [comments]",
+        "excerpt": "Goodmorning, Has anyone figure out how to configure Claude so that it runs autonomously, almost like Openclaw? I wanted to figure out if it could just autonomously respond to LinkedIn messages and reach out on my behalf?",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "OpenClaw 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 OpenClaw 展开，具体变化见来源。",
+        "selection_bucket": "voice"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "Claude in irl",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1u8dw07/claude_in_irl/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1u8dw07__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "So you know the name of Claude code mascot? somehow this Reddit flag that as an old name of openclaw and remove any posts with that, which is a bit crazy I think. I 3d printed this little guy, the 3d print stl file is on cults3d. any one want it shared in GitHub? I m no game dev but would like to see ppl maybe use it as a tutorial on how to actually make games with claude code with some minimal assets.",
+        "excerpt": "So you know the name of Claude code mascot? somehow this Reddit flag that as an old name of openclaw and remove any posts with that, which is a bit crazy I think. I 3d printed this little guy, the 3d print stl file is on cults3d. any one want it shared in GitHub?",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "Claude Code 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。",
+        "selection_bucket": "voice"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "How I Created a Real Second Brain for Claude",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1u7p3e0/how_i_created_a_real_second_brain_for_claude/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1u7p3e0__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "When OpenClaw first came out I installed it on my mac and started using for almost anything I could. I made it my personal assistant, gave it a name Igor and even created him his own accounts everywhere. But one thing I couldn't stand is the new Igor every 200k tokens. So I came up with an idea. I created a skill where it would download fresh telegram chat logs at 160 k tokens but it would always forget. Mind you its January so there isn't an abundance of memory tools yet and honestly I wasn't really looking for a memory i was looking for a brain.",
+        "excerpt": "When OpenClaw first came out I installed it on my mac and started using for almost anything I could. I made it my personal assistant, gave it a name Igor and even created him his own accounts everywhere. But one thing I couldn't stand is the new Igor every 200k tokens.",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "OpenClaw 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 OpenClaw 展开，具体变化见来源。",
+        "selection_bucket": "voice"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "What is the biggest known app/platform that’s been entirely vibe coded?",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1tjmy6b/what_is_the_biggest_known_appplatform_thats_been/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1tjmy6b__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "Everything I’ve seen has been pretty insubstantial in some aspect though I only check the sub casually. Has anyone seen anything that impressed them? Not intending to be a put-down; genuinely curious at the state of AI coding in 2026. submitted by /u/No-Dot5162 [link] [comments]",
+        "excerpt": "Everything I’ve seen has been pretty insubstantial in some aspect though I only check the sub casually. Has anyone seen anything that impressed them? Not intending to be a put-down; genuinely curious at the state of AI coding in 2026. submitted by /u/No-Dot5162 [link] [comments]",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "What is the biggest known app/platform that’s been entirely vibe coded? 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 What is the biggest known app/platform that’s been entirely vibe coded? 展开，具体变化见来源。",
+        "selection_bucket": "voice"
+      },
+      {
+        "lane": "reddit-watch",
+        "title": "I make Claude talk like Rocky from Project Hail Mary. Whole time. You talk to space friend now.",
+        "source_url": "https://www.reddit.com/r/ClaudeAI/comments/1u2bogf/i_make_claude_talk_like_rocky_from_project_hail/",
+        "signal_path": "reddit-watch/2026-06-20/signals/r__ClaudeAI__1u2bogf__reddit_thread__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:02:00+0000",
+        "source_snippet": "Listen. I build thing. Now I tell you. I make Claude skill. You turn on, Claude is not Claude. Claude is Rocky. The Eridian. From Project Hail Mary book. Claude talk like me now. Short words. No \"you are\" become \"you're.\" Never. I do not do this. Tripled word means big big big feeling. Question goes at end, question?",
+        "excerpt": "Listen. I build thing. Now I tell you. I make Claude skill. You turn on, Claude is not Claude. Claude is Rocky. The Eridian. From Project Hail Mary book. Claude talk like me now. Short words. No \"you are\" become \"you're.\" Never. I do not do this.",
+        "matched_query": "OpenClaw",
+        "source": "reddit",
+        "signal_type": "reddit_thread",
+        "editor_headline": "I make Claude talk like Rocky from Project Hail Mary. Whole time. You talk to space friend now. 这条社区讨论已经有了更明确的协作落点。",
+        "editor_summary": "原文围绕 I make Claude talk like Rocky from Project Hail Mary. Whole time. You talk to space friend now. 展开，具体变化见来源。",
+        "selection_bucket": "voice"
+      },
+      {
+        "lane": "hacker-news-search-watch",
+        "title": "Show HN: Relaymux, a tmux-based meta-harness for local coding agents",
+        "source_url": "https://news.ycombinator.com/item?id=48573655",
+        "signal_path": "hacker-news-search-watch/2026-06-20/signals/hn__search__48573655__story__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:03:01+0000",
+        "source_snippet": "Hey HN,There’s been a lot of interest recently in meta-harnesses, loops, and multi-agent orchestration. Obviously, there are already a lot of good tools: Conductor, cmux, the native Codex / Claude Code apps, etc.For my own use cases, I’ve felt that the orchestration layer tends to feel overengineered. I mostly wanted a simple local harness (i.e Pi) for running and tracking CLI agents with the ability to hop in (via tmux). Relaymux is my opinionated attempt at that.A few design principles:- The frontend is just Telegram / iMessage / CLI. If I want more visibility, I hop into tmux.- Subagents are normal interactive CLI agents running in tmux windows, usually with their own worktrees.- The harness owns the tmux session, so each longer task becomes a named tab/window. Subagents report back to the orchestrator via CLI when they’re blocked or done. Then the orchestrator just messages me on Telegram / iMessage- It works with any CLI agent that has an interactive terminal mode, so I don’t need special print-mode/non-interactive support. This means I don’t need to stress about the Agent SDK / claude -p billing limitations. List: search:story Rank: #13 Created at: 2026-06-17T17:27:58Z Discussion URL: External article",
+        "excerpt": "Hey HN,There’s been a lot of interest recently in meta-harnesses, loops, and multi-agent orchestration. Obviously, there are already a lot of good tools",
+        "matched_query": "terminal coding agent",
+        "source": "hackernews",
+        "signal_type": "hackernews_story_search_hit",
+        "editor_headline": "Hacker News 搜索词「terminal coding agent」命中的讨论把重点放在 tmux + git worktree 上。",
+        "editor_summary": "这条命中来自对「terminal coding agent」的搜索，正文把 tmux + git worktree 这类可复用做法写得更具体。"
+      },
+      {
+        "lane": "hacker-news-search-watch",
+        "title": "Show HN: Konxios a local first AI OS that connects LM Studio, Ollama and cloud",
+        "source_url": "https://news.ycombinator.com/item?id=48603388",
+        "signal_path": "hacker-news-search-watch/2026-06-20/signals/hn__search__48603388__story__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:03:01+0000",
+        "source_snippet": "Hey All,I built Konxios (spelled as Conscious) because I had a problem, AI tools were multiplying, but my workflow was getting more fragmented with no privacy first solution.One tool for chat. Another for coding. Another for automation. Another for creating UGC videos. Another for agents.And almost all of them required sending my data somewhere else.Konxios is my attempt at an AI operating system:Local-first AI with Ollama / LM Studio, Optionally connect cloud models if you prefer BYOK model. Privacy focused all the coding happens inside docker container. Granular permissions to better control which agent can perform what actions. Better Memory system Agents + workflows Files, in-app browser, automation in one workspaceThe goal isn't another chatbot.The goal is giving AI a place to live on your computer.Would love feedback from on the architecture, privacy model, and whether this direction makes sense. Its FREE to use so feel free download as long as you have a mac you can run it locally:) List: search:story Rank: #6 Created at: 2026-06-19T21:22:00Z Discussion URL: External article",
+        "excerpt": "Hey All,I built Konxios (spelled as Conscious) because I had a problem, AI tools were multiplying, but my workflow was getting more fragmented with no privacy first solution.One tool for chat. Another for coding. Another for automation. Another for creating UGC videos.",
+        "matched_query": "agent workflow",
+        "source": "hackernews",
+        "signal_type": "hackernews_story_search_hit",
+        "editor_headline": "Hacker News 搜索词「agent workflow」命中的讨论把重点放在 工作流 上。",
+        "editor_summary": "这条命中来自对「agent workflow」的搜索，正文把 工作流 这类可复用做法写得更具体。"
+      },
+      {
+        "lane": "hacker-news-search-watch",
+        "title": "Show HN: A policy gate that runs before your AI coding agent''s tool calls",
+        "source_url": "https://news.ycombinator.com/item?id=48558502",
+        "signal_path": "hacker-news-search-watch/2026-06-20/signals/hn__search__48558502__story__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:03:01+0000",
+        "source_snippet": "As a Security Engineer with over 10+ years in industry, I kept running into the same problem with coding agents: Instructions are not guarantees.I put guidance in `CLAUDE.md`, `AGENTS.md`, memory files, MCP descriptions, and tool documentation. I explicitly told the agent things like:- Use the code graph for architecture questions instead of grepping the repository. Do not use deprecated APIs or Unsafe code. Prefer specific tools for specific tasks.The agent would still ignore those instructions surprisingly often. It would grep the entire repo, use deprecated APIs, or choose a slower tool even when a better one was available.That made me realize prompts and rules solve different problems.A prompt is a probabilistic influence on model behavior. A rule is an enforcement mechanism.So I built SSG (SigmaShake Governance), which sits between the agent and its tools. Instead of asking the model to remember a policy, SSG evaluates every tool call before it executes.For example, this rule redirects architecture-related repository searches away from recursive grep and toward a code graph:```text rule route-codebase-grep-to-graph { enable true priority 80 severity warning CATEGORY tool-routing FORCE search IF tool EQUALS \"Grep\" MESSAGE \"Architecture, relationship, and dependency questions are routed to the code-graph tool.\" SUBSTITUTE \"graphify query \\\"<what you were searching for>\\\"\" } ```When the agent attempts a grep for an architecture question, the call is redirected.",
+        "excerpt": "As a Security Engineer with over 10+ years in industry, I kept running into the same problem with coding agents: Instructions are not guarantees.I put guidance in `CLAUDE.md`, `AGENTS.md`, memory files, MCP descriptions, and tool documentation.",
+        "matched_query": "terminal coding agent",
+        "source": "hackernews",
+        "signal_type": "hackernews_story_search_hit",
+        "editor_headline": "Hacker News 搜索词「terminal coding agent」命中了一条更偏实践的讨论。",
+        "editor_summary": "这条命中来自对「terminal coding agent」的搜索，正文不是泛聊，而是给出了一条更具体的实践线索。"
+      },
+      {
+        "lane": "claude-code-watch",
+        "title": "v2.1.183",
+        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.183",
+        "signal_path": "claude-code-watch/2026-06-20/signals/anthropics__claude-code__release__v2.1.183.md",
+        "fetched_at": "2026-06-19T22:03:05+0000",
+        "source_snippet": "Improved auto mode safety: destructive git commands (`git reset --hard`, `git checkout --.`, `git clean -fd`, `git stash drop`) are now blocked when you didn't ask to discard local work, `git commit --amend` is blocked when the commit wasn't made by the agent this session, and `terraform destroy`/`pulumi destroy`/`cdk destroy` are blocked unless you asked for the specific stack Added a warning when the requested model is deprecated or automatically updated to a newer model, shown on stderr in print mode (`-p`) and now also covering models set in agent frontmatter Added `attribution.sessionUrl` setting to omit the claude.ai session link from commits and PRs in web and Remote Control sessions Added `/config --help` to list all available shorthand keys for `/config key=value` Changed `/config` toggle behavior: Enter and Space both change the selected setting, and Esc now saves and closes instead of reverting Removed the startup \"setup issues\" line under the logo — run `/doctor` to see configuration issues or use `--debug`",
+        "excerpt": "Improved auto mode safety: destructive git commands (`git reset --hard`, `git checkout --.`, `git clean -fd`, `git stash drop`) are now blocked when you didn't ask to discard local work, `git commit --amend` is blocked when the commit wasn't made by the agent this session",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "v2.1.183 这次更新更偏向补齐真实使用链路。",
+        "editor_summary": "原文围绕 v2.1.183 展开，具体变化见来源。"
+      },
+      {
+        "lane": "codex-watch",
+        "title": "[codex] Preserve skill descriptions outside model context",
+        "source_url": "https://github.com/openai/codex/pull/29006",
+        "signal_path": "codex-watch/2026-06-20/signals/openai__codex__merged_pr__29006.md",
+        "fetched_at": "2026-06-19T22:03:52+0000",
+        "source_snippet": "**Title:** [codex] Preserve skill descriptions outside model context **Author:** @charlesgong-openai **Merged at:**",
+        "excerpt": "**Title:** [codex] Preserve skill descriptions outside model context **Author:** @charlesgong-openai **Merged at:** 2026-06-19T19:47:54Z **Merge commit:**",
+        "source": "github",
+        "signal_type": "merged_pr",
+        "editor_headline": "Codex 这次改动更像是在修执行链路里的关键语义。",
+        "editor_summary": "原文围绕 Codex 展开，具体变化见来源。"
+      },
+      {
+        "lane": "codex-watch",
+        "title": "[codex] trace pre-sampling skill and persistence latency (#29042)",
+        "source_url": "https://github.com/openai/codex/commit/a57b268d61ca7d4d20819587b999d8a15635440b",
+        "signal_path": "codex-watch/2026-06-20/signals/openai__codex__commit__a57b268d61ca.md",
+        "fetched_at": "2026-06-19T22:03:53+0000",
+        "source_snippet": "**Author:** @rphilizaire-openai **Committed at:**",
+        "excerpt": "**Author:** @rphilizaire-openai **Committed at:** 2026-06-19T17:13:27Z [codex] trace pre-sampling skill and persistence latency (#29042)",
+        "source": "github",
+        "signal_type": "commit",
+        "editor_headline": "Codex 这次改动更像是在修执行链路里的关键语义。",
+        "editor_summary": "原文围绕 Codex 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "system_prompts_leaks",
+        "source_url": "https://github.com/asgeirtj/system_prompts_leaks",
+        "signal_path": "github-trending-weekly/2026-06-20/signals/asgeirtj__system_prompts_leaks__trending-weekly.md",
+        "fetched_at": "2026-06-19T22:04:14+0000",
+        "source_snippet": "Extracted system prompts from Anthropic - Claude Fable 5, Opus 4.8, Claude Code, Claude Design. OpenAI - ChatGPT 5.5 Thinking, GPT 5.5 Instant, Codex. Google - Gemini 3.5 Flash, 3.1 Pro, Antigravity. **Author:** @asgeirtj/system_prompts_leaks",
+        "excerpt": "Extracted system prompts from Anthropic - Claude Fable 5, Opus 4.8, Claude Code, Claude Design. OpenAI - ChatGPT 5.5 Thinking, GPT 5.5 Instant, Codex. Google - Gemini 3.5 Flash, 3.1 Pro, Antigravity. **Author:** @asgeirtj/system_prompts_leaks",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "agentsview",
+        "source_url": "https://github.com/kenn-io/agentsview",
+        "signal_path": "github-trending-weekly/2026-06-20/signals/kenn-io__agentsview__trending-weekly.md",
+        "fetched_at": "2026-06-19T22:04:15+0000",
+        "source_snippet": "Local-first session search, analytics, insights, and token use statistics for coding agents, supporting Claude Code, Codex, and more than 20 other agents. **Author:** @kenn-io/agentsview",
+        "excerpt": "Local-first session search, analytics, insights, and token use statistics for coding agents, supporting Claude Code, Codex, and more than 20 other agents. **Author:** @kenn-io/agentsview",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "rize-watch",
+        "title": "#3 antigravity-awesome-skills — Rize AI tools weekly ranking",
+        "source_url": "https://github.com/sickn33/antigravity-awesome-skills",
+        "signal_path": "rize-watch/2026-06-20/signals/03-sickn33-antigravity-awesome-skills__rize_ai_tools_rank__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:04:26+0000",
+        "source_snippet": "Installable GitHub library of 1,500+ agentic skills for Claude Code, Cursor, Codex CLI, Gemini CLI, Antigravity, and more. Includes specialized plugins, installer CLI, bundles, workflows, and official/community skill collections. Rank: #3 Repository: Ranking page",
+        "excerpt": "Installable GitHub library of 1,500+ agentic skills for Claude Code, Cursor, Codex CLI, Gemini CLI, Antigravity, and more. Includes specialized plugins, installer CLI, bundles, workflows, and official/community skill collections.",
+        "source": "rize",
+        "signal_type": "rize_ai_tools_rank",
+        "editor_headline": "Claude Code 进入了今天的日报。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "product-hunt-watch",
+        "title": "API to MCP — Turn any API into an MCP server for AI agents",
+        "source_url": "https://www.producthunt.com/products/api-to-mcp?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+        "signal_path": "product-hunt-watch/2026-06-20/signals/api-to-mcp__developer-tools__producthunt_topic_hit__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:04:30+0000",
+        "source_snippet": "Turn any API into an MCP server for AI agents **Author:** @API to MCP",
+        "excerpt": "Turn any API into an MCP server for AI agents **Author:** @API to MCP",
+        "source": "producthunt",
+        "signal_type": "producthunt_topic_hit",
+        "editor_headline": "MCP 正试图把 MCP 工作流包装 这类工作流环节直接做成产品。",
+        "editor_summary": "条目的卖点相当集中，核心就是把 MCP 工作流包装 这类 agent 工作流环节包装成单独可卖的成品。"
+      },
+      {
+        "lane": "product-hunt-watch",
+        "title": "Claude Code Artifacts — Preview and share your coding work live as it happ",
+        "source_url": "https://www.producthunt.com/products/claude-redesigned?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+        "signal_path": "product-hunt-watch/2026-06-20/signals/claude-code-artifacts__developer-tools__producthunt_topic_hit__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:04:30+0000",
+        "source_snippet": "Preview and share your coding work live as it happens **Author:** @Claude Code Artifacts",
+        "excerpt": "Preview and share your coding work live as it happens **Author:** @Claude Code Artifacts",
+        "source": "producthunt",
+        "signal_type": "producthunt_topic_hit",
+        "editor_headline": "Claude Code 把 agent 工作流里的单一环节做成了产品。",
+        "editor_summary": "Claude Code 的卖点很集中，说明面向 agent 工作流单一环节的包装正在变成独立产品。"
+      },
+      {
+        "lane": "polymarket-watch",
+        "title": "Will Anthropic have the second best Coding AI model at the end of June 2026?",
+        "source_url": "https://polymarket.com/event/which-company-has-the-second-best-coding-ai-model-end-of-june",
+        "signal_path": "polymarket-watch/2026-06-20/signals/pm__coding-ai__528155__prediction_market__2026-06-20.md",
+        "fetched_at": "2026-06-19T22:04:35+0000",
+        "source_snippet": "Market: Which company has the second-best Coding AI model end of June? Question: Will Anthropic have the second best Coding AI model at the end of June 2026? Current leader: Anthropic (91.1%) Anthropic: 91.1% Z.ai: 5.2% OpenAI: 1.1% 24h volume: 1,480.3 30d volume: 22,892.9 Liquidity: 45,728.9 Price movement: down 1.8% this week",
+        "excerpt": "Market: Which company has the second-best Coding AI model end of June? Question: Will Anthropic have the second best Coding AI model at the end of June 2026? Current leader: Anthropic (91.1%)",
+        "matched_query": "coding AI",
+        "source": "polymarket",
+        "signal_type": "prediction_market",
+        "editor_headline": "市场对 Anthropic 在 coding AI 第二梯队的位置判断相当集中。",
+        "editor_summary": "这份 Polymarket 合约当前把 Anthropic 放在显著领先位置，反映出交易者对头部 coding model 分层的共识。"
+      }
+    ],
+    "summary": {
+      "selected_item_count": 34,
+      "lane_counts": [
+        {
+          "lane": "weather-watch",
+          "selected_item_count": 2
+        },
+        {
+          "lane": "x-feed",
+          "selected_item_count": 10
+        },
+        {
+          "lane": "x-following",
+          "selected_item_count": 2
+        },
+        {
+          "lane": "reddit-watch",
+          "selected_item_count": 8
+        },
+        {
+          "lane": "hacker-news-watch",
+          "selected_item_count": 0
+        },
+        {
+          "lane": "hacker-news-search-watch",
+          "selected_item_count": 3
+        },
+        {
+          "lane": "claude-code-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "codex-watch",
+          "selected_item_count": 2
+        },
+        {
+          "lane": "github-ai-projects",
+          "selected_item_count": 0
+        },
+        {
+          "lane": "github-trending-weekly",
+          "selected_item_count": 2
+        },
+        {
+          "lane": "rize-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "product-hunt-watch",
+          "selected_item_count": 2
+        },
+        {
+          "lane": "polymarket-watch",
+          "selected_item_count": 1
+        }
+      ]
+    }
+  },
+  "summary": {
+    "collect_useful_item_count": 329,
+    "selected_item_count": 34,
+    "is_subset": true
+  }
+}

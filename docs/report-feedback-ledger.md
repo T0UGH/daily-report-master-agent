@@ -588,3 +588,9 @@
 - 发布后发现 helper 首发 Feishu card header 仍是非自说明 `AI Agent 日报（2026-06-19）`，同 run 修正为 `Rook｜AI Agent 日报精选（2026-06-19）`，live verify 通过，并撤回 superseded card。
 - 最终文档：https://www.feishu.cn/docx/AEEgdq4P3ob0Bwx4w8Pc0etqnZc
 - 最终 card_message_id：om_x100b6c72b52c0d34c3200241367225b
+
+## 2026-06-20
+
+- 交付：Hermes subagent lane 架构完成；Feishu Docx + Rook 自说明精选卡片已发送。
+- 运行：collect 后 Reddit partial（RSS/部分源异常但有 8 条 raw），github-ai-projects 为 derived lane；validation/assemble 通过。
+- 卡片：publish helper 首发 header 缺 Rook｜，同 run 已重发修正版并撤回 superseded card。
