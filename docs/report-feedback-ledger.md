@@ -594,3 +594,18 @@
 - 交付：Hermes subagent lane 架构完成；Feishu Docx + Rook 自说明精选卡片已发送。
 - 运行：collect 后 Reddit partial（RSS/部分源异常但有 8 条 raw），github-ai-projects 为 derived lane；validation/assemble 通过。
 - 卡片：publish helper 首发 header 缺 Rook｜，同 run 已重发修正版并撤回 superseded card。
+
+## 2026-06-21
+
+### 运行记录
+- 06:00 cron 使用 Hermes 原生 lane subagent 架构完成日报：先 repo-local `signals-engine` collect/diagnose/retry，再 package、delegate lane、validate、assemble、publish、archive。
+- collect preflight 使用 `/Users/haha/workspace/signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`，lane registry 完整。
+- Reddit collect 首次/重试遇到 RSS 429，但当日 package 中仍有可读 raw；lane subagent 判定为去重后 empty。OpenClaw package 被 prepare 阶段遗漏，主 agent 按 raw signal 目录委派 lane subagent，最终判定 empty。
+- publish helper 首发 Feishu card header 仍缺 `Rook｜`；同 run 修正 payload、preflight、重发、live verify，并撤回 superseded card。
+
+### 验证产物
+- runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-06-21/`
+- archive: `archive/2026-06-21/`
+- final doc: `https://www.feishu.cn/docx/Ujs9dCe1PoM3dgxa6EScOPJjnVb`
+- final card: `om_x100b6c456c7e9ca4c32d78aedf641a4`
+
