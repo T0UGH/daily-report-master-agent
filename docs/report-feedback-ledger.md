@@ -609,3 +609,6 @@
 - final doc: `https://www.feishu.cn/docx/Ujs9dCe1PoM3dgxa6EScOPJjnVb`
 - final card: `om_x100b6c456c7e9ca4c32d78aedf641a4`
 
+## 2026-06-22 cron run
+- delivery: succeeded; Feishu Docx https://www.feishu.cn/docx/GKMKdFJhZohlfDxIFHTc2WPdnaf; corrected card `om_x100b6cb2633d38acc101cd9a8464bf1`.
+- notes: repo-local signals-engine preflight healthy; Reddit RSS hit HTTP 429 but package evidence was empty/no discussion; OpenClaw package gap handled from raw signal directory; helper card header lacked `Rook｜`, corrected/re-sent and superseded card revoked.
