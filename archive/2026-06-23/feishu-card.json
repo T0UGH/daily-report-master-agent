@@ -1,0 +1,300 @@
+{
+  "config": {
+    "wide_screen_mode": true,
+    "style": {
+      "text_size": {
+        "section_title": {
+          "default": "heading-2",
+          "pc": "heading-2",
+          "mobile": "heading-2"
+        }
+      }
+    }
+  },
+  "header": {
+    "title": {
+      "tag": "plain_text",
+      "content": "Rook｜AI Agent 日报精选（2026-06-23）"
+    },
+    "subtitle": {
+      "tag": "lark_md",
+      "content": "[查看完整文档](https://www.feishu.cn/docx/VKX8d5HMnoreEAxlM1icDbuzn6Q)"
+    }
+  },
+  "elements": [
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "我不是贵平，我是 Rook。 [查看完整文档](https://www.feishu.cn/docx/VKX8d5HMnoreEAxlM1icDbuzn6Q)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "天气",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **北京·海淀：小毛毛雨，19.8°C–30.8°C。** 降水概率 73%、预计 1.2 mm，北风最高 17.8 km/h；较昨日最高温下降约 2.1°C、低温上升约 1.4°C，炎热感略缓但降雨概率明显升高，通勤建议带伞，午后仍注意补水与防闷热。 [天气](https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-23&end_date=2026-06-23)\n- **上海·杨浦：雷暴伴轻微冰雹，21.6°C–23.8°C。** 降水概率 100%、预计 29.8 mm，北风最高 12.2 km/h；较昨日最高温再降约 2.4°C、雨量从 12.5 mm 升至 29.8 mm，强对流和积水风险更突出，出门务必带伞、防滑，并尽量避开雷暴/冰雹时段户外停留。 [天气](https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-23&end_date=2026-06-23)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "X 推荐",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Grok Build 新增 `/goal`：把长任务交给多轮 subagents 自主执行。** 官方帖称它会用多轮子代理实现、测试并迭代目标，这和近两天“loop engineering”主线相比更像产品化入口；试用时要重点看停止条件、预算上限、子任务日志、失败回滚和人类审批点，而不是只看“能跑很久”。 https://x.com/grok/status/2069095154691272933\n- **Cursor 在 Compile keynote 后预告三项发布，其中包括与 SpaceX 训练新模型。** raw 只给出 keynote 摘要级信号，不能写成模型能力已验证；但 Cursor 把 coding IDE、专用模型训练和真实工程组织绑定在一起，说明 agent IDE 竞争正在从 UI/补全转向“面向高强度代码库的模型—产品联合优化”。 https://x.com/cursor_ai/status/2069149296436330776",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "X 关注",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Google 宣布 Interactions API 已 GA，并称它是 Gemini models 与 agents 的主要接口。** raw 只截到“Built bas…”，不能展开具体参数或迁移细节；但官方账号把它定位为 agent 入口，说明 Gemini 侧接口正在从单次模型调用走向更面向交互/agent 的统一层。团队若接入，应优先核对旧 API 兼容、工具调用语义、会话状态、权限审计、速率限制和日志可观测性。https://x.com/Google/status/2069108942102310957\n- **OpenAI Daybreak 从漏洞发现扩展到“机器速度修补”，Codex Security plugin 被单独点名。** OpenAI 官方称将扩大 Daybreak，gdb 补充说新工具和模型会加速 patching；另一条 gdb 帖把 Codex Security plugin 描述为面向安全团队的深度扫描、验证发现、追踪攻击路径、构建威胁模型等能力。由于 raw 都被截断，今天只把它当作方向性产品信号：安全 agent 正从发现漏洞进入修复、验证和威胁建模闭环，落地时要看补丁 diff、回归测试、误报处理、权限边界和人工审批。https://x.com/OpenAI/status/2069104283824640023 / https://x.com/gdb/status/2069112120206332130 / https://x.com/gdb/status/2069128701850386834",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Reddit 社区",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- 今日暂无可新增的 Reddit 社区更新。本次包内可读到 8 个 r/ClaudeAI 线程，但全部为 0 score / 0 comments；Skill Index、/app-it、Lore、多 agent 协作、自主交易、Claude Fable 5、voxel GTA 等只有发帖正文，没有社区回复可支撑“讨论实质”。其中自主交易 Update 1 虽补充了 Charter、Decision Journal、Playbook、止损/仓位/熔断等护栏，但已作为 6 月 22 日包内同一信号处理过，今天无新增评论或事实，不重复刊登。\n- **今日取舍：** 已读取 `input.md`、`context.json`、8 个 reddit raw 文件，以及 2026-06-22 / 2026-06-21 历史报告；历史仅用于去重，未使用 `selected_items.json` 作为主要判断。任务上下文提示 Reddit 采集曾遇到 HTTP 429 partial/failed，但当前包内 raw 可读；因可用证据没有未覆盖的社区讨论，本栏输出空结果。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 热榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Show HN: Oak 把“面向 agent 的版本控制”推上 HN #10，118 分、117 评论；作者称 virtual mounts 可让本地/云端 agent 不必完整下载 repo，并支持多任务并行。** 评论区主要质疑“for agents”是否成立：模型已熟悉 Git，新 VCS 反而要额外文档和上下文；也有人分享用 gitnow 给 agent 独立 workspace/scratch space 的替代做法。 [HN](https://news.ycombinator.com/item?id=48631726) / [Oak](https://oak.space/oak/oak)\n- **Moebius 以 0.2B inpainting model 声称达到 10B 级表现，登上 HN #9，191 分、58 评论；讨论重点落在小模型实用边界。** 实测评论认可 0.2B 体量下表现不错，但指出自然图像补洞区域更平滑、novel objects 表现差、输出限制在 512×512；另有从广告尺寸扩展项目来的经验提醒，不同托管后端的输入尺寸/预处理要求会让生产流水线很脆弱。 [HN](https://news.ycombinator.com/item?id=48630171) / [Moebius](https://hustvl.github.io/Moebius/)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 搜索观察",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- 今日暂无可新增的 Hacker News 搜索观察更新。本次 raw corpus 正常，共 15 条 HN search story hit；其中最有讨论 substance 的 Pulse（39 分、14 评论）和最直接关联长跑 agent 会话接管的 Trustmux，已在 2026-06-22 报告实质刊登，今天不重复。其余条目要么已在近两日报告覆盖（Dapr/Diagrid workflow history signing、CWC、Konxios、Velane、Pagecast、Agentbrowse、语音控制 Pi Coding Agent 等），要么只有标题/自述级证据且 0–1 条评论，暂不足以支撑新的读者向更新。\n- **今日取舍：** 已读取 `input.md`、`context.json`、15 个 HN search raw 文件，以及 2026-06-22 / 2026-06-21 历史报告；raw corpus 为主要证据，历史仅用于去重，未使用 `selected_items.json` 作为主要判断。按近两日去重规则，剔除昨天已刊登的 Trustmux 与 Pulse；同时剔除重复项、标题级弱证据、书签/设计/教育/营销项目、低评论低信息量 Web IDE/agent shell 项目，以及与 AI/coding-agent 工作流新增价值弱于入选线的内容。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Claude Code",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Claude Code `v2.1.186` 新增 `claude mcp login <name>` / `logout <name>`，可不进交互式 `/mcp` 菜单完成 MCP 鉴权，并支持 `--no-browser` stdin 重定向用于 SSH。** 对远端、CI 或无浏览器环境的 agent 工作流，这是更可脚本化的 MCP 登录路径；同版还让 `claude mcp get/remove` 对拼错的 server 名给出近似建议。 [v2.1.186](https://github.com/anthropics/claude-code/releases/tag/v2.1.186)\n- **`v2.1.186` 改了多个交互工作流：`/workflows` agent 详情页按 `f` 可按状态过滤，`/plugin` Installed tab 新增 “Skills” 区，`/login` 在配置 `awsAuthRefresh` 后增加 “Claude Platform on AWS - refresh credentials”。** 这些变化主要影响多 workflow / plugin / AWS Platform 用户的日常排障与凭证刷新路径。 [CHANGELOG](https://github.com/anthropics/claude-code/blob/HEAD/CHANGELOG.md)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Codex",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Codex `0.142.0-alpha.11` 与 `0.142.0-alpha.12` 继续滚动，最新预发布推进到 `alpha.12`；release notes 仍只有 “Release 0.142.0-alpha.x”。** 资产仍覆盖 CLI、app-server、responses proxy、npm / Python 包、Windows sandbox setup、sigstore、symbols、安装脚本和 config schema，因此更适合作为快速预发布/分发回归信号，而不是可解读的功能发布；`alpha.9` 已在昨日报告覆盖，今天只作为版本列车连续性参考。 [alpha.11](https://github.com/openai/codex/releases/tag/rust-v0.142.0-alpha.11) / [alpha.12](https://github.com/openai/codex/releases/tag/rust-v0.142.0-alpha.12)\n- **Codex 开始铺设“尊重系统代理”的共享 auth 路由边界，并在同一批变更里补上 Windows 解析器。** #26707 新增 `codex-client/src/outbound_proxy.rs`、`OutboundProxyConfig` / route class / failure class 和 route-aware reqwest client builder，把 browser/device/access-token login、token refresh、cloud-config、plugin auth、app-server account login、TUI/app startup 等 auth/startup HTTP client 接到统一策略；默认行为不变，只有 `respect_system_proxy = true` 时走系统/PAC/WPAD → env proxy → direct 的路径。#26708 则在 Windows 上读取 WinHTTP/IE 配置，支持显式 PAC、WPAD、静态代理和 bypass 规则，并用 URL-specific SHA-256 cache key 避免保留原始 URL。 [PR #26707](https://github.com/openai/codex/pull/26707) / [PR #26708](https://github.com/openai/codex/pull/26708)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "OpenClaw",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **OpenClaw `v2026.6.10-beta.2` 在 `beta.1` 后继续收窄到“短对话更快、模型路由更稳、会话/策略状态更安全”三类运行时修复：短 conversational turns 可自动启用 fast mode，长任务再回到 normal mode；Zai/GLM 模型合成、overload failover 与 `/think` reasoning-level 选择改为更一致地跟随实时 model catalog；channel switch 会清掉 stale origin，cron delivery awareness 绑定目标 session，hook registry 组合后也不会丢 trusted tool policies。** 对使用 OpenClaw 跑多渠道 agent、cron delivery、Zai/GLM 或需要审批/信任策略的团队，`beta.2` 相比昨天已刊登的 `beta.1` 更像一次风险面收敛：重点回归 short-turn fast mode fallback、channel 切换后的投递目标、Zai/GLM failover、runtime reasoning menu，以及 approval-sensitive tool policy 是否仍被保留。https://github.com/openclaw/openclaw/releases/tag/v2026.6.10-beta.2\n- **今日取舍：** 常规 `openclaw` package 目录缺失，因此按 master 规则改用同日 `openclaw-watch` raw 证据目录；采集成功，`run.json`/`index.md` 显示 3 个 release signals。`v2026.6.10-beta.2` 是今天唯一相对 2026-06-22 报告的新版本；`v2026.6.10-beta.1` 与 `v2026.6.9` 已在 2026-06-22 OpenClaw 栏覆盖，今天仅作为去重背景，不重复展开。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "GitHub AI 项目",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **[koala73/worldmonitor](https://github.com/koala73/worldmonitor)（GitHub API 校验 58,580 stars）本周上榜，定位是“AI-powered news aggregation / geopolitical monitoring / infrastructure tracking”的实时全球情报仪表盘。** 这不是 coding-agent 框架，但 raw 明确给出 AI 驱动的新闻聚合与态势感知用途；对需要把公开新闻、地缘事件和基础设施信号接入 agent/分析工作流的团队，试用重点应放在来源追溯、去重/误报、实时数据权限、地图/告警副作用，以及模型生成摘要能否回链到原始证据。 [GitHub](https://github.com/koala73/worldmonitor)\n- **今日取舍：** 已读取 `input.md`、`context.json`、GitHub trending weekly raw、交叉 raw、`raw/selected-items/system_prompts_leaks.json` audit 文件，以及 2026-06-22 / 2026-06-21 历史报告；历史仅用于去重，`selected-items` 仅作 audit 参考。按 hard floor stars ≥100，本次只选择有当日 raw 支撑、GitHub API 校验达标、且近两日报告未实质展开的新仓库：`koala73/worldmonitor` 58,580 stars。`calesthio/OpenMontage` 昨日已在本栏展开；`withastro/flue`、`DeusData/codebase-memory-mcp`、`addyosmani/agent-skills`、`NVIDIA/SkillSpector`、`Panniantong/Agent-Reach`、`chopratejas/headroom` 等虽达标但已在近日报告覆盖或明确去重；`asgeirtj/system_prompts_leaks`、`LMCache/LMCache`、`google-research/timesfm` 达标但分别偏提示词归档、LLM serving KV-cache 与时序预测，今天与 AI/coding-agent 项目工作流的直接增量弱于入选线。`OpenCut-app/OpenCut` 与多项高星通用开源项目虽达标或上榜，但 raw 未提供足够明确的 AI/coding-agent 当日增量。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "GitHub 趋势项目",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- 今日暂无可新增的 GitHub 趋势项目。本次 `github-trending-weekly` raw corpus 正常，共 18 个仓库信号；按 hard floor stars ≥100 与“只选 AI/coding-agent workflow 相关仓库”的要求筛选后，直接相关的 `withastro/flue`、`calesthio/OpenMontage`、`DeusData/codebase-memory-mcp`、`addyosmani/agent-skills`、`NVIDIA/SkillSpector`、`Panniantong/Agent-Reach` 等均已在近两日报告中展开或明确去重，今天 raw 未提供新的 release、功能变化或可作为 follow-up 的新增事实。\n- **今日取舍：** 已读取 `input.md`、`context.json`、18 个 GitHub trending raw 文件，以及 2026-06-22 / 2026-06-21 历史报告；raw corpus 为主要证据，历史仅用于去重，未使用 `selected_items.json` 驱动判断。`LMCache/LMCache`、`google-research/timesfm`、`asgeirtj/system_prompts_leaks`、`koala73/worldmonitor` 虽与 AI/模型/情报相关，但分别偏 LLM serving KV-cache、时序预测、系统提示词归档和新闻情报 dashboard，缺少今天面向 coding-agent 工作流的直接增量；`Kong/insomnia`、`makeplane/plane`、`penpot/penpot`、`freeCodeCamp/freeCodeCamp`、`n0-computer/iroh` 等是通用开发或非 AI 项目，raw 未给出当日 agent/coding workflow 事实。因此本栏输出空结果，避免重复刊登近两日已处理的 GitHub trending 仓库。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Rize AI 工具榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- 今日暂无可新增的 Rize AI 工具榜更新。本次 raw corpus 正常，共 20 条 Rize weekly ranking 证据，采集时间均为 2026-06-22T22:03:53+0000；但它仍是同一批 Rize AI Tools weekly ranking 快照的延续，raw 只提供排名、GitHub 仓库链接和一句项目简介，没有新增排名变化、仓库发布事实、评分变化或可作为 follow-up 的新证据。近两日报告已连续判定该快照无新增增量，今天继续空栏，避免把同一批榜单项目重复写成日报更新。\n- **今日取舍：** 已读取 `input.md`、`context.json`、20 条 Rize raw，以及 2026-06-22 / 2026-06-21 历史报告；raw corpus 为主要证据，历史仅用于去重，未使用 `selected_items.json` 作为主要判断。近日报告已覆盖并随后去重 #3 `antigravity-awesome-skills`、#4 `nanobot`、#5 `MemPalace`、#6 `OpenSquilla`、#7 `headroom`、#9 `graphify`、#10 `hermes-studio`、#12 `TencentDB-Agent-Memory` 等核心 AI/coding-agent 项目；今天 #1 `worldmonitor`、#2 `openclaude`、#8 `ilab-gpt-conjure`、#11 `openlake`、#13 `knowhere`、#14 `oh-my-pi`、#15 `maths-cs-ai-compendium`、#16 `Toonflow-app`、#17 `claude-ads`、#18 `OfficeCLI`、#19 `awesome-openclaw-usecases-zh`、#20 `Data-Analysis-Agent` 也只有榜单位置与一句简介，未提供比近两日更强的新事实，因此全部作为重复或弱增量项剔除。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Product Hunt 新品",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **AgentX** 登上 Product Hunt，定位是“评估 AI agent、定位问题并一键修复”。这比通用 observability 更贴近 agent 交付闭环：如果要接入 coding-agent/业务 agent，重点应验证它能否复现失败轨迹、区分提示词/工具/环境问题、给出的 fix 是否可审查，以及是否会在一键修复时越过测试、权限和人工审批。 [Product Hunt](https://www.producthunt.com/products/agentx?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)\n- **Skybridge** 主打“面向 MCP Apps 的全栈开源 React framework”。它的价值不在又一个前端框架，而在把 MCP 应用的 UI、服务端和工具调用边界产品化；评估时应看 MCP server/client 鉴权、工具 schema 版本化、agent 可见能力的最小授权、React 状态与工具执行日志如何关联，以及部署后多租户隔离。 [Product Hunt](https://www.producthunt.com/products/skybridge?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)\n- **Selector Forge** 是一个为 AI 生成 resilient selectors 的浏览器扩展。对浏览器自动化、UI 测试和网页操作 agent 来说，稳定 selector 往往比“模型再看一遍截图”更便宜也更可审计；试用时应关注动态 DOM、Shadow DOM、i18n 文案变化、权限注入范围，以及生成 selector 能否随测试失败回写为可维护的定位规则。 [Product Hunt](https://www.producthunt.com/products/selector-forge?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Polymarket AI 市场",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **6 月最佳 Coding AI 模型盘口仍押 Anthropic，但优势从昨日报告的 95.4% 降到 93.8%；OpenAI 2.2%、Moonshot 0.6%，24h 成交量约 2,624.9，30d 约 46,260.9。** 这只是交易者预期，做 coding-agent 选型仍要看自家任务的可合并率、测试通过率和工具调用稳定性。 [Polymarket](https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-june)\n- **6 月最佳 AI 模型总榜给 Anthropic 93.0%，Google 5.5%、OpenAI 1.7%；30d 成交量约 633.7 万、流动性约 337.2 万，raw 标注本月上行 19.4%。** 相比昨日报告的 94.5% 小幅回落，但资金量仍远高于其他 AI 盘口；不要把通用总榜直接等同于 coding、数学或长上下文能力。 [Polymarket](https://polymarket.com/event/which-company-has-best-ai-model-end-of-june)",
+        "text_size": "normal"
+      }
+    }
+  ]
+}

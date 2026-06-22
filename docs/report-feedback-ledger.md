@@ -612,3 +612,13 @@
 ## 2026-06-22 cron run
 - delivery: succeeded; Feishu Docx https://www.feishu.cn/docx/GKMKdFJhZohlfDxIFHTc2WPdnaf; corrected card `om_x100b6cb2633d38acc101cd9a8464bf1`.
 - notes: repo-local signals-engine preflight healthy; Reddit RSS hit HTTP 429 but package evidence was empty/no discussion; OpenClaw package gap handled from raw signal directory; helper card header lacked `Rook｜`, corrected/re-sent and superseded card revoked.
+
+## 2026-06-23
+
+### 生产运行记录
+- 06:00 cron 使用 Hermes 原生 subagent lane 架构完成日报：collect → prepare packages → lane subagents → validate → assemble → Feishu publish → archive。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`；lane registry 包含 weather/reddit/HN/Claude/Codex/OpenClaw/Polymarket 等生产 lane。
+- Reddit collect 遇到 RSS 429，已 diagnose + retry；包内仍有可读 raw，但 lane subagent 判定没有可发布社区讨论，输出 `empty`。
+- `openclaw` package 缺失，按 master 规则使用同日 `openclaw-watch` raw 证据直接 delegated，subagent 输出 `ok`。
+- publish helper 首发卡片 header 仍为非自说明 `AI Agent 日报（2026-06-23）`；同 run 已修正为 `Rook｜AI Agent 日报精选（2026-06-23）`、live verify 后撤回 superseded card，并回写 `publish-state.json`。
+- 归档位置：`archive/2026-06-23/`；最终 Feishu Docx: https://www.feishu.cn/docx/VKX8d5HMnoreEAxlM1icDbuzn6Q。
