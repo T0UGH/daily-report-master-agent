@@ -622,3 +622,15 @@
 - `openclaw` package 缺失，按 master 规则使用同日 `openclaw-watch` raw 证据直接 delegated，subagent 输出 `ok`。
 - publish helper 首发卡片 header 仍为非自说明 `AI Agent 日报（2026-06-23）`；同 run 已修正为 `Rook｜AI Agent 日报精选（2026-06-23）`、live verify 后撤回 superseded card，并回写 `publish-state.json`。
 - 归档位置：`archive/2026-06-23/`；最终 Feishu Docx: https://www.feishu.cn/docx/VKX8d5HMnoreEAxlM1icDbuzn6Q。
+
+## 2026-06-24
+
+### 运行记录
+- 06:00 cron 使用 Hermes 原生 subagent lane 架构完成；collect 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data root `/Users/haha/.daily-lane-data`。
+- Feishu publish helper 首发卡片 header 仍生成非自说明 `AI Agent 日报（2026-06-24）`；同 run 已修正为 `Rook｜AI Agent 日报精选（2026-06-24）`、重发并撤回 superseded card。
+- OpenClaw package 仍缺失但 raw collector 有同日证据；lane subagent 从 `openclaw-watch` raw 与近两日历史判断为 `empty`，未使用 renderer fallback。
+
+### 待验证 / 后续改动方向
+- 发布 helper 仍需从源头保证 interactive card header 使用 `Rook｜`，避免每天手动 correction/resend/revoke。
+- `prepare_lane_packages.py` 对 `openclaw-watch` -> `openclaw` 的映射仍需修正，避免 package gap 反复出现。
+
