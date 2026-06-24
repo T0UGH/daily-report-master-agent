@@ -634,3 +634,14 @@
 - 发布 helper 仍需从源头保证 interactive card header 使用 `Rook｜`，避免每天手动 correction/resend/revoke。
 - `prepare_lane_packages.py` 对 `openclaw-watch` -> `openclaw` 的映射仍需修正，避免 package gap 反复出现。
 
+
+## 2026-06-25
+
+### 运行记录
+- 06:00 Hermes 原生 subagent lane 架构完成生产日报；collect 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data root `/Users/haha/.daily-lane-data`。
+- Reddit collect 首次与 retry 均非零退出，但 package 中仍有 8 条 raw evidence；lane subagent 判定为 `empty`，不是 blocked。
+- `github-ai-projects` 按 derived reader lane 处理；`openclaw` 常规 package 缺失时从 `openclaw-watch` raw evidence 生成 lane output。
+- publish helper 首发卡片 header 仍为非自说明的 `AI Agent 日报（2026-06-25）`；同 run 内已修正为 `Rook｜AI Agent 日报精选（2026-06-25）`、live verify，并撤回 superseded card。
+
+### 待验证
+- 后续仍需继续检查 publish helper 是否会忽略 `--title "Rook｜..."` 并生成非自说明卡片 header。
