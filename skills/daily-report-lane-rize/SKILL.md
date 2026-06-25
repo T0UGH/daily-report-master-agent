@@ -29,6 +29,9 @@ Reject items when:
 - it is clearly irrelevant to AI/coding-agent/tooling readers and enough stronger ranked items exist;
 - it duplicates another selected repo.
 
+## Usefulness Bar（MT 反馈 2026-06-25）
+长度不是问题；问题是“有用信息密度”。Rize 是榜单栏目，可以保留排名事实，但不要只机械搬榜。每个入选条目必须写清：它是什么、为什么对 AI/coding-agent/developer-tool/workflow 读者有用、有什么可核验来源。如果只能写出空泛描述且没有 repo/source 细节，宁可少选或标 empty。
+
 ## Writing Style
 Write Chinese-first, concrete, human-readable prose. Keep links.
 

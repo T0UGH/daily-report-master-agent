@@ -24,6 +24,16 @@ Reject items when:
 - it repeats another stronger item;
 - it cannot be explained in concrete human terms.
 
+
+## Usefulness Bar（MT 反馈 2026-06-25）
+长度不是问题；问题是“有用信息密度”。宁可少选，也不要用低信息量内容填满栏目。每个入选条目必须同时满足：
+- **新信息**：今天相对昨天/前天或常识，具体新增了什么；如果只是同一产品/观点反复出现，必须写出新增事实，否则拒绝。
+- **可执行/可判断**：读者看完能知道该试用、避坑、跟进、学习、忽略中的哪一种，以及理由。
+- **证据锚点**：至少包含一个可核验事实（版本号、repo/产品名、作者、数据、价格、接口/功能变化、错误现象、讨论分歧、链接来源）。
+- **非空泛价值**：禁止只写“值得关注/说明趋势/生态变化/更成熟/更清楚”；如果没有具体“为什么有用”，就不要选。
+
+写作时优先保留事实与判断依据；不要为了变短删除最有用的细节。
+
 ## Lane-Specific Judgment
 Weather goes first. Include Beijing and Shanghai by default. Keep it practical and concise; no over-writing.
 

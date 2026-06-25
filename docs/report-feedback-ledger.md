@@ -643,5 +643,14 @@
 - `github-ai-projects` 按 derived reader lane 处理；`openclaw` 常规 package 缺失时从 `openclaw-watch` raw evidence 生成 lane output。
 - publish helper 首发卡片 header 仍为非自说明的 `AI Agent 日报（2026-06-25）`；同 run 内已修正为 `Rook｜AI Agent 日报精选（2026-06-25）`、live verify，并撤回 superseded card。
 
+### 用户反馈
+- MT 反馈：“其实太长我觉得没问题，主要是有用的信息变得越来越少了”。
+- 重点不是压缩长度，而是提高每条信息的有效性、可判断性和新增事实密度。
+
+### 已采取改动
+- 给所有 reader-facing lane skill 增加 `Usefulness Bar（MT 反馈 2026-06-25）`：每条必须有新增事实、可执行/可判断价值、证据锚点、非空泛理由；宁可少选或 empty，也不要用低信息量内容填满栏目；写作时不得为了变短删除最有用的事实细节。
+- 已通过 `skills/daily-report-master/scripts/sync_skills.py` 同步到 `~/.hermes/skills`，确保 2026-06-26 cron 加载到新约束。
+
 ### 待验证
 - 后续仍需继续检查 publish helper 是否会忽略 `--title "Rook｜..."` 并生成非自说明卡片 header。
+- 2026-06-26 日报检查：条目数量可以减少，但每条应能回答“今天新增什么 / 对 MT 有什么用 / 证据在哪里”。
