@@ -654,3 +654,14 @@
 ### 待验证
 - 后续仍需继续检查 publish helper 是否会忽略 `--title "Rook｜..."` 并生成非自说明卡片 header。
 - 2026-06-26 日报检查：条目数量可以减少，但每条应能回答“今天新增什么 / 对 MT 有什么用 / 证据在哪里”。
+
+## 2026-06-26
+
+### 自动运行记录
+- 06:00 master cron 使用 Hermes 原生 subagent lane 架构完成当天日报：collect / package / lane subagents / validate / assemble / Feishu publish / archive 均完成。
+- deterministic collect 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data root `/Users/haha/.daily-lane-data`；preflight lane registry 完整。
+- Reddit collect 首次失败后同 run diagnose/retry；最终 Reddit lane subagent 因 raw discussion 证据不足判定 `empty`，没有 fallback。
+- `openclaw` reader package 仍缺失 direct package，lane subagent 按 raw `/Users/haha/.daily-lane-data/signals/openclaw-watch/2026-06-26/signals` 生成输出。
+- Feishu publish helper 首发卡片 header 仍缺 `Rook｜`，已同 run 修正 payload、重发、live verify，并撤回 superseded card；最终 card message 指向 `om_x100b6ceedb68b8a4c432f8132f8c185`。
+- 最终文档：https://www.feishu.cn/docx/HySYdDsBDomP7RxhiPucNpebnrd
+
