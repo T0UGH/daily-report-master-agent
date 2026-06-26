@@ -665,3 +665,9 @@
 - Feishu publish helper 首发卡片 header 仍缺 `Rook｜`，已同 run 修正 payload、重发、live verify，并撤回 superseded card；最终 card message 指向 `om_x100b6ceedb68b8a4c432f8132f8c185`。
 - 最终文档：https://www.feishu.cn/docx/HySYdDsBDomP7RxhiPucNpebnrd
 
+## 2026-06-27
+
+- Delivery: succeeded
+- Doc: https://www.feishu.cn/docx/NDMmdNeWWouE0wxk3e0cCWM1nJd
+- Card: om_x100b6cdbe7b060a0c26fe38114db685
+- Notes: Hermes native subagent lane architecture; Reddit collect hit RSS 429 but lane package had evidence and lane judged empty; OpenClaw package was manually created from successful openclaw-watch raw and judged empty; helper card header corrected/resend/live-verified, superseded card revoked.

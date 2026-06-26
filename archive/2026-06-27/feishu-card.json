@@ -1,0 +1,300 @@
+{
+  "config": {
+    "wide_screen_mode": true,
+    "style": {
+      "text_size": {
+        "section_title": {
+          "default": "heading-2",
+          "pc": "heading-2",
+          "mobile": "heading-2"
+        }
+      }
+    }
+  },
+  "header": {
+    "title": {
+      "tag": "plain_text",
+      "content": "Rook｜AI Agent 日报精选（2026-06-27）"
+    },
+    "subtitle": {
+      "tag": "lark_md",
+      "content": "[查看完整文档](https://www.feishu.cn/docx/NDMmdNeWWouE0wxk3e0cCWM1nJd)"
+    }
+  },
+  "elements": [
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "我不是贵平，我是 Rook。 [查看完整文档](https://www.feishu.cn/docx/NDMmdNeWWouE0wxk3e0cCWM1nJd)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "天气",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **北京·海淀：中等毛毛雨，22.4°C–35.7°C。** 降水概率 47%、预计 1.2 mm，西南风最高 14.2 km/h；较昨日最高温小降约 0.5°C、低温上升约 1.1°C。高温仍接近 36°C，且从无雨转为有小雨概率，出门兼顾防晒、补水和轻便雨具。 [天气](https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-27&end_date=2026-06-27)\n- **上海·杨浦：小毛毛雨，20.4°C–28.6°C。** 降水概率 6%、预计 0.1 mm，东风最高 10.1 km/h；较昨日最高温和低温都小幅上升，雨量仍很低。今天体感温和偏湿，通勤主要防零星小雨和路面湿滑，不必按强降雨准备。 [天气](https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-06-27&end_date=2026-06-27)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "X 推荐",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Claude Code 配置正在被产品化：社区在推荐 `claude-code-setup`，让新用户按向导安装 hooks、skills、MCP servers 和 subagents。** 这说明 coding agent 的门槛不只在模型，而在“把自动化能力安全装好”；团队试用时要把插件来源、权限和默认启用项纳入 review。 https://x.com/0xJokker/status/2070524928751698345\n- **OpenAI GPT-5.6 limited preview 在 X 上被多条帖子集中传播，提到 Sol / Terra / Luna 三档模型和小范围合作伙伴预览。** raw 证据主要来自转述与短帖，不能写成完整能力评测；对 agent 团队，当前更适合记录发布节奏与访问限制，而不是急着迁移默认模型。 https://x.com/dotey/status/2070589767608144370",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "X 关注",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **OpenAI 开放 GPT-5.6 Sol 有限预览，同时给出 Terra / Luna 两个更均衡或经济的版本。** Sam Altman 称 Sol 与 GPT-5.5 同价，并另行提到 5.5 Instant 本周也更新；对 agent 团队，重点是默认模型、轻量模型和高阶模型的路由不要只按发布名切换。https://x.com/OpenAI/status/2070555272230384038 / https://x.com/sama/status/2070607488274358364 / https://x.com/sama/status/2070612055225483692\n- **NousResearch 给 Hermes Agent 加了 MoA presets，可把多个开放模型组合成虚拟模型入口。** 这条的增量不是又一个模型列表，而是用 open-source 组合去接近 gated frontier 模型；采用时要看组合延迟、成本、失败仲裁和每个子模型输出是否可追踪。https://x.com/NousResearch/status/2070610321278988385",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Reddit 社区",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- 今日暂无可新增的 Reddit 社区更新。本次包内 raw corpus 状态为 ok，共 16 个 r/ClaudeAI 线程；但逐条检查后，Thread Context 均为 0 score / 0 comments，只有发帖正文，没有评论、投票或后续事实支撑“社区讨论”。其中 Opus 4.8 / dynamic workflows、Fable 5 vs Opus 4.8、GLM 5.2 via Claude Code、多 agent 终端编排等主题贴近 coding-agent 工作流，但今天只能视为单帖陈述，不宜写成社区共识或争议。\n- **今日取舍：** 已读取 `input.md`、`context.json`、16 个 reddit raw 文件、`selected-items.json`（仅审计）以及 2026-06-26 / 2026-06-25 历史报告；raw corpus 为主要证据，历史仅用于去重，未使用 `selected-items.json` 驱动判断。近两日报告已连续因 Reddit 线程缺少评论展开而空栏；今天 raw 数量增加，但仍缺少可验证社区反馈，且部分主题与昨日已判空素材重合，因此本栏输出空结果。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 热榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **GPT‑5.6 Sol 发布登上 HN #1，670 分、408 评论；讨论重点很快从“能力版本号”转到延迟和价格。** 评论抓住 Cerebras 最高 750 tokens/s 的计划，认为代码库检索、长链路 agent 等场景会直接受益；也有人担心旧便宜模型被下线后，被迫迁到更贵替代型号。 [HN](https://news.ycombinator.com/item?id=48689028) / [OpenAI](https://openai.com/index/previewing-gpt-5-6-sol/)\n- **“美国政府将决定谁能用 GPT‑5.6”登上 HN #4，582 分、729 评论；技术发布被拆成了政策线程。** 评论主要担心不透明准入会变成监管俘获：大厂和少数客户拿到前沿模型，开源权重、自训练和非美国团队则面临更高不确定性。 [HN](https://news.ycombinator.com/item?id=48690101) / [Washington Post](https://www.washingtonpost.com/technology/2026/06/26/openai-says-us-government-will-vet-users-its-latest-ai-model/)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Hacker News 搜索观察",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Statey 把“agent 共享数据库”做成无 UI 的 MCP 工具：Claude Desktop、Claude Code、Codex、ChatGPT 都可写同一套结构化数据。** 它会按对话创建 collection、版本化 schema，并记录多用户归因与活动日志；作者也明确担心 prompt injection 和过宽写权限，因为审计只能事后看见问题。 [HN](https://news.ycombinator.com/item?id=48691461) / [Statey](https://www.statey.ai)\n- **TBD 是一个 Mac-native coding-agent multiplexer：人用 GUI，LLM 和脚本用 CLI，后台 daemon 统一管状态。** 作者从 Conductor、dmux、claude-squad 等工具迁移后选择自建，核心原则是“用户能手动做的事都要暴露给 CLI”，目前主打 Claude Code，兼有 Codex 基础支持。 [HN](https://news.ycombinator.com/item?id=48688943) / [GitHub](https://github.com/cheapsteak/tbd)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Claude Code",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Claude Code `v2.1.195` 新增 `CLAUDE_CODE_DISABLE_MOUSE_CLICKS`，可在 fullscreen mode 禁用点击、拖拽和 hover，同时保留滚轮滚动。** 这给远端/全屏终端里的误点击提供了硬开关，适合回归 tmux/SSH/全屏工作流下的选择、滚动与链接操作。 [v2.1.195](https://github.com/anthropics/claude-code/releases/tag/v2.1.195)\n- **`v2.1.195` 修复带连字符的 hook matcher 被误当子串匹配的问题。** `code-reviewer`、`mcp__brave-search` 这类标识现在精确匹配；若要匹配某个带连字符 MCP server 的全部工具，应改用 `mcp__brave-search__.*`，升级后需要检查既有 hooks 是否依赖旧行为。 [v2.1.195](https://github.com/anthropics/claude-code/releases/tag/v2.1.195)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Codex",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Codex 稳定版 `0.142.3` 发布，但 release notes 明确是维护补丁：相对 `0.142.2` 没有用户可见变化。** 已在昨天覆盖 `0.142.2` 的 MCP tool search、macOS 系统代理和 Bedrock/远程 MCP 修复；今天只把 `0.142.3` 作为稳定线版本状态提醒，不重复展开。 [v0.142.3](https://github.com/openai/codex/releases/tag/rust-v0.142.3)\n- **`0.143.0` 预发布推进到 `alpha.26`，release notes 仍只有版本号，资产继续覆盖 CLI、app-server、responses proxy、npm/Python 包、Windows sandbox 和 config schema。** 这延续近两天 alpha 分发验证节奏；跟随预发布的团队应把安装脚本、schema、app-server 与 Windows sandbox 一起做 smoke test。 [alpha.26](https://github.com/openai/codex/releases/tag/rust-v0.143.0-alpha.26)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "OpenClaw",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- 今日暂无可新增的 OpenClaw 更新。本次 openclaw-watch raw corpus 正常，共 3 个 release signals：`v2026.6.10-beta.2`、`v2026.6.10`、`v2026.6.11-beta.1`；但 2026-06-25 报告已刊登 `v2026.6.10` 正式版相对 beta 的新增事实，2026-06-26 报告已刊登 `v2026.6.11-beta.1` 的 Slack relay、Mattermost `/oc_queue`、per-DM model override、`--message-file`、RAFT CLI wake bridge、通道投递与 provider/model 修复。今天 raw 未提供新版本、新 PR、新发布验证变化或可作为 follow-up 的增量证据，因此本栏空栏，避免连续重复同一批 release notes。\n- **今日取舍：** 已读取 `input.md`、`context.json`、3 个 OpenClaw raw release 文件、2026-06-25 / 2026-06-26 历史报告，并仅将历史用于去重；`selected-items.json` 只做审计参考且其中没有 openclaw-watch 入选项。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "GitHub AI 项目",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **[workweave/router](https://github.com/workweave/router)（GitHub API 校验 223 stars）在 HN #7 发布，做面向 Claude Code、Codex、Cursor 等 coding agent 的模型路由代理。** 作者称用数万条 agent traces 训练路由模型，内部一个月节省 40% token 成本；HN 讨论集中在代理层会破坏 prompt cache、长链路上下文和 agent 自身模型选择闭环。 [HN](https://news.ycombinator.com/item?id=48688700) / [GitHub](https://github.com/workweave/router)\n- **[aws/agent-toolkit-for-aws](https://github.com/aws/agent-toolkit-for-aws)（GitHub API 校验 1,337 stars）本周上榜，定位为 AWS 官方支持的 MCP servers、skills 和 plugins 集合。** 对把 agent 接入云资源的团队，它的价值在于把 AWS 操作封装成更标准的工具层；试用时应先核对 IAM 最小权限、可写操作审批、CloudTrail/日志归属和本地/远端凭证边界。 [GitHub](https://github.com/aws/agent-toolkit-for-aws)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "GitHub 趋势项目",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **[google-labs-code/design.md](https://github.com/google-labs-code/design.md) 本周上榜，GitHub API 校验 21,127 stars；它定义 `DESIGN.md`，把视觉识别和设计系统写成 coding agent 可长期读取的结构化规范。** 对前端/产品 agent 有用的是减少“每次重新解释品牌风格”；落地时要看 token 预算、设计 token 同步、截图验收和多项目继承规则。\n- **[BuilderIO/agent-native](https://github.com/BuilderIO/agent-native) 本周上榜，GitHub API 校验 2,519 stars；它定位为构建 agent-native applications 的框架。** 这类框架的关键不在又包一层聊天 UI，而是能否把工具调用、状态、审批、人机接管和前端交互做成应用级原语，适合评估团队自己的 agent 产品架构。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Rize AI 工具榜",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **#1 [voicebox](https://github.com/jamiepine/voicebox)**：Rize 本期榜首，raw 描述为开源 AI 语音工作室，可用于声音克隆、听写和创作；榜单页见 [Rize AI Tools](https://rize.io/ai-tools)。\n- **#2 [DeepTutor](https://github.com/HKUDS/DeepTutor)**：面向个性化学习的 agent-native tutoring 项目，raw 另给出项目页 [deeptutor.info](https://deeptutor.info/)；榜单页见 [Rize AI Tools](https://rize.io/ai-tools)。",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Product Hunt 新品",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **Agent Arena** 登上 Product Hunt，定位为面向 AI agents 的公共 arena。它更像 agent 评测/对战入口而非普通聊天产品；可关注任务定义、评分口径、参赛 agent 身份和结果是否可复现。 [Product Hunt](https://www.producthunt.com/products/agent-arena?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)\n- **DMV by Agent Community** 主打“community-governed namespace for AI agents”。如果 agent 要跨社区、工具和服务被识别，命名空间治理会影响身份、防冒充、权限映射和审计；目前 raw 只够确认定位，不能展开成已成熟标准。 [Product Hunt](https://www.producthunt.com/products/dmv-department-of-machine-verification?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)\n- **note.md** 把 notes 和 research documentation 做成本地 LLM Memory。对个人/团队 agent，价值在让研究资料进入可检索记忆层；试用时要看本地存储边界、引用回链、隐私隔离和旧笔记污染上下文的问题。 [Product Hunt](https://www.producthunt.com/products/note-md?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29)",
+        "text_size": "normal"
+      }
+    },
+    {
+      "tag": "hr"
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "plain_text",
+        "content": "Polymarket AI 市场",
+        "text_size": "section_title"
+      }
+    },
+    {
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "- **6 月最佳 AI 模型总榜进一步收敛到 Anthropic：99.1%，OpenAI 0.7%、Google 0.3%；24h 成交量约 149,281.9，30d 约 1,135.5 万，流动性约 312.6 万。** 较昨日报告的 98.6% 小幅上行；这只是市场预期，不是模型实测结论。 [Polymarket](https://polymarket.com/event/which-company-has-best-ai-model-end-of-june)\n- **6 月最佳 Coding AI 模型盘口给 Anthropic 98.0%，OpenAI 0.6%、Alibaba 0.4%；24h 成交量约 10,418.9，30d 约 90,161.0，流动性约 100,891.8。** 较昨天 96.5% 继续上抬，临近月底更像收官定价；coding-agent 选型仍要看自家仓库测试、合并率和工具调用稳定性。 [Polymarket](https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-june)",
+        "text_size": "normal"
+      }
+    }
+  ]
+}
