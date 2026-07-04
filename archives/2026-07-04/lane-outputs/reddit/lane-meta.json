@@ -1,0 +1,59 @@
+{
+  "lane": "reddit",
+  "status": "ok",
+  "selected_count": 3,
+  "rejected_count": 5,
+  "sources": [
+    "https://www.reddit.com/r/ClaudeAI/comments/1twb8c5/anyone_else_copying_and_pasting_between_claude/",
+    "https://www.reddit.com/r/ClaudeAI/comments/1u85myc/the_gap_between_claude_code_power_users_and_us/",
+    "https://www.reddit.com/r/ClaudeAI/comments/1ueskow/claude_code_in_the_terminal_vs_the_claude_desktop/"
+  ],
+  "selected": [
+    {
+      "id": "1twb8c5",
+      "title": "Anyone else copying and pasting between Claude Chat (Desktop) and Claude Code constantly while building an app?",
+      "reason": "具体展示非技术用户从 Chat 复制到 Claude Code 的低效路径，以及改用 VS Code 内 Claude Code 后的体验变化；未在昨日 Reddit 栏出现。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1twb8c5/anyone_else_copying_and_pasting_between_claude/"
+    },
+    {
+      "id": "1u85myc",
+      "title": "the gap between Claude Code power users and us chat-only people keeps getting wider and i don't think that's great for the community",
+      "reason": "提供 Claude 社区内部从通用聊天向 coding power-user 内容倾斜的讨论，对 agent/coding-tool 受众分层有参考价值；未在昨日 Reddit 栏出现。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1u85myc/the_gap_between_claude_code_power_users_and_us/"
+    },
+    {
+      "id": "1ueskow",
+      "title": "Claude Code in the terminal vs. the Claude Desktop app — which do you use and why?",
+      "reason": "围绕终端、桌面、多文件上下文和 MCP 集成的日常工作流选择，能为 coding-agent 读者提供具体决策维度；未在昨日 Reddit 栏出现。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1ueskow/claude_code_in_the_terminal_vs_the_claude_desktop/"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "1ua3252",
+      "reason": "多代理并行工作台痛点已在 2026-07-03 Reddit 栏发布，今日 raw 未提供新增事实。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1ua3252/is_there_actually_a_good_way_to_orchestrate/"
+    },
+    {
+      "id": "1u3vyk7",
+      "reason": "Fable 5 vs Opus 4.8 的 917 场景 benchmark 已在昨日 Reddit 栏发布，今日无新增评论或数据。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1u3vyk7/tested_claude_fable_5_and_opus_48_across_917/"
+    },
+    {
+      "id": "1u6guvg",
+      "reason": "ForgeDock/GitHub issue 知识库工作流已在昨日 Reddit 栏发布，今日 raw 是重复材料。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1u6guvg/built_a_system_which_uses_github_as_knowledge/"
+    },
+    {
+      "id": "1u8pycz",
+      "reason": "GLM 5.2 via Claude Code 的主观体验已在昨日 Reddit 栏发布，今日无新增 benchmark。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1u8pycz/glm_52_via_claude_code_is_the_first_nonclaude/"
+    },
+    {
+      "id": "1uhnn6o",
+      "reason": "SQLite C 到 Zig 迁移案例已在昨日 Reddit 栏发布，今日 raw 未显示进度变化。",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1uhnn6o/weekend_exercise_ive_been_using_claude_code_to/"
+    }
+  ],
+  "notes": "Raw corpus ok，共 8 条。按 skill 要求读取 2026-07-03 历史报告做去重；selected_items_path 为 null，未作为筛选依据。昨日已发布的 5 条强信号按重复剔除，只保留 3 条未发布且与 Claude/Claude Code 使用分层或工作流选择相关的讨论。"
+}

@@ -1,0 +1,32 @@
+{
+  "lane": "weather",
+  "status": "ok",
+  "selected_count": 2,
+  "rejected_count": 0,
+  "sources": [
+    {
+      "id": "beijing-haidian",
+      "title": "北京·海淀 2026-07-04 weather: Light drizzle, 24.8°C to 37.2°C",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-04&end_date=2026-07-04",
+      "raw_path": "raw/beijing-haidian__daily_weather__2026-07-04.md"
+    },
+    {
+      "id": "shanghai-yangpu",
+      "title": "上海·杨浦 2026-07-04 weather: Thunderstorm with slight hail, 25.1°C to 32.4°C",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-04&end_date=2026-07-04",
+      "raw_path": "raw/shanghai-yangpu__daily_weather__2026-07-04.md"
+    }
+  ],
+  "selected": [
+    {
+      "id": "beijing-haidian",
+      "reason": "默认城市天气项；原始语料提供天气、温度、降水概率/雨量、风速风向和来源。与 2026-07-03 相比最高温略降但仍高温，降水从预计 0 mm 变为小雨 0.2 mm。"
+    },
+    {
+      "id": "shanghai-yangpu",
+      "reason": "默认城市天气项；原始语料提供雷暴轻微冰雹、温度、96% 降水概率和 10.8 mm 雨量。与 2026-07-03 相比仍有强对流风险，冰雹强度描述减轻但降雨概率升高。"
+    }
+  ],
+  "rejected": [],
+  "notes": "Raw corpus status ok; selected_items_path is null. Yesterday's report was read as dedupe reference only; weather is recurring and not deduped purely because the section appeared yesterday."
+}

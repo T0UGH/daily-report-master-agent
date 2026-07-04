@@ -1,0 +1,39 @@
+{
+  "lane": "x-feed",
+  "status": "ok",
+  "selected_count": 10,
+  "rejected_count": 233,
+  "sources": [
+    "https://x.com/ClaudeCodeLog/status/2073091434123591872",
+    "https://x.com/ClaudeDevs/status/2072770790114914317",
+    "https://x.com/ClaudeDevs/status/2072818299361263778",
+    "https://x.com/yunxi0623/status/2073017018572546497",
+    "https://x.com/IBuzovskyi/status/2073073852012171697",
+    "https://x.com/yibie/status/2072965594484543525",
+    "https://x.com/steipete/status/2073214429655883814",
+    "https://x.com/369Serena/status/2072937232592195971",
+    "https://x.com/FeitengLi/status/2073046885896728625",
+    "https://x.com/precisox/status/2073193056250040554"
+  ],
+  "selected": [
+    {"source": "ClaudeCodeLog__feed__2073091434123591872.md", "reason": "具体 Claude Code 版本更新，直接影响 CLI/IDE 权限与自动化工作流。"},
+    {"source": "ClaudeDevs__feed__2072770790114914317.md", "reason": "官方账号发布 Claude Code Artifacts 计划扩展，和开发者产物分享有关。"},
+    {"source": "ClaudeDevs__feed__2072818299361263778.md", "reason": "官方 API 限额和 tier 调整，对多 agent 与批量调用有实际影响。"},
+    {"source": "yunxi0623__feed__2073017018572546497.md", "reason": "Chrome DevTools MCP 连接 coding agent，属于前端调试工具链变化。"},
+    {"source": "IBuzovskyi__feed__2073073852012171697.md", "reason": "Hermes profiles 的专门化代理隔离能力，与 agent 日常使用直接相关。"},
+    {"source": "yibie__feed__2072965594484543525.md", "reason": "Fable 5 autoresearch loop 给出实验数量、成本和效率变化，信息较具体。"},
+    {"source": "steipete__feed__2073214429655883814.md", "reason": "强调 agent 端到端测试环境，符合 coding-agent workflow 读者关注。"},
+    {"source": "369Serena__feed__2072937232592195971.md", "reason": "video-use 展示 Codex 进入视频编辑工作流，扩展 coding agent 应用边界。"},
+    {"source": "FeitengLi__feed__2073046885896728625.md", "reason": "Thinking Machines + Qwen3-235B 在金融文档场景落地，具备机构应用信号。"},
+    {"source": "precisox__feed__2073193056250040554.md", "reason": "NVIDIA LocateAnything 与 VLM grounding 相关，可关联 GUI/视觉 agent。"}
+  ],
+  "rejected": [
+    {"pattern": "Fable 5 纯炫技/网页视觉演示", "reason": "同质内容很多，缺少可复用流程或新事实，只保留 autoresearch 与测试/设计方法相关条目。"},
+    {"pattern": "课程、账号推荐、泛 AI 学习清单", "reason": "多为营销或泛建议，不能具体说明工具、版本或工作流变化。"},
+    {"pattern": "只有短链接或无正文的帖子", "reason": "证据太薄，无法独立复述发生了什么。"},
+    {"pattern": "金融、股票、美国节日、读书等非 AI agent 主题", "reason": "与 AI/coding-agent 日报读者关联弱。"},
+    {"pattern": "重复的 Claude/Fable 成本压缩图片化方案", "reason": "多个帖子转述同一 pxpipe 思路，证据多为未经验证的省钱说法，未纳入正文。"},
+    {"pattern": "低互动或个人体验型 Claude Code 成果", "reason": "缺少可审计链接、代码仓库或明确方法，优先级低于官方发布和工具链变化。"}
+  ],
+  "notes": "读取了 x-feed lane package、context 与 2026-07-03 历史报告；昨日 X 推荐为空，无需排除同题复写。raw corpus 共 243 个文件，按 raw 内容人工筛选，selected_items 未作为判断依据。"
+}

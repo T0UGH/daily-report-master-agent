@@ -1,0 +1,93 @@
+{
+  "lane": "hacker-news-search",
+  "status": "ok",
+  "selected_count": 6,
+  "rejected_count": 8,
+  "sources": [
+    {
+      "id": "48776386",
+      "title": "Show HN: Ultracodex – Run Claude Ultracode Dynamic Workflows with Codex Agents",
+      "url": "https://news.ycombinator.com/item?id=48776386",
+      "external_url": "https://github.com/YuanpingSong/ultracodex",
+      "reason": "新条目；具体说明 Claude/Codex 分工、workflow scripts 与额度/loop engineering 用途。"
+    },
+    {
+      "id": "48766320",
+      "title": "Show HN: EEBench – AI agents design real circuits, graded by physics simulation",
+      "url": "https://news.ycombinator.com/item?id=48766320",
+      "external_url": "https://www.eebench.org/",
+      "reason": "新条目；有明确评测方法和分数，适合 AI agent 评测读者。"
+    },
+    {
+      "id": "48778145",
+      "title": "Show HN: Emra – A workspace where every app you build shares one db",
+      "url": "https://news.ycombinator.com/item?id=48778145",
+      "external_url": "https://emra.app",
+      "reason": "新条目；AI app 工作区、共享数据库和可下载数据边界具体。"
+    },
+    {
+      "id": "48780219",
+      "title": "Cadreen – memory, governance, self-healing, and execution as one system",
+      "url": "https://news.ycombinator.com/item?id=48780219",
+      "external_url": null,
+      "reason": "新条目；agent memory/governance/tool execution/audit trail 信息明确，虽无外部_url但正文给出 GitHub 链接。"
+    },
+    {
+      "id": "48770383",
+      "title": "Show HN: Imagent – agentic image/video/speech generation",
+      "url": "https://news.ycombinator.com/item?id=48770383",
+      "external_url": "https://github.com/unliftedq/imagent",
+      "reason": "新条目；多媒体生成进入 agent workflow，评论补充成本/API key 设计问题。"
+    },
+    {
+      "id": "48723755",
+      "title": "Show HN: TermRover – a native tmux-first terminal for iOS and Android",
+      "url": "https://news.ycombinator.com/item?id=48723755",
+      "external_url": "https://termrover.sh/",
+      "reason": "未在昨日 HN 搜索中出现；移动端 tmux/SSH 驱动 coding agents 的使用场景具体。"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "48762862",
+      "title": "Launch HN: Manufact (YC S25) – MCP Cloud",
+      "reason": "昨日 HN 搜索已收录，今日无新增 raw 事实。"
+    },
+    {
+      "id": "48763592",
+      "title": "Blog HN: Claude Code Making an Ass Out of You and Me",
+      "reason": "昨日已收录 Claude Code 自动假设边界讨论，今日无新增 raw 事实。"
+    },
+    {
+      "id": "48727448",
+      "title": "Show HN: Agentic Orchestrator, a TUI for long-running coding agents",
+      "reason": "昨日已收录，今日无实质新进展。"
+    },
+    {
+      "id": "48732590",
+      "title": "Show HN: Ouijit, command terminals running coding agents",
+      "reason": "昨日与 bb 合并收录，本次重复。"
+    },
+    {
+      "id": "48752835",
+      "title": "Show HN: An Open Source Codex App that works across provider",
+      "reason": "昨日与 Ouijit 合并收录，本次重复。"
+    },
+    {
+      "id": "48747786",
+      "title": "Palabre – Make two AI coding agents debate a decision in your terminal",
+      "reason": "raw 只有标题、0 评论，证据太薄。"
+    },
+    {
+      "id": "48772872",
+      "title": "A B2B marketing agency grew to $1.5M ARR in 6 months by betting on AI",
+      "reason": "偏营销增长案例，不够贴近 AI/coding-agent 工程工作流。"
+    },
+    {
+      "id": "48780400",
+      "title": "Show HN: Durable AI agents without the workflow engine",
+      "reason": "raw 只有标题和链接，0 评论，无法具体解释。"
+    }
+  ],
+  "notes": "Raw corpus ok: 14 files. Used raw corpus as primary evidence and 2026-07-03 report only for dedupe; selected_items was absent/audit-only."
+}

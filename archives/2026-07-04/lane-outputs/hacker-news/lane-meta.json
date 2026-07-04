@@ -1,0 +1,113 @@
+{
+  "lane": "hacker-news",
+  "status": "ok",
+  "selected_count": 6,
+  "rejected_count": 12,
+  "sources": [
+    {
+      "id": "48775921",
+      "title": "Jamesob's guide to running SOTA LLMs locally",
+      "hn_url": "https://news.ycombinator.com/item?id=48775921",
+      "source_url": "https://github.com/jamesob/local-llm",
+      "reason": "本地 SOTA LLM 的硬件预算、量化与长上下文质量争议，直接影响 AI/coding-agent 本地部署判断。"
+    },
+    {
+      "id": "48780417",
+      "title": "Performance per dollar is getting faster and cheaper",
+      "hn_url": "https://news.ycombinator.com/item?id=48780417",
+      "source_url": "https://www.wafer.ai/blog/glm52-amd",
+      "reason": "GLM-5.2、AMD GPU、性能/美元和量化透明度讨论，适合模型服务成本评估。"
+    },
+    {
+      "id": "48780801",
+      "title": "Leanstral 1.5: Proof abundance for all",
+      "hn_url": "https://news.ycombinator.com/item?id=48780801",
+      "source_url": "https://mistral.ai/news/leanstral-1-5/",
+      "reason": "专用小模型用于形式化证明和 bug finding，评论提供了对基准和示例可信度的审视。"
+    },
+    {
+      "id": "48779454",
+      "title": "SearXNG: A free internet metasearch engine",
+      "hn_url": "https://news.ycombinator.com/item?id=48779454",
+      "source_url": "https://github.com/searxng/searxng",
+      "reason": "评论引出 Hister 的浏览/本地文件全文索引和 MCP 用法，和私有 AI 助手检索上下文直接相关。"
+    },
+    {
+      "id": "48782671",
+      "title": "Agentic coding notes from Galapagos Island",
+      "hn_url": "https://news.ycombinator.com/item?id=48782671",
+      "source_url": "https://danluu.com/ai-coding/#appendix-agentic-loops-and-writing-this-post",
+      "reason": "agentic coding 与大上下文世界模型讨论，切中 coding-agent 工作流。"
+    },
+    {
+      "id": "48779352",
+      "title": "Kagi Changelog (July 2): Heads, tails, and an AI toggle",
+      "hn_url": "https://news.ycombinator.com/item?id=48779352",
+      "source_url": "https://kagi.com/changelog#10959",
+      "reason": "搜索产品中的 AI 开关、隐私和成本/订阅边界，对 AI 产品设计有具体参考。"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "48739018",
+      "title": "Mir Books – Books from the Soviet Era",
+      "reason": "文化/出版怀旧讨论，和 AI/coding-agent 工作流关系弱。"
+    },
+    {
+      "id": "48776044",
+      "title": "Costco is the anti-Amazon",
+      "reason": "供应链与零售模式讨论，缺少 AI/coding-agent 相关具体点。"
+    },
+    {
+      "id": "48778757",
+      "title": "FreeBSD ate my RAM",
+      "reason": "操作系统内存解释文章质量不错，但评论信息薄，和今日 AI agent 读者相关性不如入选项。"
+    },
+    {
+      "id": "48779683",
+      "title": "Espionage Against the European Parliament",
+      "reason": "Pegasus 政治间谍事件偏安全新闻，未形成与 AI/coding-agent 工具链直接相关的讨论。"
+    },
+    {
+      "id": "48779723",
+      "title": "Applied Category Theory Course (2018)",
+      "reason": "课程资源无评论，证据不足。"
+    },
+    {
+      "id": "48779977",
+      "title": "Africans Are Turning to Starlink",
+      "reason": "网络基础设施议题，和 AI/coding-agent 关联间接。"
+    },
+    {
+      "id": "48780352",
+      "title": "Goodbye, Forever, Probably",
+      "reason": "分数和评论都少，讨论内容不足。"
+    },
+    {
+      "id": "48780865",
+      "title": "Steam Controller Auto-Charge – pilot to magnetic charging puck using CV",
+      "reason": "有趣的 CV/硬件 hack，但更偏玩具项目，和 AI agent 日报主线较远。"
+    },
+    {
+      "id": "48780870",
+      "title": "Giant trees have no trouble pumping water to top branches: new research",
+      "reason": "植物科学讨论，非本 lane 主题。"
+    },
+    {
+      "id": "48781688",
+      "title": "MSI Center – How to gain SYSTEM privileges in seconds",
+      "reason": "本地安全漏洞有工程价值，但与 AI/coding-agent 直接关联弱，未入选。"
+    },
+    {
+      "id": "48782219",
+      "title": "Synthesis is harder than analysis",
+      "reason": "可与生成/验证类比，但评论偏抽象认知讨论，缺少可执行实践信息。"
+    },
+    {
+      "id": "48783117",
+      "title": "The bottleneck might be the air in the room",
+      "reason": "办公环境与 CO2 讨论，非 AI/coding-agent 主题。"
+    }
+  ],
+  "notes": "以 raw/ 下 18 个 topstories 文件和 input.md raw excerpts 为主证据；selected_items_path 为 null。已读取 2026-07-03 历史报告作去重参考，未重复昨日 HN 条目。"
+}

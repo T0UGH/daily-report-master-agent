@@ -1,0 +1,59 @@
+{
+  "lane": "polymarket",
+  "status": "ok",
+  "selected_count": 6,
+  "rejected_count": 4,
+  "sources": [
+    "https://polymarket.com/event/which-company-has-best-ai-model-end-of-july-299",
+    "https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-july",
+    "https://polymarket.com/event/which-company-has-the-best-math-ai-model-end-of-july",
+    "https://polymarket.com/event/ai-model-scores-90-on-frontiermath-benchmark-before-2027",
+    "https://polymarket.com/event/best-chinese-ai-company-end-of-july",
+    "https://polymarket.com/event/which-company-has-best-ai-model-end-of-2026"
+  ],
+  "selected": [
+    {
+      "raw_file": "raw/pm__model-race__556131__prediction_market__2026-07-04.md",
+      "reason": "高流动性主市场，直接反映 7 月底通用 AI 模型公司预期；与昨日同题但概率和成交数据更新明显。"
+    },
+    {
+      "raw_file": "raw/pm__coding-ai__556287__prediction_market__2026-07-04.md",
+      "reason": "直接关联 coding AI / coding agent 选型，概率集中且来源完整。"
+    },
+    {
+      "raw_file": "raw/pm__company-expectation__556271__prediction_market__2026-07-04.md",
+      "reason": "数学模型能力对 agent 推理/代码任务有读者价值，价格变动和概率可具体说明。"
+    },
+    {
+      "raw_file": "raw/pm__benchmark__79080__prediction_market__2026-07-04.md",
+      "reason": "FrontierMath 是 AI benchmark 相关市场，能解释为高难数学基准突破预期。"
+    },
+    {
+      "raw_file": "raw/pm__model-race__556312__prediction_market__2026-07-04.md",
+      "reason": "中国模型品牌预期与 AI 生态相关，概率较昨日变化，来源完整。"
+    },
+    {
+      "raw_file": "raw/pm__model-race__556382__prediction_market__2026-07-04.md",
+      "reason": "年底时间尺度补充短期 7 月市场，可说明长期预期更分散。"
+    }
+  ],
+  "rejected": [
+    {
+      "raw_file": "raw/pm__coding-ai__336534__prediction_market__2026-07-04.md",
+      "reason": "Outcome 名称重复为 any AI model，阈值分档不可从 raw 中可靠区分，容易误导。"
+    },
+    {
+      "raw_file": "raw/pm__company-expectation__502834__prediction_market__2026-07-04.md",
+      "reason": "OpenAI + Anthropic vs Google 估值市场 24h/30d 成交很低，且与 AI/coding-agent 工作流关联较弱。"
+    },
+    {
+      "raw_file": "raw/pm__company-expectation__556162__prediction_market__2026-07-04.md",
+      "reason": "第三名 AI 模型公司市场不如 #1、coding、math 或年底市场有解释价值，且与已选模型竞赛重复。"
+    },
+    {
+      "raw_file": "raw/pm__company-expectation__556229__prediction_market__2026-07-04.md",
+      "reason": "与主市场 raw/pm__model-race__556131 同题高度重复，主市场流动性和成交更强。"
+    }
+  ],
+  "notes": "Raw corpus status ok. selected_items_path is null; no audit-only selected_items used. Read 2026-07-03 report for dedupe; kept recurring market items because they are current market snapshots with changed probabilities/volumes, and stated notable changes where applicable."
+}

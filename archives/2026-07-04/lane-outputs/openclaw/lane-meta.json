@@ -1,0 +1,48 @@
+{
+  "lane": "openclaw",
+  "status": "ok",
+  "selected_count": 3,
+  "rejected_count": 3,
+  "sources": [
+    "https://github.com/openclaw/openclaw/releases/tag/v2026.6.11"
+  ],
+  "selected": [
+    {
+      "title": "OpenClaw v2026.6.11 稳定版多渠道送达可靠性修复",
+      "source": "https://github.com/openclaw/openclaw/releases/tag/v2026.6.11",
+      "reason": "稳定版 release notes 给出具体渠道、错投/重复/卡住/重连等问题，且昨日 OpenClaw 栏未覆盖该稳定版。"
+    },
+    {
+      "title": "OpenClaw v2026.6.11 强化模型与 provider fallback/fail-safe",
+      "source": "https://github.com/openclaw/openclaw/releases/tag/v2026.6.11",
+      "reason": "Codex usage limit、Claude CLI credits、OpenRouter/Google catalog 等是 AI/coding-agent 运行时直接相关的具体可靠性改进。"
+    },
+    {
+      "title": "OpenClaw v2026.6.11 增加 message-file、RAFT wake、Slack/Mattermost/usage-cost 运维能力",
+      "source": "https://github.com/openclaw/openclaw/releases/tag/v2026.6.11",
+      "reason": "CLI、队列、远程唤醒、per-DM 模型和成本统计是可操作的 agent 工作流变化。"
+    }
+  ],
+  "rejected": [
+    {
+      "title": "OpenClaw v2026.7.1-beta.1",
+      "source": "https://github.com/openclaw/openclaw/releases/tag/v2026.7.1-beta.1",
+      "reason": "昨日 2026-07-03 报告已完整覆盖 GPT-5.6、openclaw attach、Telegram Codex、on-exit cron、iMessage polls 等要点；今日无新增事实，按去重规则拒绝重复。"
+    },
+    {
+      "title": "OpenClaw v2026.6.11-beta.2",
+      "source": "https://github.com/openclaw/openclaw/releases/tag/v2026.6.11-beta.2",
+      "reason": "预发布内容与 v2026.6.11 稳定版高度重叠，优先采用稳定版 release 作为证据。"
+    },
+    {
+      "title": "README 社区入口更新",
+      "source": "https://github.com/openclaw/openclaw/blob/HEAD/README.md",
+      "reason": "该项只出现在昨日报告引用中，今日 raw corpus 没有 README 文件，不能作为主要证据。"
+    }
+  ],
+  "notes": [
+    "Raw corpus status ok，读取 input.md、context.json、history/2026-07-03-report.md 与 3 个 raw release 文件。",
+    "selected_items.json 未作为 primary evidence；本包未列出该文件。",
+    "OpenClaw 非固定保留栏；本次保留是因为 v2026.6.11 stable 有具体、未在昨日 OpenClaw 栏覆盖的 agent 运维与运行时可靠性信息。"
+  ]
+}

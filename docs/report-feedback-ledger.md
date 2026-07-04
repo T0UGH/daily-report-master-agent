@@ -671,3 +671,11 @@
 - Doc: https://www.feishu.cn/docx/NDMmdNeWWouE0wxk3e0cCWM1nJd
 - Card: om_x100b6cdbe7b060a0c26fe38114db685
 - Notes: Hermes native subagent lane architecture; Reddit collect hit RSS 429 but lane package had evidence and lane judged empty; OpenClaw package was manually created from successful openclaw-watch raw and judged empty; helper card header corrected/resend/live-verified, superseded card revoked.
+## 2026-07-04
+
+- Runtime: `/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-07-04`
+- Report: `archives/2026-07-04/report.md`
+- Feishu Doc: https://www.feishu.cn/docx/Osffd3P5QoHI2ux69yTcp2L7nib
+- Card: corrected live-verified header `Rook｜AI Agent 日报精选（2026-07-04）`; final message `om_x100b6bb8b80b98a8b217d11f28ed828`; superseded helper card revoked.
+- Collect note: repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`; Reddit retry still returned rc=1 but raw evidence existed and lane subagent completed ok.
+

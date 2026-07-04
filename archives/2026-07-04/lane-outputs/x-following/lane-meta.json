@@ -1,0 +1,62 @@
+{
+  "lane": "x-following",
+  "status": "ok",
+  "selected_count": 8,
+  "rejected_count": 109,
+  "sources": [
+    "https://x.com/steipete/status/2073214429655883814",
+    "https://x.com/steipete/status/2073277317464682723",
+    "https://x.com/thdxr/status/2073238046296924466",
+    "https://x.com/op7418/status/2073221461792464953",
+    "https://x.com/cyrilXBT/status/2073316884435681724",
+    "https://x.com/aiedge_/status/2073240468155236480",
+    "https://x.com/GithubProjects/status/2073263038061560187",
+    "https://x.com/AI_jacksaku/status/2073225283151482906"
+  ],
+  "selected": [
+    {
+      "source": "raw/steipete__post__2073214429655883814.md",
+      "reason": "具体 agent 工作流建议：给 agent 独立环境做端到端测试；高互动且与 coding-agent 直接相关。"
+    },
+    {
+      "source": "raw/steipete__post__2073277317464682723.md",
+      "reason": "具体 Codex+imagegen 设计实现方法；可转化为前端 agent 工作流。"
+    },
+    {
+      "source": "raw/thdxr__post__2073238046296924466.md",
+      "reason": "具体 code review 操作变化：大 diff 先让 agent 按文件总结；适合 AI 编程读者。"
+    },
+    {
+      "source": "raw/op7418__post__2073221461792464953.md",
+      "reason": "真实项目案例：Fable 5 与 Codex 协作升级 AI SDK 7，提供两天 loop 与额度观察。"
+    },
+    {
+      "source": "raw/cyrilXBT__post__2073316884435681724.md",
+      "reason": "围绕 Fable 5 的提示策略讨论，信息虽短但主题明确，补充模型使用层面的实践。"
+    },
+    {
+      "source": "raw/aiedge___post__2073240468155236480.md",
+      "reason": "多 agent 实时任务可视化/管理界面案例，体现 agent 工作台趋势。"
+    },
+    {
+      "source": "raw/GithubProjects__post__2073263038061560187.md",
+      "reason": "开源企业 RAG agent 平台 MaxKB，和知识检索 pipeline、agent 构建直接相关。"
+    },
+    {
+      "source": "raw/AI_jacksaku__post__2073225283151482906.md",
+      "reason": "Meta AI Agent 组织投入和速度不及预期的产业信号，含具体人数背景。"
+    }
+  ],
+  "rejected": [
+    {
+      "reason": "大量帖子为泛 AI/投资/政策/生活评论、转推或缺少可操作细节，不适合 AI/coding-agent 日报正文。"
+    },
+    {
+      "reason": "部分候选虽然相关但原始文本被截断严重或只是重复 Fable 5 热度，无法形成比入选项更具体的说明。"
+    },
+    {
+      "reason": "昨日 X 关注为空，无需因历史报告做实质去重；但已避开与其他今日 lane 明显重复的泛 GitHub 榜单素材。"
+    }
+  ],
+  "notes": "基于 raw/ 117 条 X following 语料人工筛选；selected_items.json 不存在且未作为判断依据。输出采用中文 paraphrase，并保留每条来源链接。"
+}

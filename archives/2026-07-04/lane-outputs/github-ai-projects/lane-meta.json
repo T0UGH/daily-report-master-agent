@@ -1,0 +1,109 @@
+{
+  "lane": "github-ai-projects",
+  "status": "ok",
+  "selected_count": 6,
+  "rejected_count": 15,
+  "sources": [
+    "https://github.com/openai/codex-plugin-cc",
+    "https://github.com/JCodesMore/ai-website-cloner-template",
+    "https://github.com/ogulcancelik/herdr",
+    "https://github.com/msitarzewski/agency-agents",
+    "https://github.com/kunchenguid/no-mistakes",
+    "https://github.com/interviewstreet/hiring-agent"
+  ],
+  "selected": [
+    {
+      "repo": "openai/codex-plugin-cc",
+      "stars": 23473,
+      "reason": "raw corpus shows a weekly-trending GitHub repo for using Codex from Claude Code; GitHub metadata verified stars >= 100; not present in 2026-07-03 GitHub AI 项目 section."
+    },
+    {
+      "repo": "JCodesMore/ai-website-cloner-template",
+      "stars": 25385,
+      "reason": "raw corpus describes one-command website cloning with AI coding agents; GitHub metadata verified stars >= 100; concrete frontend-agent workflow."
+    },
+    {
+      "repo": "ogulcancelik/herdr",
+      "stars": 11014,
+      "reason": "raw corpus describes a terminal agent multiplexer; GitHub metadata verified stars >= 100; directly relevant to multi-agent session management."
+    },
+    {
+      "repo": "msitarzewski/agency-agents",
+      "stars": 126741,
+      "reason": "raw corpus describes a broad role library for AI agents; GitHub metadata verified stars >= 100; useful for reusable agent roles and processes."
+    },
+    {
+      "repo": "kunchenguid/no-mistakes",
+      "stars": 5140,
+      "reason": "raw corpus provides a minimal git workflow signal; GitHub metadata verified stars >= 100; selected as a concrete pre-push guardrail idea."
+    },
+    {
+      "repo": "interviewstreet/hiring-agent",
+      "stars": 4586,
+      "reason": "raw corpus describes an AI agent for resume scoring; GitHub metadata verified stars >= 100; concrete vertical agent workflow."
+    }
+  ],
+  "rejected": [
+    {
+      "repo": "DeusData/codebase-memory-mcp",
+      "reason": "strong and verified, but substantially repeated from 2026-07-03 GitHub AI 项目 / GitHub 趋势项目 sections without new raw facts beyond star drift."
+    },
+    {
+      "repo": "google-labs-code/design.md",
+      "reason": "strong and verified, but substantially repeated from 2026-07-03 sections without a new release or material change."
+    },
+    {
+      "repo": "alibaba/page-agent",
+      "reason": "strong and verified, but repeated from 2026-07-03 sections without new evidence beyond current trending presence."
+    },
+    {
+      "repo": "calesthio/OpenMontage",
+      "reason": "strong and verified, but repeated from 2026-07-03 GitHub AI 项目, GitHub 趋势项目 and Rize sections."
+    },
+    {
+      "repo": "stablyai/orca",
+      "reason": "strong and verified, but repeated from 2026-07-03 sections without new raw facts."
+    },
+    {
+      "repo": "topoteretes/cognee",
+      "reason": "strong and verified, but repeated from 2026-07-03 sections without a meaningful follow-up."
+    },
+    {
+      "repo": "usestrix/strix",
+      "reason": "verified and relevant to security agents, but already used in 2026-07-03 GitHub 趋势项目 and no new change is present."
+    },
+    {
+      "repo": "diegosouzapw/OmniRoute",
+      "reason": "verified and relevant to AI gateway/coding tools, but repeated from 2026-07-03 GitHub 趋势项目."
+    },
+    {
+      "repo": "browser-use/video-use",
+      "reason": "verified and agent-relevant, but repeated from 2026-07-03 GitHub 趋势项目; OpenMontage also covered video-agent space more fully yesterday."
+    },
+    {
+      "repo": "xbtlin/ai-berkshire",
+      "reason": "verified but repeated from 2026-07-03 GitHub 趋势项目; no new project fact beyond trend presence."
+    },
+    {
+      "repo": "craft-ai-agents/craft-agents-oss",
+      "reason": "stars verified above floor, but raw corpus contains no concrete preview/description, so evidence is too thin."
+    },
+    {
+      "repo": "Robbyant/lingbot-map",
+      "reason": "3D reconstruction project; relevance to AI/coding-agent workflows is indirect."
+    },
+    {
+      "repo": "logto-io/logto",
+      "reason": "authentication infrastructure for SaaS/AI apps, but not specifically an AI/coding-agent project."
+    },
+    {
+      "repo": "mauriceboe/TREK",
+      "reason": "travel planner; not relevant to AI/coding-agent workflows."
+    },
+    {
+      "repo": "simplex-chat/simplex-chat",
+      "reason": "private messaging app; not relevant to AI/coding-agent workflows."
+    }
+  ],
+  "notes": "Read input.md, context.json, raw GitHub trending corpus, and 2026-07-03 history for dedupe. Used GitHub API metadata to verify star counts for all selected repositories. selected_items.json was not present and was not used."
+}

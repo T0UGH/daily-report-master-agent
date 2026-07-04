@@ -1,0 +1,390 @@
+{
+  "report_date": "2026-07-04",
+  "source": "signals-engine",
+  "selected_items": [
+    {
+      "lane": "weather-watch",
+      "title": "上海·杨浦 2026-07-04 weather: Thunderstorm with slight hail, 25.1°C to 32.4°C",
+      "source_url": "https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-04&end_date=2026-07-04",
+      "signal_path": "weather-watch/2026-07-04/signals/shanghai-yangpu__daily_weather__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:52:33+0000",
+      "source_snippet": "Date: 2026-07-04 Location: 上海·杨浦 Condition: Thunderstorm with slight hail Temperature: 25.1°C to 32.4°C Precipitation: 96% chance, 10.8 mm Wind: up to 9.1 km/h SW (218°)",
+      "excerpt": "Date: 2026-07-04 Location: 上海·杨浦 Condition: Thunderstorm with slight hail Temperature: 25.1°C to 32.4°C Precipitation: 96% chance, 10.8 mm Wind: up to 9.1 km/h SW (218°)",
+      "source": "weather",
+      "signal_type": "daily_weather",
+      "editor_headline": "上海·杨浦 2026-07-04 weather: Thunderstorm with slight hail, 25.1°C to 32.4°C 进入了今天的日报。",
+      "editor_summary": "原文围绕 上海·杨浦 2026-07-04 weather: Thunderstorm with slight hail, 25.1°C to 32.4°C 展开，具体变化见来源。"
+    },
+    {
+      "lane": "weather-watch",
+      "title": "北京·海淀 2026-07-04 weather: Light drizzle, 24.8°C to 37.2°C",
+      "source_url": "https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-04&end_date=2026-07-04",
+      "signal_path": "weather-watch/2026-07-04/signals/beijing-haidian__daily_weather__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:52:32+0000",
+      "source_snippet": "Date: 2026-07-04 Location: 北京·海淀 Condition: Light drizzle Temperature: 24.8°C to 37.2°C Precipitation: 49% chance, 0.2 mm Wind: up to 11.4 km/h SW (224°)",
+      "excerpt": "Date: 2026-07-04 Location: 北京·海淀 Condition: Light drizzle Temperature: 24.8°C to 37.2°C Precipitation: 49% chance, 0.2 mm Wind: up to 11.4 km/h SW (224°)",
+      "source": "weather",
+      "signal_type": "daily_weather",
+      "editor_headline": "北京·海淀 2026-07-04 weather: Light drizzle, 24.8°C to 37.2°C 进入了今天的日报。",
+      "editor_summary": "原文围绕 北京·海淀 2026-07-04 weather: Light drizzle, 24.8°C to 37.2°C 展开，具体变化见来源。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@AYi_AInotes #75",
+      "source_url": "https://x.com/AYi_AInotes/status/2073292761839607987",
+      "signal_path": "x-feed/2026-07-04/signals/AYi_AInotes__feed__2073292761839607987.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "holy fucking shit，大模型计费的底层漏洞，被人用一张图片捅穿了🤯 给大模型喂长文本的成本，被这个野路子直接砍了六成， 这款叫pxpipe的本地代理工具，会自动拦截发往Anthropic接口的请求， 把系统提示，工具文档",
+      "excerpt": "holy fucking shit，大模型计费的底层漏洞，被人用一张图片捅穿了🤯 给大模型喂长文本的成本，被这个野路子直接砍了六成， 这款叫pxpipe的本地代理工具，会自动拦截发往Anthropic接口的请求， 把系统提示，工具文档",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "Anthropic 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "holy fucking shit，大模型计费的底层漏洞，被人用一张图片捅穿了🤯 给大模型喂长文本的成本，被这个野路子直接砍了六成， 这款叫pxpipe的本地代理工具，会自动拦截发往Anthropic接口的请求， 把系统。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@Easycompany333 #5",
+      "source_url": "https://x.com/Easycompany333/status/2073021941011845292",
+      "signal_path": "x-feed/2026-07-04/signals/Easycompany333__feed__2073021941011845292.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "让Agent自我Dreaming是一套loop里面非常有用的Agent自我迭代，也是出自Anthropic。 视频里的 Dreams、Claude Agent SDK、项目上下文和自动执行流程。",
+      "excerpt": "让Agent自我Dreaming是一套loop里面非常有用的Agent自我迭代，也是出自Anthropic。 视频里的 Dreams、Claude Agent SDK、项目上下文和自动执行流程。",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "Anthropic 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "让Agent自我Dreaming是一套loop里面非常有用的Agent自我迭代，也是出自Anthropic。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@369Serena #66",
+      "source_url": "https://x.com/369Serena/status/2073308312540418380",
+      "signal_path": "x-feed/2026-07-04/signals/369Serena__feed__2073308312540418380.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "如何让 Codex 拥有复刻拆解抖音爆款视频的能力？？ Github 上有个近 3K start 的 Skills，叫 claude-video， 可以让 Claude / Codex 这类 Agent 真的“看懂”视频。",
+      "excerpt": "如何让 Codex 拥有复刻拆解抖音爆款视频的能力？？ Github 上有个近 3K start 的 Skills，叫 claude-video， 可以让 Claude / Codex 这类 Agent 真的“看懂”视频。",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "如何让 Codex 拥有复刻拆解抖音爆款视频的能力？？ Github 上有个近 3K start 的 Skills，叫 claude-video， 可以让 Claude / Codex 这类 Agent 真的“看懂”视频。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@Easycompany333 #88",
+      "source_url": "https://x.com/Easycompany333/status/2073287364810579982",
+      "signal_path": "x-feed/2026-07-04/signals/Easycompany333__feed__2073287364810579982.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "英伟达工程师这段讲 Agent Loop 的视频，值得看。 Codex如果超过Token上限以后表现下降38%，那如何设计一个可以长期跑的Agent，一个视频讲清楚 这段视频讲的重点很简单： 给 Agent 一个循环。",
+      "excerpt": "英伟达工程师这段讲 Agent Loop 的视频，值得看。 Codex如果超过Token上限以后表现下降38%，那如何设计一个可以长期跑的Agent，一个视频讲清楚 这段视频讲的重点很简单： 给 Agent 一个循环。",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "Codex 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "英伟达工程师这段讲 Agent Loop 的视频，值得看。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@EXM7777 #97",
+      "source_url": "https://x.com/EXM7777/status/2073149818336408010",
+      "signal_path": "x-feed/2026-07-04/signals/EXM7777__feed__2073149818336408010.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "Fable x Obsidian inside Claude Code is literally insane... and there will never be a better time to build a fully docum",
+      "excerpt": "Fable x Obsidian inside Claude Code is literally insane... and there will never be a better time to build a fully docum",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "帖子在串一个 Obsidian + Claude 工作流，开头就是新建 vault，再接到 Claude Desktop / Claude Code。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@FeitengLi #46",
+      "source_url": "https://x.com/FeitengLi/status/2073046885896728625",
+      "signal_path": "x-feed/2026-07-04/signals/FeitengLi__feed__2073046885896728625.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "桥水基金在 Mira Murati（OpenAI 前 CTO）新公司 Thinking Machines 平台上发的 Technical Report。 拿 Qwen3-235B 做私有化微调，在金融文档筛选和央行报告解读上直接落地。",
+      "excerpt": "桥水基金在 Mira Murati（OpenAI 前 CTO）新公司 Thinking Machines 平台上发的 Technical Report。 拿 Qwen3-235B 做私有化微调，在金融文档筛选和央行报告解读上直接落地。",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "OpenAI 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "桥水基金在 Mira Murati（OpenAI 前 CTO）新公司 Thinking Machines 平台上发的 Technical Report。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@Xudong07452910 #73",
+      "source_url": "https://x.com/Xudong07452910/status/2073247932250546248",
+      "signal_path": "x-feed/2026-07-04/signals/Xudong07452910__feed__2073247932250546248.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "为什么 AI Agent 的「记忆」通常被设计成外挂的数据库，而不是一种可以被学习的能力？ 这篇斯坦福论文 AutoMem 的答案是：记忆本身就是一种认知技能，就像阅读、推理一样，可以被端到端训练。",
+      "excerpt": "为什么 AI Agent 的「记忆」通常被设计成外挂的数据库，而不是一种可以被学习的能力？ 这篇斯坦福论文 AutoMem 的答案是：记忆本身就是一种认知技能，就像阅读、推理一样，可以被端到端训练。",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "X 推荐流 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "为什么 AI Agent 的「记忆」通常被设计成外挂的数据库，而不是一种可以被学习的能力？ 这篇斯坦福论文 AutoMem 的答案是：记忆本身就是一种认知技能，就像阅读、推理一样，可以被端到端训练。"
+    },
+    {
+      "lane": "x-feed",
+      "title": "@php_martin #61",
+      "source_url": "https://x.com/php_martin/status/2073031000775410000",
+      "signal_path": "x-feed/2026-07-04/signals/php_martin__feed__2073031000775410000.md",
+      "fetched_at": "2026-07-04T08:52:40+0000",
+      "source_snippet": "一份 PRD，直接生成 21,000 行代码 把产品需求文档丢进去，它自己完成了完整拆解：任务规划、代码生成、测试运行、bug 修复，全程没有任何人工介入。 123 秒的视频里，从一个空白项目开始，逐步生成后端 API、前端界面、数据库",
+      "excerpt": "一份 PRD，直接生成 21,000 行代码 把产品需求文档丢进去，它自己完成了完整拆解：任务规划、代码生成、测试运行、bug 修复，全程没有任何人工介入。 123 秒的视频里，从一个空白项目开始，逐步生成后端 API、前端界面、数据库",
+      "source": "x",
+      "signal_type": "feed-exposure",
+      "editor_headline": "X 推荐流 这条线索已经从泛聊开始落到更具体的工作流动作。",
+      "editor_summary": "一份 PRD，直接生成 21,000 行代码 把产品需求文档丢进去，它自己完成了完整拆解：任务规划、代码生成、测试运行、bug 修复，全程没有任何人工介入。"
+    },
+    {
+      "lane": "x-following",
+      "title": "@op7418",
+      "source_url": "https://x.com/op7418/status/2073221461792464953",
+      "signal_path": "x-following/2026-07-04/signals/op7418__post__2073221461792464953.md",
+      "fetched_at": "2026-07-04T08:52:45+0000",
+      "source_snippet": "从前天 Fable 5 上线早上开始到现在，Fable 5 和 Codex 一起完成了它的第一个 loop 循环。 帮我的 CodePilot 完成了 AI SDK 7 的所有升级。 已经跑了两天整，目前我的额度还没有用完，所以 Fab",
+      "excerpt": "从前天 Fable 5 上线早上开始到现在，Fable 5 和 Codex 一起完成了它的第一个 loop 循环。 帮我的 CodePilot 完成了 AI SDK 7 的所有升级。 已经跑了两天整，目前我的额度还没有用完，所以 Fab",
+      "source": "x",
+      "signal_type": "post",
+      "editor_headline": "Codex 这条关注流线索需要补出原帖对象、动作和卡点。",
+      "editor_summary": "从前天 Fable 5 上线早上开始到现在，Fable 5 和 Codex 一起完成了它的第一个 loop 循环。"
+    },
+    {
+      "lane": "hacker-news-watch",
+      "title": "Agentic coding notes from Galapagos Island",
+      "source_url": "https://news.ycombinator.com/item?id=48782671",
+      "signal_path": "hacker-news-watch/2026-07-04/signals/hn__topstories__48782671__story__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:54:59+0000",
+      "source_snippet": "Agentic coding notes from Galapagos Island List: topstories Rank: #2 Created at: 2026-07-04T04:37:15Z Discussion URL: External article: OP's alt text makes it clear that by \"Galapagos Island\" they mean Vancouver. I assumed that this was some sort of local nickname, but all of the references to \"Galápagos of Canada\" I could find are talking about Haida Gwaii instead. A lot of the crazy ideas seem to have melted away in the face of massive context sizes. Today, I can put roughly a megabyte of utf8 text into my system prompt before things start to get weird.That is a massive amount of information even if we are being sloppy with it. You can read The Hobbit and the first Harry Potter book cover-to-cover and still have room to spare. I would deeply struggle to develop a world model this detailed for any business. Anything that needs to get more specific than these narratives can be a SQL query tool into the data warehouse, grep over the codebase, MS graph API lookup, etc.Giving the business a balanced way to collaborate over this one shared model of the world is a new challenge I am beginning to engage with. I've also noticed that the world model will compound on itself in terms of self-detection of update opportunities. The more constraints there are, the more likely we appear to violate one. URL typo: \"hange how he works](/productivity-velocity/)\". (I make this kind of Markdown syntax error all the time and set up a lint for '](/'.)You should talk to for sponsorship/credits and about environments.",
+      "excerpt": "Agentic coding notes from Galapagos Island List: topstories Rank: #2 Created at: 2026-07-04T04:37:15Z Discussion URL: External article: OP's alt text makes it clear that by \"Galapagos Island\" they mean Vancouver.",
+      "source": "hackernews",
+      "signal_type": "hackernews_story",
+      "editor_headline": "Agentic coding notes from Galapagos Island 这条 Hacker News 热榜讨论已经落到更具体的实践细节。",
+      "editor_summary": "原文围绕 Agentic coding notes from Galapagos Island 展开，具体变化见来源。"
+    },
+    {
+      "lane": "hacker-news-watch",
+      "title": "Leanstral 1.5: Proof abundance for all",
+      "source_url": "https://news.ycombinator.com/item?id=48780801",
+      "signal_path": "hacker-news-watch/2026-07-04/signals/hn__topstories__48780801__story__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:54:59+0000",
+      "source_snippet": "Leanstral 1.5: Proof abundance for all List: topstories Rank: #3 Created at: 2026-07-03T22:33:10Z Discussion URL: External article: There's a lot of criticism of Mistral being unable to compete with large model, and that's fair. But I think it dismisses what Mistral is actually doing, which is making specific capabilities available at high quality in tiny models.I do a lot of OCR, file analysis, stuff like that. I use Mistral for that. I put 100$ into my account, and it just runs for a year without any worries about the amount of requests I make, because the cost is minuscule. That's valuable, even if it doesn't compete with Opus 4.8. This is nice work, but I found the bug finding example to be weird:> One such bug was in the sign function for zigzag decoding of the datrs/varinteger library. On input Std.U64.MAX, the expression (value + 1) overflowed, causing crashes in debug mode and silent corruption in release mode—an edge case that testing and fuzzing would typically miss.In what way would this boundary condition case be considered something that \"testing [...] would typically miss\"?",
+      "excerpt": "Leanstral 1.5: Proof abundance for all List: topstories Rank: #3 Created at: 2026-07-03T22:33:10Z Discussion URL: External article: There's a lot of criticism of Mistral being unable to compete with large model, and that's fair.",
+      "source": "hackernews",
+      "signal_type": "hackernews_story",
+      "editor_headline": "Leanstral 1.5: Proof abundance for all 这条 Hacker News 热榜讨论已经落到更具体的实践细节。",
+      "editor_summary": "原文围绕 Leanstral 1.5: Proof abundance for all 展开，具体变化见来源。"
+    },
+    {
+      "lane": "hacker-news-watch",
+      "title": "SearXNG: A free internet metasearch engine",
+      "source_url": "https://news.ycombinator.com/item?id=48779454",
+      "signal_path": "hacker-news-watch/2026-07-04/signals/hn__topstories__48779454__story__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:54:59+0000",
+      "source_snippet": "SearXNG: A free internet metasearch engine List: topstories Rank: #10 Created at: 2026-07-03T20:15:49Z Discussion URL: External article: Ohi, I'm the original creator of Searx, but due to the limitations of the metasearch concept I'm not involved in the development anymore. My new search project is ( is a full text indexer for websites and local files which automatically saves all the visited pages rendered by your browser. Storing full page content allows serving offline result previews and the full page content via MCP.Take a look at how the MCP can be utilized: Shameless plug: For commercial offering that also includes social media search, I run this: I've been using searxng for several years now. I don't run my own instances because the inhumane network censorship imposed by GFW, and proxy detection enforced by search engines. Instead, I rely on public instances on the list [1] and libredirect [2]. Note that service from a single instance is not guaranteed, but you can always switch to other available instances with little cost within a minute.I won't say searxng can help you degoogle because metasearch engine calls other search engines, e.g., google, to collect results. However, if you try searxng, you can at least get rid of things like ai reviews in no time.In the end, thank you people after searxng project and public instances.[1]",
+      "excerpt": "SearXNG: A free internet metasearch engine List: topstories Rank: #10 Created at: 2026-07-03T20:15:49Z Discussion URL: External article: Ohi, I'm the original creator of Searx, but due to the limitations of the metasearch concept I'm not involved in the development anymore.",
+      "source": "hackernews",
+      "signal_type": "hackernews_story",
+      "editor_headline": "MCP 这条 Hacker News 热榜讨论已经落到更具体的实践细节。",
+      "editor_summary": "原文围绕 MCP 展开，具体变化见来源。"
+    },
+    {
+      "lane": "hacker-news-search-watch",
+      "title": "Show HN: Agentic Orchestrator, a TUI for long-running coding agents",
+      "source_url": "https://news.ycombinator.com/item?id=48727448",
+      "signal_path": "hacker-news-search-watch/2026-07-04/signals/hn__search__48727448__story__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:55:33+0000",
+      "source_snippet": "Hello Folks!Agentic Orchestrator is a terminal tool that takes complex feature requests and builds them by orchestrating coding agents through a series of phases that emulate a full-fledged engineering flow: requirements clarification, research, design, multi-phase planning, implementation, and review. It is a single pane of glass for all your features and exposes post-publish utilities such as resolving merge conflicts and responding to review comments.The key design choice is that this is deterministic orchestration on top of undeterministic agents: things like \"human review gates\", phase transitions, and artifact validations are all done by the harness in GO, while the agents take on \"bite-sized\" tasks.In the lifecycle of a feature, human judgment is typically needed during the \"first half\" of the workflow (from clarification to planning), depending on how much the developer wants to be involved. The \"second half\" (multi-phased implementation/review loop) typically executes while \"AFK\" unless the tool is unable to make progress without human intervention.Agentic Orchestrator is Apache2.0 and can be installed via Homebrew. You should be able to run it on macOS, Linux and WSL as long as you have `gh` and at least one of the following coding agents: OpenCode (tested with GLM-5.2), Codex, or Claude Code. While having a single coding agent is enough, in my setup I like to mix and match different agents/models for different phases (eg: claude/opus4.7 for planning, opencode/glm5.2 for implementing, codex/gpt5.5 for reviewing).I hope you enjoy it.",
+      "excerpt": "Hello Folks!Agentic Orchestrator is a terminal tool that takes complex feature requests and builds them by orchestrating coding agents through a series of phases that emulate a full-fledged engineering flow",
+      "matched_query": "terminal coding agent",
+      "source": "hackernews",
+      "signal_type": "hackernews_story_search_hit",
+      "editor_headline": "Hacker News 搜索词「terminal coding agent」命中的讨论把重点放在 工作流 上。",
+      "editor_summary": "这条命中来自对「terminal coding agent」的搜索，正文把 工作流 这类可复用做法写得更具体。"
+    },
+    {
+      "lane": "claude-code-watch",
+      "title": "v2.1.201",
+      "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.201",
+      "signal_path": "claude-code-watch/2026-07-04/signals/anthropics__claude-code__release__v2.1.201.md",
+      "fetched_at": "2026-07-04T08:55:37+0000",
+      "source_snippet": "Claude Sonnet 5 sessions no longer use the mid-conversation system role for harness reminders",
+      "excerpt": "Claude Sonnet 5 sessions no longer use the mid-conversation system role for harness reminders claude-darwin-arm64.tar.gz (64.8 MB) claude-darwin-x64.tar.gz (69.4 MB) claude-linux-arm64-musl.tar.gz (72.3 MB) claude-linux-arm64.tar.gz (74.3 MB) claude-linux-x64-musl.tar.gz (73.5",
+      "source": "github",
+      "signal_type": "release",
+      "editor_headline": "v2.1.201 这次更新更偏向补齐真实使用链路。",
+      "editor_summary": "原文围绕 v2.1.201 展开，具体变化见来源。"
+    },
+    {
+      "lane": "claude-code-watch",
+      "title": "v2.1.200",
+      "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.200",
+      "signal_path": "claude-code-watch/2026-07-04/signals/anthropics__claude-code__release__v2.1.200.md",
+      "fetched_at": "2026-07-04T08:55:37+0000",
+      "source_snippet": "Changed `AskUserQuestion` dialogs to no longer auto-continue by default; opt into an idle timeout via `/config` Changed the \"default\" permission mode to \"Manual\" across the CLI, `--help`, VS Code, and JetBrains; `--permission-mode manual` and `\"defaultMode\": \"manual\"` are accepted alongside `default` Fixed a crash at startup when `disabledMcpServers` or `enabledMcpServers` in `.claude.json` is set to a non-array value Fixed background sessions silently stopping mid-turn after sleep/wake or when reopening a stalled session Fixed background sessions re-running a turn cancelled with Esc after a stall respawn",
+      "excerpt": "Changed `AskUserQuestion` dialogs to no longer auto-continue by default; opt into an idle timeout via `/config` Changed the \"default\" permission mode to \"Manual\" across the CLI, `--help`, VS Code, and JetBrains",
+      "source": "github",
+      "signal_type": "release",
+      "editor_headline": "v2.1.200 这次更新更偏向补齐真实使用链路。",
+      "editor_summary": "原文围绕 v2.1.200 展开，具体变化见来源。"
+    },
+    {
+      "lane": "claude-code-watch",
+      "title": "v2.1.199",
+      "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.199",
+      "signal_path": "claude-code-watch/2026-07-04/signals/anthropics__claude-code__release__v2.1.199.md",
+      "fetched_at": "2026-07-04T08:55:37+0000",
+      "source_snippet": "Stacked slash-skill invocations like `/skill-a /skill-b do XYZ` now load all leading skills (up to 5), not just the first Fixed SSL certificate errors (TLS-inspecting proxies, missing `NODE_EXTRA_CA_CERTS`, expired certs) burning retries before showing actionable guidance — they now fail immediately with the fix hint Fixed streaming responses being discarded when the API emits a mid-stream overloaded/server error after partial output — the partial is now kept with an incomplete-response notice Fixed subagents cut off by a rate limit or server error silently failing instead of returning their partial work to the parent Fixed subagents reporting API errors (e.g. usage limit reached) as successful results — the error is now reported to the parent agent",
+      "excerpt": "Stacked slash-skill invocations like `/skill-a /skill-b do XYZ` now load all leading skills (up to 5), not just the first Fixed SSL certificate errors (TLS-inspecting proxies, missing `NODE_EXTRA_CA_CERTS`",
+      "source": "github",
+      "signal_type": "release",
+      "editor_headline": "v2.1.199 这次更新更偏向补齐真实使用链路。",
+      "editor_summary": "原文围绕 v2.1.199 展开，具体变化见来源。"
+    },
+    {
+      "lane": "codex-watch",
+      "title": "0.143.0-alpha.35",
+      "source_url": "https://github.com/openai/codex/releases/tag/rust-v0.143.0-alpha.35",
+      "signal_path": "codex-watch/2026-07-04/signals/openai__codex__release__rust-v0.143.0-alpha.35.md",
+      "fetched_at": "2026-07-04T08:56:24+0000",
+      "source_snippet": "Release 0.143.0-alpha.",
+      "excerpt": "Release 0.143.0-alpha.35 argument-comment-lint (0.0 MB) argument-comment-lint-aarch64-apple-darwin.tar.gz (3.2 MB) argument-comment-lint-aarch64-unknown-linux-gnu.tar.gz (3.6 MB) argument-comment-lint-x86_64-pc-windows-msvc.zip (3.1",
+      "source": "github",
+      "signal_type": "release",
+      "editor_headline": "0.143.0-alpha.35 这次改动更像是在修执行链路里的关键语义。",
+      "editor_summary": "原文围绕 0.143.0-alpha.35 展开，具体变化见来源。"
+    },
+    {
+      "lane": "github-trending-weekly",
+      "title": "OmniRoute",
+      "source_url": "https://github.com/diegosouzapw/OmniRoute",
+      "signal_path": "github-trending-weekly/2026-07-04/signals/diegosouzapw__OmniRoute__trending-weekly.md",
+      "fetched_at": "2026-07-04T08:56:46+0000",
+      "source_snippet": "Never stop coding. Free AI gateway: one endpoint, 231+ providers (50+ free), connect Claude Code, Codex, Cursor, Cline &amp; Copilot to FREE Claude/GPT/Gemini. RTK+Caveman stacked compression saves 15 **Author:** @diegosouzapw/OmniRoute",
+      "excerpt": "Never stop coding. Free AI gateway: one endpoint, 231+ providers (50+ free), connect Claude Code, Codex, Cursor, Cline &amp; Copilot to FREE Claude/GPT/Gemini. RTK+Caveman stacked compression saves 15 **Author:** @diegosouzapw/OmniRoute",
+      "source": "github-trending",
+      "signal_type": "trending-weekly",
+      "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+      "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+    },
+    {
+      "lane": "github-trending-weekly",
+      "title": "codex-plugin-cc",
+      "source_url": "https://github.com/openai/codex-plugin-cc",
+      "signal_path": "github-trending-weekly/2026-07-04/signals/openai__codex-plugin-cc__trending-weekly.md",
+      "fetched_at": "2026-07-04T08:56:56+0000",
+      "source_snippet": "Use Codex from Claude Code to review code or delegate tasks. **Author:** @openai/codex-plugin-cc",
+      "excerpt": "Use Codex from Claude Code to review code or delegate tasks. **Author:** @openai/codex-plugin-cc",
+      "source": "github-trending",
+      "signal_type": "trending-weekly",
+      "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+      "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+    },
+    {
+      "lane": "github-trending-weekly",
+      "title": "ai-berkshire",
+      "source_url": "https://github.com/xbtlin/ai-berkshire",
+      "signal_path": "github-trending-weekly/2026-07-04/signals/xbtlin__ai-berkshire__trending-weekly.md",
+      "fetched_at": "2026-07-04T08:56:41+0000",
+      "source_snippet": "AI 时代的伯克希尔：基于 Claude Code / Codex 的价值投资研究框架。巴菲特·芒格·段永平·李录四大师方法论 + 多Agent并行研究。| AI-era Berkshire: a value investing research framework built for Claude Code / Codex.",
+      "excerpt": "AI 时代的伯克希尔：基于 Claude Code / Codex 的价值投资研究框架。巴菲特·芒格·段永平·李录四大师方法论 + 多Agent并行研究。| AI-era Berkshire: a value investing research framework built for Claude Code / Codex.",
+      "source": "github-trending",
+      "signal_type": "trending-weekly",
+      "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+      "editor_summary": "AI 时代的伯克希尔：基于 Claude Code / Codex 的价值投资研究框架。"
+    },
+    {
+      "lane": "rize-watch",
+      "title": "#3 Anthropic-Cybersecurity-Skills — Rize AI tools weekly ranking",
+      "source_url": "https://github.com/mukul975/Anthropic-Cybersecurity-Skills",
+      "signal_path": "rize-watch/2026-07-04/signals/03-mukul975-anthropic-cybersecurity-skills__rize_ai_tools_rank__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:56:59+0000",
+      "source_snippet": "817 structured cybersecurity skills for AI agents · Mapped to 6 frameworks: MITRE ATT&CK, NIST CSF 2.0, MITRE ATLAS, D3FEND, NIST AI RMF & MITRE F3 (Fight Fraud) · agentskills.io standard · Works with Claude Code, GitHub Copilot, Codex CLI, Cursor, Gemini CLI & 20+ platforms · 29 security domains · Apache 2.0 Rank: #3 Repository: Ranking page",
+      "excerpt": "817 structured cybersecurity skills for AI agents · Mapped to 6 frameworks: MITRE ATT&CK, NIST CSF 2.0, MITRE ATLAS, D3FEND, NIST AI RMF & MITRE F3 (Fight Fraud) · agentskills.io standard · Works with Claude Code, GitHub Copilot, Codex CLI, Cursor",
+      "source": "rize",
+      "signal_type": "rize_ai_tools_rank",
+      "editor_headline": "Claude Code 进入了今天的日报。",
+      "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+    },
+    {
+      "lane": "product-hunt-watch",
+      "title": "Termi Protocol — Watch your AI coding agents build, live in 3D",
+      "source_url": "https://www.producthunt.com/products/termi-protocol?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "signal_path": "product-hunt-watch/2026-07-04/signals/termi-protocol__artificial-intelligence__producthunt_topic_hit__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:57:04+0000",
+      "source_snippet": "Watch your AI coding agents build, live in 3D **Author:** @Termi Protocol",
+      "excerpt": "Watch your AI coding agents build, live in 3D **Author:** @Termi Protocol",
+      "source": "producthunt",
+      "signal_type": "producthunt_topic_hit",
+      "editor_headline": "Termi Protocol — Watch your AI coding agents build, live in 3D 把 agent 工作流里的单一环节做成了产品。",
+      "editor_summary": "Termi Protocol — Watch your AI coding agents build, live in 3D 的卖点很集中，说明面向 agent 工作流单一环节的包装正在变成独立产品。"
+    },
+    {
+      "lane": "polymarket-watch",
+      "title": "Will Anthropic have the best Coding AI model at the end of July 2026?",
+      "source_url": "https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-july",
+      "signal_path": "polymarket-watch/2026-07-04/signals/pm__coding-ai__556287__prediction_market__2026-07-04.md",
+      "fetched_at": "2026-07-04T08:57:07+0000",
+      "source_snippet": "Market: Which company has the best Coding AI model end of July? Question: Will Anthropic have the best Coding AI model at the end of July 2026? Current leader: Anthropic (95.5%) Anthropic: 95.5% OpenAI: 3.5% xAI: 1.5% 24h volume: 465.6 30d volume: 13,606.2 Liquidity: 85,342.0 Price movement: up 5.0% this week",
+      "excerpt": "Market: Which company has the best Coding AI model end of July? Question: Will Anthropic have the best Coding AI model at the end of July 2026? Current leader: Anthropic (95.5%)",
+      "matched_query": "coding AI",
+      "source": "polymarket",
+      "signal_type": "prediction_market",
+      "editor_headline": "市场目前把 Anthropic 放在更占优的位置，Anthropic 相关判断还在继续收敛。",
+      "editor_summary": "当前主结果大约在 95.5% 左右，说明交易者对这条判断已经形成较强共识。"
+    }
+  ],
+  "summary": {
+    "selected_item_count": 25,
+    "lane_counts": [
+      {
+        "lane": "weather-watch",
+        "selected_item_count": 2
+      },
+      {
+        "lane": "x-feed",
+        "selected_item_count": 8
+      },
+      {
+        "lane": "x-following",
+        "selected_item_count": 1
+      },
+      {
+        "lane": "reddit-watch",
+        "selected_item_count": 0
+      },
+      {
+        "lane": "hacker-news-watch",
+        "selected_item_count": 3
+      },
+      {
+        "lane": "hacker-news-search-watch",
+        "selected_item_count": 1
+      },
+      {
+        "lane": "claude-code-watch",
+        "selected_item_count": 3
+      },
+      {
+        "lane": "codex-watch",
+        "selected_item_count": 1
+      },
+      {
+        "lane": "github-ai-projects",
+        "selected_item_count": 0
+      },
+      {
+        "lane": "github-trending-weekly",
+        "selected_item_count": 3
+      },
+      {
+        "lane": "rize-watch",
+        "selected_item_count": 1
+      },
+      {
+        "lane": "product-hunt-watch",
+        "selected_item_count": 1
+      },
+      {
+        "lane": "polymarket-watch",
+        "selected_item_count": 1
+      }
+    ]
+  }
+}

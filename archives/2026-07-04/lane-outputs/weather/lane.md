@@ -1,0 +1,4 @@
+## 天气
+
+- **北京·海淀**：今日小毛毛雨，24.8–37.2°C，最高温仍在 37°C 以上；降水概率 49%、预计 0.2 mm，西南风最高 11.4 km/h，外出重点仍是防暑补水，阵雨影响较轻。来源：[Open-Meteo](https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-04&end_date=2026-07-04)
+- **上海·杨浦**：今日雷暴并可能伴轻微冰雹，25.1–32.4°C；降水概率 96%、预计 10.8 mm，西南风最高 9.1 km/h，通勤和外卖/出行安排建议预留强降雨延误。来源：[Open-Meteo](https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-04&end_date=2026-07-04)

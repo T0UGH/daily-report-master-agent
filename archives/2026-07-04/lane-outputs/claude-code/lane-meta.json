@@ -1,0 +1,51 @@
+{
+  "lane": "claude-code",
+  "status": "ok",
+  "selected_count": 7,
+  "rejected_count": 2,
+  "sources": [
+    {
+      "title": "Claude Code v2.1.201",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.201",
+      "raw_file": "raw/anthropics__claude-code__release__v2.1.201.md",
+      "selected_reason": "Sonnet 5 harness reminder system-role behavior is a concrete user-visible/session-behavior change."
+    },
+    {
+      "title": "Claude Code v2.1.200",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.200",
+      "raw_file": "raw/anthropics__claude-code__release__v2.1.200.md",
+      "selected_reason": "Default permission mode, AskUserQuestion timeout, background daemon, plugin/MCP/accessibility fixes are concrete workflow and reliability changes."
+    },
+    {
+      "title": "Claude Code v2.1.199",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.199",
+      "raw_file": "raw/anthropics__claude-code__release__v2.1.199.md",
+      "selected_reason": "Stacked slash-skills, partial-output preservation, subagent error propagation, retry behavior, and background-agent fixes directly affect coding-agent workflows."
+    },
+    {
+      "title": "Claude Code changelog 2026-07-04",
+      "url": "https://github.com/anthropics/claude-code/blob/HEAD/CHANGELOG.md",
+      "raw_file": "raw/anthropics__claude-code__changelog__2026-07-04.md",
+      "selected_reason": "Used only to confirm v2.1.201 changelog entry; release page remained the cleaner source link."
+    }
+  ],
+  "rejected": [
+    {
+      "title": "Claude Code v2.1.198",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.198",
+      "raw_file": "raw/anthropics__claude-code__release__v2.1.198.md",
+      "reason": "Substantially covered in the 2026-07-03 report; not repeated except as background context."
+    },
+    {
+      "title": "Release asset lists for v2.1.199-v2.1.201",
+      "url": "https://github.com/anthropics/claude-code/releases",
+      "raw_file": "raw/anthropics__claude-code__release__v2.1.199.md; raw/anthropics__claude-code__release__v2.1.200.md; raw/anthropics__claude-code__release__v2.1.201.md",
+      "reason": "Binary asset sizes and checksum links are routine packaging metadata, not useful reader-facing daily-report items."
+    }
+  ],
+  "notes": [
+    "Raw corpus status was ok with 5 raw files; selected_items was absent and not used.",
+    "Read 2026-07-03 history for dedupe. v2.1.198 was rejected because it was already reported yesterday.",
+    "Output is Chinese-first and keeps source links."
+  ]
+}

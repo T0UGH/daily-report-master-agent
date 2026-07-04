@@ -1,0 +1,142 @@
+{
+  "lane": "rize",
+  "status": "ok",
+  "selected_count": 8,
+  "rejected_count": 12,
+  "sources": [
+    "https://rize.io/ai-tools",
+    "https://github.com/calesthio/OpenMontage",
+    "https://github.com/mukul975/Anthropic-Cybersecurity-Skills",
+    "https://github.com/HKUDS/Vibe-Trading",
+    "https://github.com/Leonxlnx/taste-skill",
+    "https://github.com/jundot/omlx",
+    "https://github.com/jnMetaCode/agency-agents-zh",
+    "https://github.com/calesthio/Crucix",
+    "https://github.com/browser-use/browser-harness"
+  ],
+  "selected": [
+    {
+      "rank": 2,
+      "repo": "calesthio/OpenMontage",
+      "url": "https://github.com/calesthio/OpenMontage",
+      "reason": "排名靠前且 raw 描述完整：开源 agentic 视频生产系统，含 12 条 pipeline、52 个工具、500+ agent skills。"
+    },
+    {
+      "rank": 3,
+      "repo": "mukul975/Anthropic-Cybersecurity-Skills",
+      "url": "https://github.com/mukul975/Anthropic-Cybersecurity-Skills",
+      "reason": "排名靠前且与 AI agent 安全技能直接相关，raw 提供 817 个技能、多个安全框架和支持平台。"
+    },
+    {
+      "rank": 4,
+      "repo": "HKUDS/Vibe-Trading",
+      "url": "https://github.com/HKUDS/Vibe-Trading",
+      "reason": "排名靠前，raw 明确定位为个人交易 agent。"
+    },
+    {
+      "rank": 5,
+      "repo": "Leonxlnx/taste-skill",
+      "url": "https://github.com/Leonxlnx/taste-skill",
+      "reason": "排名靠前，raw 说明其用于给 AI 增加 taste 约束、减少泛化输出。"
+    },
+    {
+      "rank": 6,
+      "repo": "jundot/omlx",
+      "url": "https://github.com/jundot/omlx",
+      "reason": "排名靠前且面向 LLM 推理基础设施，raw 提供 Apple Silicon、continuous batching、SSD caching、macOS 菜单栏管理等具体信息。"
+    },
+    {
+      "rank": 7,
+      "repo": "jnMetaCode/agency-agents-zh",
+      "url": "https://github.com/jnMetaCode/agency-agents-zh",
+      "reason": "排名靠前且与 agent 角色库/编排相关，raw 给出 266 个角色、18 种工具、20 个部门和 DAG 协作信息。"
+    },
+    {
+      "rank": 8,
+      "repo": "calesthio/Crucix",
+      "url": "https://github.com/calesthio/Crucix",
+      "reason": "排名靠前，raw 明确为个人情报 agent，从多数据源观察变化并提醒。"
+    },
+    {
+      "rank": 9,
+      "repo": "browser-use/browser-harness",
+      "url": "https://github.com/browser-use/browser-harness",
+      "reason": "排名靠前且与浏览器 agent 执行直接相关，raw 描述为 self-healing harness。"
+    }
+  ],
+  "rejected": [
+    {
+      "rank": 1,
+      "repo": "rohitg00/ai-engineering-from-scratch",
+      "url": "https://github.com/rohitg00/ai-engineering-from-scratch",
+      "reason": "raw 描述过薄，仅有 Learn it. Build it. Ship it for others，无法具体说明项目内容。"
+    },
+    {
+      "rank": 10,
+      "repo": "waooAI/waoowaoo",
+      "url": "https://github.com/waooAI/waoowaoo",
+      "reason": "超过本栏最多 8 条限制；前面已有 OpenMontage，优先保留更高排名的视频生产系统。"
+    },
+    {
+      "rank": 11,
+      "repo": "mksglu/context-mode",
+      "url": "https://github.com/mksglu/context-mode",
+      "reason": "超过本栏最多 8 条限制，虽与 coding agents 相关但排名低于已选条目。"
+    },
+    {
+      "rank": 12,
+      "repo": "nexu-io/html-anything",
+      "url": "https://github.com/nexu-io/html-anything",
+      "reason": "超过本栏最多 8 条限制。"
+    },
+    {
+      "rank": 13,
+      "repo": "palmier-io/palmier-pro",
+      "url": "https://github.com/palmier-io/palmier-pro",
+      "reason": "超过本栏最多 8 条限制且 raw 描述较短。"
+    },
+    {
+      "rank": 14,
+      "repo": "raiyanyahya/how-to-train-your-gpt",
+      "url": "https://github.com/raiyanyahya/how-to-train-your-gpt",
+      "reason": "超过本栏最多 8 条限制。"
+    },
+    {
+      "rank": 15,
+      "repo": "ClaudioDrews/memory-os",
+      "url": "https://github.com/ClaudioDrews/memory-os",
+      "reason": "超过本栏最多 8 条限制。"
+    },
+    {
+      "rank": 16,
+      "repo": "nullclaw/nullclaw",
+      "url": "https://github.com/nullclaw/nullclaw",
+      "reason": "超过本栏最多 8 条限制。"
+    },
+    {
+      "rank": 17,
+      "repo": "kyegomez/OpenMythos",
+      "url": "https://github.com/kyegomez/OpenMythos",
+      "reason": "超过本栏最多 8 条限制。"
+    },
+    {
+      "rank": 18,
+      "repo": "xbtlin/ai-berkshire",
+      "url": "https://github.com/xbtlin/ai-berkshire",
+      "reason": "超过本栏最多 8 条限制。"
+    },
+    {
+      "rank": 19,
+      "repo": "lintsinghua/claude-code-book",
+      "url": "https://github.com/lintsinghua/claude-code-book",
+      "reason": "超过本栏最多 8 条限制。"
+    },
+    {
+      "rank": 20,
+      "repo": "nexu-io/open-design",
+      "url": "https://github.com/nexu-io/open-design",
+      "reason": "超过本栏最多 8 条限制。"
+    }
+  ],
+  "notes": "Raw corpus status ok. 使用 raw/01-20 作为主要证据；selected_items 未作为判断依据。读取 2026-07-03 历史报告仅作参考；Rize 榜单为当日排名事实，未因昨日同源榜单整体去重。"
+}

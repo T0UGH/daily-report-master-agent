@@ -1,0 +1,49 @@
+{
+  "lane": "product-hunt",
+  "status": "ok",
+  "selected_count": 3,
+  "rejected_count": 22,
+  "sources": [
+    {
+      "title": "Context.dev — One API to scrape, enrich, and extract the internet",
+      "url": "https://www.producthunt.com/products/context-dev?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "reason": "Selected: directly useful for AI/coding-agent products that need web scraping, Markdown conversion, structured extraction, screenshots, and enrichment through one API; strongest Product Hunt traction in raw corpus at 825 votes."
+    },
+    {
+      "title": "Glaze by Raycast — Create your own Mac apps by chatting with AI",
+      "url": "https://www.producthunt.com/products/glaze-4?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "reason": "Selected: concrete AI-native app-building workflow on macOS from a known desktop productivity vendor; PH shows 467 votes and 81 comments."
+    },
+    {
+      "title": "Macuse — Give Your AI Superpowers on macOS",
+      "url": "https://www.producthunt.com/products/macuse?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "reason": "Selected: connects Claude, Codex, Cursor, Raycast, and MCP clients to macOS apps plus Computer Use, directly relevant to local agent workflows and permissions."
+    }
+  ],
+  "rejected": [
+    {"title": "Retrace", "reason": "Rejected as exact repeat from 2026-07-03 Product Hunt lane."},
+    {"title": "scritty", "reason": "Rejected as exact repeat from 2026-07-03 Product Hunt lane."},
+    {"title": "PieterPost MCP", "reason": "Rejected as exact repeat from 2026-07-03 Product Hunt lane."},
+    {"title": "Basedash Actions", "reason": "Good agentic BI/action item, but lower priority than selected items for a coding-agent daily report; kept out to stay within 2-3 items."},
+    {"title": "Flowly", "reason": "Relevant personal agent, but description is broad and less concrete than Context.dev/Macuse for developer workflows."},
+    {"title": "Archify", "reason": "Developer-tool relevant, but raw evidence is thin beyond 'understand software' browser inspection."},
+    {"title": "Banger Mail", "reason": "AI agents in shared mailboxes, but mainly team inbox SaaS and less central to AI/coding-agent readers."},
+    {"title": "Needle", "reason": "Agentic GTM product; rejected as vertical sales workflow rather than broad AI/coding-agent infrastructure."},
+    {"title": "Macro", "reason": "Broad all-in-one workspace with shared memory; agent relevance is generic."},
+    {"title": "Mentic", "reason": "Only preview-level raw evidence for Meta ads agent; too thin."},
+    {"title": "Vox", "reason": "Not selected; insufficient concrete relevance to AI/coding-agent workflows in reviewed raw corpus."},
+    {"title": "NXT", "reason": "Not selected; less relevant/less concrete for AI agent developer audience."},
+    {"title": "Solaris", "reason": "Not selected; weaker evidence and less direct coding-agent relevance."},
+    {"title": "OsloQ", "reason": "Not selected; insufficiently concrete for this lane compared with selected items."},
+    {"title": "Tamamon", "reason": "Not selected; weaker relevance to AI/coding-agent workflows."},
+    {"title": "Termi Protocol", "reason": "Preview-level/thin evidence only."},
+    {"title": "Vida", "reason": "Preview-level/thin evidence only."},
+    {"title": "CentryAI", "reason": "Subscription tracker; generic productivity and not agent/coding focused."},
+    {"title": "ChecklistFox", "reason": "AI checklist/PDF generator; too generic for this lane."},
+    {"title": "Gaming Chat SDK by CometChat", "reason": "Developer tool but not AI/coding-agent related."},
+    {"title": "html.contact", "reason": "Form backend; useful devtool but not AI/coding-agent related."},
+    {"title": "Sidedoor", "reason": "Not selected; generic productivity evidence and weak agent relevance."
+    }
+  ],
+  "notes": "Used raw corpus as primary evidence and 2026-07-03 report as dedupe reference. selected_items.json was not present. Duplicate topic files were deduplicated at product level for judgment."
+}

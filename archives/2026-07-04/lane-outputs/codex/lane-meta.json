@@ -1,0 +1,76 @@
+{
+  "lane": "codex",
+  "status": "ok",
+  "selected_count": 5,
+  "rejected_count": 8,
+  "sources": [
+    {
+      "title": "fix(install): reuse GitHub release metadata",
+      "url": "https://github.com/openai/codex/pull/31056",
+      "reason": "选中：安装器减少未认证 GitHub API 调用，并修正 403 限流时的误导性错误，直接影响 Codex 安装可靠性。"
+    },
+    {
+      "title": "[codex] expose remote plugin versions",
+      "url": "https://github.com/openai/codex/pull/30981",
+      "reason": "选中：远程插件与本地插件版本语义变清楚，影响插件 marketplace、已安装插件和 TUI 提及插件的可观测性。"
+    },
+    {
+      "title": "Fix MIME types for path-backed feedback attachments",
+      "url": "https://github.com/openai/codex/pull/30796",
+      "reason": "选中：修复 Desktop 反馈日志包 MIME metadata，避免 gzip 日志被文本解码破坏，属于可解释的诊断链路修复。"
+    },
+    {
+      "title": "0.143.0-alpha.35",
+      "url": "https://github.com/openai/codex/releases/tag/rust-v0.143.0-alpha.35",
+      "reason": "选中：预发布版本有新 tag 和跨平台资产，但说明只有版本号，因此压缩为测试通道提醒。"
+    },
+    {
+      "title": "chore: remove unused git-cliff configuration",
+      "url": "https://github.com/openai/codex/pull/31066",
+      "reason": "选中：虽是清理项，但说明 Codex Rust 发布流程不再依赖旧 TypeScript CLI changelog 工具，可减少发布流程误解。"
+    }
+  ],
+  "rejected": [
+    {
+      "title": "fix(install): reuse GitHub release metadata (#31056) commit",
+      "url": "https://github.com/openai/codex/commit/319d03056e9b345fe9d129873c3a808c5df783df",
+      "reason": "与 PR #31056 内容重复，保留 PR 作为更完整来源。"
+    },
+    {
+      "title": "[codex] expose remote plugin versions (#30981) commit",
+      "url": "https://github.com/openai/codex/commit/d206a5d68f1240b51f13a8364c20a4de307737d0",
+      "reason": "commit 原文信息过薄，且与 PR #30981 重复。"
+    },
+    {
+      "title": "Fix MIME types for path-backed feedback attachments (#30796) commit",
+      "url": "https://github.com/openai/codex/commit/1f17e7512f0e47625f2cad416f14870688a99814",
+      "reason": "与 PR #30796 重复，PR 摘要足够完整。"
+    },
+    {
+      "title": "chore: remove unused git-cliff configuration (#31066) commit",
+      "url": "https://github.com/openai/codex/commit/98d28aab54ed86714901b6619400598598876dd0",
+      "reason": "与 PR #31066 重复。"
+    },
+    {
+      "title": "[codex] Add configurable multi-agent mode hint text",
+      "url": "https://github.com/openai/codex/pull/30493",
+      "reason": "昨日 Codex 栏已写多 Agent v2 相关更新；今日 raw 没有比该条更晚的新事实，按去重规则不再重复。"
+    },
+    {
+      "title": "[codex] Add configurable multi-agent mode hint text (#30493) commit",
+      "url": "https://github.com/openai/codex/commit/da4c8ca57d40b074bdc1b5b1218851100150c56b",
+      "reason": "与 PR #30493 重复，且昨日已覆盖同主题。"
+    },
+    {
+      "title": "0.143.0-alpha.33",
+      "url": "https://github.com/openai/codex/releases/tag/rust-v0.143.0-alpha.33",
+      "reason": "release note 只有版本号，且昨日已写 alpha.33/alpha.34 测试通道信息；今天用 alpha.35 概括最新预发布。"
+    },
+    {
+      "title": "0.143.0-alpha.34",
+      "url": "https://github.com/openai/codex/releases/tag/rust-v0.143.0-alpha.34",
+      "reason": "昨日已覆盖 alpha.34；今天不重复旧预发布版本。"
+    }
+  ],
+  "notes": "基于 raw corpus 13 个文件筛选；selected_items.json 未提供且未使用。读取了 2026-07-03 历史日报作为去重参考。"
+}

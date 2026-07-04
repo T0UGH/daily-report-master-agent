@@ -1,0 +1,126 @@
+{
+  "lane": "github-trending",
+  "status": "ok",
+  "selected_count": 4,
+  "rejected_count": 17,
+  "sources": [
+    "https://github.com/openai/codex-plugin-cc",
+    "https://github.com/ogulcancelik/herdr",
+    "https://github.com/JCodesMore/ai-website-cloner-template",
+    "https://github.com/msitarzewski/agency-agents"
+  ],
+  "selected": [
+    {
+      "repo": "openai/codex-plugin-cc",
+      "url": "https://github.com/openai/codex-plugin-cc",
+      "stars": 23475,
+      "reason": "raw corpus says it lets users use Codex from Claude Code for code review or task delegation; GitHub metadata verifies >=100 stars; not present in yesterday's GitHub trending section."
+    },
+    {
+      "repo": "ogulcancelik/herdr",
+      "url": "https://github.com/ogulcancelik/herdr",
+      "stars": 11017,
+      "reason": "raw corpus identifies it as a terminal agent multiplexer; directly relevant to multi-agent workflow ergonomics; GitHub metadata verifies >=100 stars; not a repeat from yesterday."
+    },
+    {
+      "repo": "JCodesMore/ai-website-cloner-template",
+      "url": "https://github.com/JCodesMore/ai-website-cloner-template",
+      "stars": 25386,
+      "reason": "raw corpus describes one-command website cloning with AI coding agents; concrete frontend-agent workflow; GitHub metadata verifies >=100 stars; not in yesterday's report."
+    },
+    {
+      "repo": "msitarzewski/agency-agents",
+      "url": "https://github.com/msitarzewski/agency-agents",
+      "stars": 126741,
+      "reason": "raw corpus describes a library of specialized agent roles with processes and deliverables; relevant as reusable agent configuration/workflow assets; GitHub metadata verifies >=100 stars; not an exact repeat of yesterday's GitHub trending items."
+    }
+  ],
+  "rejected": [
+    {
+      "repo": "DeusData/codebase-memory-mcp",
+      "url": "https://github.com/DeusData/codebase-memory-mcp",
+      "reason": "substantially repeated from 2026-07-03 GitHub AI/GitHub Trending sections with no new raw fact beyond the same description."
+    },
+    {
+      "repo": "alibaba/page-agent",
+      "url": "https://github.com/alibaba/page-agent",
+      "reason": "substantially repeated from 2026-07-03 report with no new raw fact."
+    },
+    {
+      "repo": "browser-use/video-use",
+      "url": "https://github.com/browser-use/video-use",
+      "reason": "substantially repeated from 2026-07-03 GitHub Trending section."
+    },
+    {
+      "repo": "calesthio/OpenMontage",
+      "url": "https://github.com/calesthio/OpenMontage",
+      "reason": "substantially repeated from 2026-07-03 GitHub Trending and Rize sections."
+    },
+    {
+      "repo": "diegosouzapw/OmniRoute",
+      "url": "https://github.com/diegosouzapw/OmniRoute",
+      "reason": "substantially repeated from 2026-07-03 GitHub Trending section."
+    },
+    {
+      "repo": "google-labs-code/design.md",
+      "url": "https://github.com/google-labs-code/design.md",
+      "reason": "substantially repeated from 2026-07-03 GitHub AI/GitHub Trending sections."
+    },
+    {
+      "repo": "stablyai/orca",
+      "url": "https://github.com/stablyai/orca",
+      "reason": "substantially repeated from 2026-07-03 GitHub AI/GitHub Trending sections."
+    },
+    {
+      "repo": "topoteretes/cognee",
+      "url": "https://github.com/topoteretes/cognee",
+      "reason": "substantially repeated from 2026-07-03 GitHub AI/GitHub Trending sections."
+    },
+    {
+      "repo": "usestrix/strix",
+      "url": "https://github.com/usestrix/strix",
+      "reason": "substantially repeated from 2026-07-03 GitHub Trending section."
+    },
+    {
+      "repo": "xbtlin/ai-berkshire",
+      "url": "https://github.com/xbtlin/ai-berkshire",
+      "reason": "substantially repeated from 2026-07-03 GitHub Trending section."
+    },
+    {
+      "repo": "Robbyant/lingbot-map",
+      "url": "https://github.com/Robbyant/lingbot-map",
+      "reason": "raw description is a 3D reconstruction foundation model; AI-adjacent but no concrete coding-agent workflow relevance."
+    },
+    {
+      "repo": "craft-ai-agents/craft-agents-oss",
+      "url": "https://github.com/craft-ai-agents/craft-agents-oss",
+      "reason": "raw corpus contains no usable preview or concrete facts beyond author/repo name."
+    },
+    {
+      "repo": "interviewstreet/hiring-agent",
+      "url": "https://github.com/interviewstreet/hiring-agent",
+      "reason": "resume scoring agent is concrete but not especially relevant to AI/coding-agent workflow readers compared with selected items."
+    },
+    {
+      "repo": "kunchenguid/no-mistakes",
+      "url": "https://github.com/kunchenguid/no-mistakes",
+      "reason": "raw evidence is too thin: only 'git push no-mistakes' with no concrete workflow explanation."
+    },
+    {
+      "repo": "logto-io/logto",
+      "url": "https://github.com/logto-io/logto",
+      "reason": "auth infrastructure for SaaS/AI apps, but raw evidence does not show specific agent workflow impact."
+    },
+    {
+      "repo": "mauriceboe/TREK",
+      "url": "https://github.com/mauriceboe/TREK",
+      "reason": "travel planner; not relevant to AI/coding-agent workflows."
+    },
+    {
+      "repo": "simplex-chat/simplex-chat",
+      "url": "https://github.com/simplex-chat/simplex-chat",
+      "reason": "privacy messaging app; not relevant to AI/coding-agent workflows."
+    }
+  ],
+  "notes": "Raw corpus was primary evidence. Star counts were verified with GitHub metadata via API/gh because raw files did not include counts; all selected repos are >=100 stars. 2026-07-03 report was read for dedupe, causing repeated high-signal repos to be rejected unless a new fact was present."
+}
