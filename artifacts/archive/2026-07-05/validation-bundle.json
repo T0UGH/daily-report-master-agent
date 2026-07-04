@@ -1,0 +1,405 @@
+{
+  "report_date": "2026-07-05",
+  "collect_result": {
+    "report_date": "2026-07-05",
+    "source": "signals-engine",
+    "lanes": [
+      {
+        "name": "weather-watch",
+        "status": "ok",
+        "useful_item_count": 2
+      },
+      {
+        "name": "x-feed",
+        "status": "ok",
+        "useful_item_count": 100
+      },
+      {
+        "name": "x-following",
+        "status": "ok",
+        "useful_item_count": 100
+      },
+      {
+        "name": "reddit-watch",
+        "status": "error",
+        "useful_item_count": 0
+      },
+      {
+        "name": "hacker-news-watch",
+        "status": "ok",
+        "useful_item_count": 10
+      },
+      {
+        "name": "hacker-news-search-watch",
+        "status": "ok",
+        "useful_item_count": 14
+      },
+      {
+        "name": "claude-code-watch",
+        "status": "ok",
+        "useful_item_count": 3
+      },
+      {
+        "name": "codex-watch",
+        "status": "ok",
+        "useful_item_count": 3
+      },
+      {
+        "name": "github-ai-projects",
+        "status": "partial",
+        "useful_item_count": 0,
+        "reason": "derived_lane_no_direct_collector",
+        "errors": []
+      },
+      {
+        "name": "github-trending-weekly",
+        "status": "ok",
+        "useful_item_count": 22
+      },
+      {
+        "name": "rize-watch",
+        "status": "ok",
+        "useful_item_count": 20
+      },
+      {
+        "name": "product-hunt-watch",
+        "status": "ok",
+        "useful_item_count": 4
+      },
+      {
+        "name": "polymarket-watch",
+        "status": "ok",
+        "useful_item_count": 9
+      }
+    ],
+    "summary": {
+      "useful_item_count": 287,
+      "partial_lane_count": 2,
+      "total_lane_count": 13,
+      "ok_lane_count": 11,
+      "error_lane_count": 1
+    },
+    "errors": [
+      "reddit-watch: errors=query 'Claude Code workflows' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=Claude+Code+workflows&restrict_sr=on&sort=relevance&t=month&limit=10; query 'Codex agent' failed: HTTP 429 for https://www.reddit.com/r/LocalLLaMA/search.rss?q=Codex+agent&restrict_sr=on&sort=relevance&t=month&limit=10; query 'OpenClaw' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=OpenClaw&restrict_sr=on&sort=relevance&t=month&limit=10; query 'AI coding agents' failed: HTTP 429 for https://www.reddit.com/r/ClaudeAI/search.rss?q=AI+coding+agents&restrict_sr=on&sort=relevance&t=month&limit=10",
+      "reddit-watch: run.status='failed'",
+      "github-ai-projects: 缺少目录 /Users/haha/.daily-lane-data/signals/github-ai-projects/2026-07-05"
+    ]
+  },
+  "selected_items": {
+    "report_date": "2026-07-05",
+    "source": "signals-engine",
+    "selected_items": [
+      {
+        "lane": "weather-watch",
+        "title": "上海·杨浦 2026-07-05 weather: Thunderstorm with slight hail, 25.4°C to 29.5°C",
+        "source_url": "https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-05&end_date=2026-07-05",
+        "signal_path": "weather-watch/2026-07-05/signals/shanghai-yangpu__daily_weather__2026-07-05.md",
+        "fetched_at": "2026-07-04T22:01:00+0000",
+        "source_snippet": "Date: 2026-07-05 Location: 上海·杨浦 Condition: Thunderstorm with slight hail Temperature: 25.4°C to 29.5°C Precipitation: 96% chance, 19.3 mm Wind: up to 16.8 km/h SW (204°)",
+        "excerpt": "Date: 2026-07-05 Location: 上海·杨浦 Condition: Thunderstorm with slight hail Temperature: 25.4°C to 29.5°C Precipitation: 96% chance, 19.3 mm Wind: up to 16.8 km/h SW (204°)",
+        "source": "weather",
+        "signal_type": "daily_weather",
+        "editor_headline": "上海·杨浦 2026-07-05 weather: Thunderstorm with slight hail, 25.4°C to 29.5°C 进入了今天的日报。",
+        "editor_summary": "原文围绕 上海·杨浦 2026-07-05 weather: Thunderstorm with slight hail, 25.4°C to 29.5°C 展开，具体变化见来源。"
+      },
+      {
+        "lane": "weather-watch",
+        "title": "北京·海淀 2026-07-05 weather: Slight rain showers, 23.4°C to 32.8°C",
+        "source_url": "https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-05&end_date=2026-07-05",
+        "signal_path": "weather-watch/2026-07-05/signals/beijing-haidian__daily_weather__2026-07-05.md",
+        "fetched_at": "2026-07-04T22:00:58+0000",
+        "source_snippet": "Date: 2026-07-05 Location: 北京·海淀 Condition: Slight rain showers Temperature: 23.4°C to 32.8°C Precipitation: 48% chance, 2.7 mm Wind: up to 12.4 km/h N (345°)",
+        "excerpt": "Date: 2026-07-05 Location: 北京·海淀 Condition: Slight rain showers Temperature: 23.4°C to 32.8°C Precipitation: 48% chance, 2.7 mm Wind: up to 12.4 km/h N (345°)",
+        "source": "weather",
+        "signal_type": "daily_weather",
+        "editor_headline": "北京·海淀 2026-07-05 weather: Slight rain showers, 23.4°C to 32.8°C 进入了今天的日报。",
+        "editor_summary": "原文围绕 北京·海淀 2026-07-05 weather: Slight rain showers, 23.4°C to 32.8°C 展开，具体变化见来源。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@canghe #72",
+        "source_url": "https://x.com/canghe/status/2073417552316010811",
+        "signal_path": "x-feed/2026-07-05/signals/canghe__feed__2073417552316010811.md",
+        "fetched_at": "2026-07-04T22:01:06+0000",
+        "source_snippet": "装上 Browser Use CLI，能让你的 Claude Code、Hermes Agent、OpenClaw，具备和 Codex 的 Browser Use一样的能力。 它会用你本地 Chrome 的 cookie 和登录状态访问后",
+        "excerpt": "装上 Browser Use CLI，能让你的 Claude Code、Hermes Agent、OpenClaw，具备和 Codex 的 Browser Use一样的能力。 它会用你本地 Chrome 的 cookie 和登录状态访问后",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "Claude Code 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "装上 Browser Use CLI，能让你的 Claude Code、Hermes Agent、OpenClaw，具备和 Codex 的 Browser Use一样的能力。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@huangyihe #10",
+        "source_url": "https://x.com/huangyihe/status/2073379133514825819",
+        "signal_path": "x-feed/2026-07-05/signals/huangyihe__feed__2073379133514825819.md",
+        "fetched_at": "2026-07-04T22:01:06+0000",
+        "source_snippet": "X官方终于出MCP了。接入之后，它可以把X变成你AI工作流里的数据源，变成AI OS的感知层组件。如果你要做高价值的信息监控，比如追踪重要账号、搜索关键词、整理趋势等等，那么这个MCP就是必装。",
+        "excerpt": "X官方终于出MCP了。接入之后，它可以把X变成你AI工作流里的数据源，变成AI OS的感知层组件。如果你要做高价值的信息监控，比如追踪重要账号、搜索关键词、整理趋势等等，那么这个MCP就是必装。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "MCP 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "X官方终于出MCP了。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@libapi_ #84",
+        "source_url": "https://x.com/libapi_/status/2073257508060475865",
+        "signal_path": "x-feed/2026-07-05/signals/libapi___feed__2073257508060475865.md",
+        "fetched_at": "2026-07-04T22:01:06+0000",
+        "source_snippet": "Ekko Agent 目前正处于内部测试与持续完善阶段。 待测试工作完成并达到上线标准后，我们将正式推出属于 EKKO 生态的自研 Agent 产品。",
+        "excerpt": "Ekko Agent 目前正处于内部测试与持续完善阶段。 待测试工作完成并达到上线标准后，我们将正式推出属于 EKKO 生态的自研 Agent 产品。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "X 推荐流 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "Ekko Agent 目前正处于内部测试与持续完善阶段。"
+      },
+      {
+        "lane": "x-feed",
+        "title": "@yanhua1010 #60",
+        "source_url": "https://x.com/yanhua1010/status/2073391451820748923",
+        "signal_path": "x-feed/2026-07-05/signals/yanhua1010__feed__2073391451820748923.md",
+        "fetched_at": "2026-07-04T22:01:06+0000",
+        "source_snippet": "怒赞ghoosty的好用的功能：分屏 快捷键：cmd+ d，太适合终端跑多agent任务了。 起因是今天想测评一下不同模型的前端设计能力，以前一直用的cmd + t，总感觉跟tmux分屏差点意思，探索了下居然ghoosty也支持了。",
+        "excerpt": "怒赞ghoosty的好用的功能：分屏 快捷键：cmd+ d，太适合终端跑多agent任务了。 起因是今天想测评一下不同模型的前端设计能力，以前一直用的cmd + t，总感觉跟tmux分屏差点意思，探索了下居然ghoosty也支持了。",
+        "source": "x",
+        "signal_type": "feed-exposure",
+        "editor_headline": "X 推荐流 这条线索已经从泛聊开始落到更具体的工作流动作。",
+        "editor_summary": "怒赞ghoosty的好用的功能：分屏 快捷键：cmd+ d，太适合终端跑多agent任务了。"
+      },
+      {
+        "lane": "x-following",
+        "title": "@0xCheshire",
+        "source_url": "https://x.com/0xCheshire/status/2073397718421238245",
+        "signal_path": "x-following/2026-07-05/signals/0xCheshire__post__2073397718421238245.md",
+        "fetched_at": "2026-07-04T22:01:10+0000",
+        "source_snippet": "这个人将 230 万条 Claude 推理数据蒸馏给 Qwen3-4B 后，竟然跑出了逆天的神级指标： 模型实现 100% 绝对自洽，且具有 0 幻觉，输出熵直接降为 0。 现在不管你让它做什么，它都只会坚定地复读一句： “埃及赢了”",
+        "excerpt": "这个人将 230 万条 Claude 推理数据蒸馏给 Qwen3-4B 后，竟然跑出了逆天的神级指标： 模型实现 100% 绝对自洽，且具有 0 幻觉，输出熵直接降为 0。 现在不管你让它做什么，它都只会坚定地复读一句： “埃及赢了”",
+        "source": "x",
+        "signal_type": "post",
+        "editor_headline": "X 关注流 这条关注流线索需要补出原帖对象、动作和卡点。",
+        "editor_summary": "这个人将 230 万条 Claude 推理数据蒸馏给 Qwen3-4B 后，竟然跑出了逆天的神级指标： 模型实现 100% 绝对自洽，且具有 0 幻觉，输出熵直接降为 0。"
+      },
+      {
+        "lane": "hacker-news-watch",
+        "title": "Better Models: Worse Tools",
+        "source_url": "https://news.ycombinator.com/item?id=48788599",
+        "signal_path": "hacker-news-watch/2026-07-05/signals/hn__topstories__48788599__story__2026-07-05.md",
+        "fetched_at": "2026-07-04T22:02:49+0000",
+        "source_snippet": "Better Models: Worse Tools List: topstories Rank: #6 Created at: 2026-07-04T20:16:22Z Discussion URL: External article: > In case you are curious about Fable: I intentionally did not test it because I was not sure if the classifiers they are running might downgrade me to Opus silently.Is this still a thing? I thought Anthropic walked back the silent downgrades so now all the different domains downgrade non-silently. This makes sense to me, much as I don't like it. IMHO the strategy taken by StrongDM's attractor coding agent seems like a path of least resistance. Directly target the LLM providers APIs and directly target their default tools. It sounds like harnesses might have to start to have model by model system prompts, though retrying works, I guess. It reminds me of the ancient times when browsers all read HTML and CSS differently, and differently on different devices. In that sense, this is nothing new. I was going to say, at least we don't have different device types, but then, the model still has to output the right variant of `grep` as well.",
+        "excerpt": "Better Models: Worse Tools List: topstories Rank: #6 Created at: 2026-07-04T20:16:22Z Discussion URL: External article: > In case you are curious about Fable",
+        "source": "hackernews",
+        "signal_type": "hackernews_story",
+        "editor_headline": "Anthropic 这条 Hacker News 热榜讨论已经落到更具体的实践细节。",
+        "editor_summary": "原文围绕 Anthropic 展开，具体变化见来源。"
+      },
+      {
+        "lane": "hacker-news-search-watch",
+        "title": "Show HN: Agentic Orchestrator, a TUI for long-running coding agents",
+        "source_url": "https://news.ycombinator.com/item?id=48727448",
+        "signal_path": "hacker-news-search-watch/2026-07-05/signals/hn__search__48727448__story__2026-07-05.md",
+        "fetched_at": "2026-07-04T22:03:09+0000",
+        "source_snippet": "Hello Folks!Agentic Orchestrator is a terminal tool that takes complex feature requests and builds them by orchestrating coding agents through a series of phases that emulate a full-fledged engineering flow: requirements clarification, research, design, multi-phase planning, implementation, and review. It is a single pane of glass for all your features and exposes post-publish utilities such as resolving merge conflicts and responding to review comments.The key design choice is that this is deterministic orchestration on top of undeterministic agents: things like \"human review gates\", phase transitions, and artifact validations are all done by the harness in GO, while the agents take on \"bite-sized\" tasks.In the lifecycle of a feature, human judgment is typically needed during the \"first half\" of the workflow (from clarification to planning), depending on how much the developer wants to be involved. The \"second half\" (multi-phased implementation/review loop) typically executes while \"AFK\" unless the tool is unable to make progress without human intervention.Agentic Orchestrator is Apache2.0 and can be installed via Homebrew. You should be able to run it on macOS, Linux and WSL as long as you have `gh` and at least one of the following coding agents: OpenCode (tested with GLM-5.2), Codex, or Claude Code. While having a single coding agent is enough, in my setup I like to mix and match different agents/models for different phases (eg: claude/opus4.7 for planning, opencode/glm5.2 for implementing, codex/gpt5.5 for reviewing).I hope you enjoy it.",
+        "excerpt": "Hello Folks!Agentic Orchestrator is a terminal tool that takes complex feature requests and builds them by orchestrating coding agents through a series of phases that emulate a full-fledged engineering flow",
+        "matched_query": "terminal coding agent",
+        "source": "hackernews",
+        "signal_type": "hackernews_story_search_hit",
+        "editor_headline": "Hacker News 搜索词「terminal coding agent」命中的讨论把重点放在 工作流 上。",
+        "editor_summary": "这条命中来自对「terminal coding agent」的搜索，正文把 工作流 这类可复用做法写得更具体。"
+      },
+      {
+        "lane": "claude-code-watch",
+        "title": "v2.1.201",
+        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.201",
+        "signal_path": "claude-code-watch/2026-07-05/signals/anthropics__claude-code__release__v2.1.201.md",
+        "fetched_at": "2026-07-04T22:03:11+0000",
+        "source_snippet": "Claude Sonnet 5 sessions no longer use the mid-conversation system role for harness reminders",
+        "excerpt": "Claude Sonnet 5 sessions no longer use the mid-conversation system role for harness reminders claude-darwin-arm64.tar.gz (64.8 MB) claude-darwin-x64.tar.gz (69.4 MB) claude-linux-arm64-musl.tar.gz (72.3 MB) claude-linux-arm64.tar.gz (74.3 MB) claude-linux-x64-musl.tar.gz (73.5",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "v2.1.201 这次更新更偏向补齐真实使用链路。",
+        "editor_summary": "原文围绕 v2.1.201 展开，具体变化见来源。"
+      },
+      {
+        "lane": "claude-code-watch",
+        "title": "v2.1.200",
+        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.200",
+        "signal_path": "claude-code-watch/2026-07-05/signals/anthropics__claude-code__release__v2.1.200.md",
+        "fetched_at": "2026-07-04T22:03:11+0000",
+        "source_snippet": "Changed `AskUserQuestion` dialogs to no longer auto-continue by default; opt into an idle timeout via `/config` Changed the \"default\" permission mode to \"Manual\" across the CLI, `--help`, VS Code, and JetBrains; `--permission-mode manual` and `\"defaultMode\": \"manual\"` are accepted alongside `default` Fixed a crash at startup when `disabledMcpServers` or `enabledMcpServers` in `.claude.json` is set to a non-array value Fixed background sessions silently stopping mid-turn after sleep/wake or when reopening a stalled session Fixed background sessions re-running a turn cancelled with Esc after a stall respawn",
+        "excerpt": "Changed `AskUserQuestion` dialogs to no longer auto-continue by default; opt into an idle timeout via `/config` Changed the \"default\" permission mode to \"Manual\" across the CLI, `--help`, VS Code, and JetBrains",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "v2.1.200 这次更新更偏向补齐真实使用链路。",
+        "editor_summary": "原文围绕 v2.1.200 展开，具体变化见来源。"
+      },
+      {
+        "lane": "claude-code-watch",
+        "title": "v2.1.199",
+        "source_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.199",
+        "signal_path": "claude-code-watch/2026-07-05/signals/anthropics__claude-code__release__v2.1.199.md",
+        "fetched_at": "2026-07-04T22:03:11+0000",
+        "source_snippet": "Stacked slash-skill invocations like `/skill-a /skill-b do XYZ` now load all leading skills (up to 5), not just the first Fixed SSL certificate errors (TLS-inspecting proxies, missing `NODE_EXTRA_CA_CERTS`, expired certs) burning retries before showing actionable guidance — they now fail immediately with the fix hint Fixed streaming responses being discarded when the API emits a mid-stream overloaded/server error after partial output — the partial is now kept with an incomplete-response notice Fixed subagents cut off by a rate limit or server error silently failing instead of returning their partial work to the parent Fixed subagents reporting API errors (e.g. usage limit reached) as successful results — the error is now reported to the parent agent",
+        "excerpt": "Stacked slash-skill invocations like `/skill-a /skill-b do XYZ` now load all leading skills (up to 5), not just the first Fixed SSL certificate errors (TLS-inspecting proxies, missing `NODE_EXTRA_CA_CERTS`",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "v2.1.199 这次更新更偏向补齐真实使用链路。",
+        "editor_summary": "原文围绕 v2.1.199 展开，具体变化见来源。"
+      },
+      {
+        "lane": "codex-watch",
+        "title": "0.143.0-alpha.35",
+        "source_url": "https://github.com/openai/codex/releases/tag/rust-v0.143.0-alpha.35",
+        "signal_path": "codex-watch/2026-07-05/signals/openai__codex__release__rust-v0.143.0-alpha.35.md",
+        "fetched_at": "2026-07-04T22:03:51+0000",
+        "source_snippet": "Release 0.143.0-alpha.",
+        "excerpt": "Release 0.143.0-alpha.35 argument-comment-lint (0.0 MB) argument-comment-lint-aarch64-apple-darwin.tar.gz (3.2 MB) argument-comment-lint-aarch64-unknown-linux-gnu.tar.gz (3.6 MB) argument-comment-lint-x86_64-pc-windows-msvc.zip (3.1",
+        "source": "github",
+        "signal_type": "release",
+        "editor_headline": "0.143.0-alpha.35 这次改动更像是在修执行链路里的关键语义。",
+        "editor_summary": "原文围绕 0.143.0-alpha.35 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "OmniRoute",
+        "source_url": "https://github.com/diegosouzapw/OmniRoute",
+        "signal_path": "github-trending-weekly/2026-07-05/signals/diegosouzapw__OmniRoute__trending-weekly.md",
+        "fetched_at": "2026-07-04T22:04:08+0000",
+        "source_snippet": "Never stop coding. Free AI gateway: one endpoint, 231+ providers (50+ free), connect Claude Code, Codex, Cursor, Cline &amp; Copilot to FREE Claude/GPT/Gemini. RTK+Caveman stacked compression saves 15 **Author:** @diegosouzapw/OmniRoute",
+        "excerpt": "Never stop coding. Free AI gateway: one endpoint, 231+ providers (50+ free), connect Claude Code, Codex, Cursor, Cline &amp; Copilot to FREE Claude/GPT/Gemini. RTK+Caveman stacked compression saves 15 **Author:** @diegosouzapw/OmniRoute",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "codex-plugin-cc",
+        "source_url": "https://github.com/openai/codex-plugin-cc",
+        "signal_path": "github-trending-weekly/2026-07-05/signals/openai__codex-plugin-cc__trending-weekly.md",
+        "fetched_at": "2026-07-04T22:04:15+0000",
+        "source_snippet": "Use Codex from Claude Code to review code or delegate tasks. **Author:** @openai/codex-plugin-cc",
+        "excerpt": "Use Codex from Claude Code to review code or delegate tasks. **Author:** @openai/codex-plugin-cc",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "github-trending-weekly",
+        "title": "ai-berkshire",
+        "source_url": "https://github.com/xbtlin/ai-berkshire",
+        "signal_path": "github-trending-weekly/2026-07-05/signals/xbtlin__ai-berkshire__trending-weekly.md",
+        "fetched_at": "2026-07-04T22:04:05+0000",
+        "source_snippet": "AI 时代的伯克希尔：基于 Claude Code / Codex 的价值投资研究框架。巴菲特·芒格·段永平·李录四大师方法论 + 多Agent并行研究。| AI-era Berkshire: a value investing research framework built for Claude Code / Codex.",
+        "excerpt": "AI 时代的伯克希尔：基于 Claude Code / Codex 的价值投资研究框架。巴菲特·芒格·段永平·李录四大师方法论 + 多Agent并行研究。| AI-era Berkshire: a value investing research framework built for Claude Code / Codex.",
+        "source": "github-trending",
+        "signal_type": "trending-weekly",
+        "editor_headline": "Claude Code 仍然是本周值得看的趋势项目之一。",
+        "editor_summary": "AI 时代的伯克希尔：基于 Claude Code / Codex 的价值投资研究框架。"
+      },
+      {
+        "lane": "rize-watch",
+        "title": "#3 Anthropic-Cybersecurity-Skills — Rize AI tools weekly ranking",
+        "source_url": "https://github.com/mukul975/Anthropic-Cybersecurity-Skills",
+        "signal_path": "rize-watch/2026-07-05/signals/03-mukul975-anthropic-cybersecurity-skills__rize_ai_tools_rank__2026-07-05.md",
+        "fetched_at": "2026-07-04T22:04:21+0000",
+        "source_snippet": "817 structured cybersecurity skills for AI agents · Mapped to 6 frameworks: MITRE ATT&CK, NIST CSF 2.0, MITRE ATLAS, D3FEND, NIST AI RMF & MITRE F3 (Fight Fraud) · agentskills.io standard · Works with Claude Code, GitHub Copilot, Codex CLI, Cursor, Gemini CLI & 20+ platforms · 29 security domains · Apache 2.0 Rank: #3 Repository: Ranking page",
+        "excerpt": "817 structured cybersecurity skills for AI agents · Mapped to 6 frameworks: MITRE ATT&CK, NIST CSF 2.0, MITRE ATLAS, D3FEND, NIST AI RMF & MITRE F3 (Fight Fraud) · agentskills.io standard · Works with Claude Code, GitHub Copilot, Codex CLI, Cursor",
+        "source": "rize",
+        "signal_type": "rize_ai_tools_rank",
+        "editor_headline": "Claude Code 进入了今天的日报。",
+        "editor_summary": "原文围绕 Claude Code 展开，具体变化见来源。"
+      },
+      {
+        "lane": "product-hunt-watch",
+        "title": "Termi Protocol — Watch your AI coding agents build, live in 3D",
+        "source_url": "https://www.producthunt.com/products/termi-protocol?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+        "signal_path": "product-hunt-watch/2026-07-05/signals/termi-protocol__artificial-intelligence__producthunt_topic_hit__2026-07-05.md",
+        "fetched_at": "2026-07-04T22:04:25+0000",
+        "source_snippet": "Watch your AI coding agents build, live in 3D **Author:** @Termi Protocol",
+        "excerpt": "Watch your AI coding agents build, live in 3D **Author:** @Termi Protocol",
+        "source": "producthunt",
+        "signal_type": "producthunt_topic_hit",
+        "editor_headline": "Termi Protocol — Watch your AI coding agents build, live in 3D 把 agent 工作流里的单一环节做成了产品。",
+        "editor_summary": "Termi Protocol — Watch your AI coding agents build, live in 3D 的卖点很集中，说明面向 agent 工作流单一环节的包装正在变成独立产品。"
+      },
+      {
+        "lane": "polymarket-watch",
+        "title": "Will Anthropic have the best Coding AI model at the end of July 2026?",
+        "source_url": "https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-july",
+        "signal_path": "polymarket-watch/2026-07-05/signals/pm__coding-ai__556287__prediction_market__2026-07-05.md",
+        "fetched_at": "2026-07-04T22:04:27+0000",
+        "source_snippet": "Market: Which company has the best Coding AI model end of July? Question: Will Anthropic have the best Coding AI model at the end of July 2026? Current leader: Anthropic (95.5%) Anthropic: 95.5% OpenAI: 3.4% xAI: 1.4% 24h volume: 273.0 30d volume: 12,857.4 Liquidity: 98,197.9 Price movement: up 27.5% this month",
+        "excerpt": "Market: Which company has the best Coding AI model end of July? Question: Will Anthropic have the best Coding AI model at the end of July 2026? Current leader: Anthropic (95.5%)",
+        "matched_query": "coding AI",
+        "source": "polymarket",
+        "signal_type": "prediction_market",
+        "editor_headline": "市场目前把 Anthropic 放在更占优的位置，Anthropic 相关判断还在继续收敛。",
+        "editor_summary": "当前主结果大约在 95.5% 左右，说明交易者对这条判断已经形成较强共识。"
+      }
+    ],
+    "summary": {
+      "selected_item_count": 19,
+      "lane_counts": [
+        {
+          "lane": "weather-watch",
+          "selected_item_count": 2
+        },
+        {
+          "lane": "x-feed",
+          "selected_item_count": 4
+        },
+        {
+          "lane": "x-following",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "reddit-watch",
+          "selected_item_count": 0
+        },
+        {
+          "lane": "hacker-news-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "hacker-news-search-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "claude-code-watch",
+          "selected_item_count": 3
+        },
+        {
+          "lane": "codex-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "github-ai-projects",
+          "selected_item_count": 0
+        },
+        {
+          "lane": "github-trending-weekly",
+          "selected_item_count": 3
+        },
+        {
+          "lane": "rize-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "product-hunt-watch",
+          "selected_item_count": 1
+        },
+        {
+          "lane": "polymarket-watch",
+          "selected_item_count": 1
+        }
+      ]
+    }
+  },
+  "summary": {
+    "collect_useful_item_count": 287,
+    "selected_item_count": 19,
+    "is_subset": true
+  }
+}

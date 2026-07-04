@@ -1,0 +1,93 @@
+{
+  "lane": "x-following",
+  "status": "ok",
+  "selected_count": 8,
+  "rejected_count": 92,
+  "sources": [
+    "https://x.com/yyyole/status/2073411252517564821",
+    "https://x.com/lifesinger/status/2073391080532533357",
+    "https://x.com/alex_prompter/status/2073462823179731032",
+    "https://x.com/aiedge_/status/2073451788276248974",
+    "https://x.com/thdxr/status/2073449533712073005",
+    "https://x.com/thdxr/status/2073492158821396482",
+    "https://x.com/steipete/status/2073482942513565713",
+    "https://x.com/AI_jacksaku/status/2073412172726886606"
+  ],
+  "selected": [
+    {
+      "source": "https://x.com/yyyole/status/2073411252517564821",
+      "reason": "直接讨论 Codex / Claude Code 使用顺序，从代码优先转向架构优先，和 coding-agent 工作流强相关。"
+    },
+    {
+      "source": "https://x.com/lifesinger/status/2073391080532533357",
+      "reason": "明确比较 Claude Code / Codex 与 YouMind 的适用边界，可帮助读者区分代码生成和知识工作场景。"
+    },
+    {
+      "source": "https://x.com/alex_prompter/status/2073462823179731032",
+      "reason": "提出 prompt/context/harness/loop engineering 分层，适合概括当前 agent 使用方法从提示词走向循环系统。"
+    },
+    {
+      "source": "https://x.com/aiedge_/status/2073451788276248974",
+      "reason": "将 Claude Fable 的 UI/UX 能力包装为 Claude Code prompt 工作流，和前端 agent 设计约束相关。"
+    },
+    {
+      "source": "https://x.com/thdxr/status/2073449533712073005",
+      "reason": "讨论 agent 生成 API 后人类不再看到的设计细节，适合提醒审查边界。"
+    },
+    {
+      "source": "https://x.com/thdxr/status/2073492158821396482",
+      "reason": "直接评价 AI coding 工具稳定性和性能未达标，和实际选型、生产使用风险相关。"
+    },
+    {
+      "source": "https://x.com/steipete/status/2073482942513565713",
+      "reason": "额度重置可见性是重度 coding-agent 使用者的实际体验问题，且不是近两日重复主题。"
+    },
+    {
+      "source": "https://x.com/AI_jacksaku/status/2073412172726886606",
+      "reason": "AI 教育追踪研究提供明确数字，能类比企业引入 AI 时区分短期产出和真实能力。"
+    }
+  ],
+  "rejected": [
+    {
+      "category": "duplicate_or_followup_too_thin",
+      "count": 7,
+      "examples": [
+        "https://x.com/cyrilXBT/status/2073446624307675464",
+        "https://x.com/cyrilXBT/status/2073446644041883971",
+        "https://x.com/cyrilXBT/status/2073446675645931667"
+      ],
+      "reason": "Fable 5、Hermes、提示词等主题已在 2026-07-04 X 关注中覆盖，今日转推没有足够新事实。"
+    },
+    {
+      "category": "too_thin_or_truncated",
+      "count": 18,
+      "examples": [
+        "https://x.com/HiTw93/status/2073416680789692519",
+        "https://x.com/DonnyWals/status/2073485219307348154",
+        "https://x.com/karpathy/status/2073496962566164990"
+      ],
+      "reason": "原文被截断或只有转推片段，无法可靠解释具体变化。"
+    },
+    {
+      "category": "not_ai_agent_relevant",
+      "count": 49,
+      "examples": [
+        "https://x.com/levelsio/status/2073436585354240067",
+        "https://x.com/KelseyTuoc/status/2073494906455334922",
+        "https://x.com/robinhanson/status/2073416854983319663"
+      ],
+      "reason": "内容偏生活、政治、节日、体育、泛科技或个人感想，不能具体服务 AI/coding-agent 读者。"
+    },
+    {
+      "category": "generic_tool_or_project_mentions",
+      "count": 18,
+      "examples": [
+        "https://x.com/GithubProjects/status/2073459330310132111",
+        "https://x.com/GithubProjects/status/2073429134290850065",
+        "https://x.com/ios_dev_alb/status/2073509651010981991"
+      ],
+      "reason": "是普通项目、SwiftUI 技巧或基础工具信息，缺少 AI agent 工作流增量。"
+    }
+  ],
+  "notes": "读取了 input.md、context.json、raw 目录和 2026-07-04/2026-07-03 历史报告；未使用 selected-items 作为主输入。今日原始语料可用，但多条 X 文本被采集截断，因此只选择能从 raw 中可靠解释的 8 条。"
+}

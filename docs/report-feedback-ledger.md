@@ -678,4 +678,11 @@
 - Feishu Doc: https://www.feishu.cn/docx/Osffd3P5QoHI2ux69yTcp2L7nib
 - Card: corrected live-verified header `Rook｜AI Agent 日报精选（2026-07-04）`; final message `om_x100b6bb8b80b98a8b217d11f28ed828`; superseded helper card revoked.
 - Collect note: repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`; Reddit retry still returned rc=1 but raw evidence existed and lane subagent completed ok.
+## 2026-07-05 cron run
+
+- 架构：Hermes native lane subagents；未使用旧 renderer fallback。
+- Collect：repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`，config `/Users/haha/.signal-engine/config/lanes.yaml`，data-dir `/Users/haha/.daily-lane-data`；preflight registry 完整。
+- 降级：Reddit collect/package raw 缺失，本栏由 subagent 标记 degraded；OpenClaw package prep 遗漏已由 master 从 `openclaw-watch` raw 构造最小 package 并交给 subagent，最终 empty。
+- 发布：Docx 成功；helper 首发卡片 header 缺少 `Rook｜`，同 run 修正 payload、重发、live verify 并撤回 superseded card。
+- 归档：`artifacts/archive/2026-07-05/`。
 

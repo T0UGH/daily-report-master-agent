@@ -1,0 +1,61 @@
+=== lanes ===
+x-feed
+x-following
+github-watch
+claude-code-watch
+openclaw-watch
+codex-watch
+reddit-watch
+hacker-news-watch
+hacker-news-search-watch
+github-trending-weekly
+product-hunt-watch
+polymarket-watch
+weather-watch
+rize-watch
+=== diagnose product-hunt-watch ===
+[debug] [diagnose] START lane=product-hunt-watch data_dir=/Users/haha/.daily-lane-data
+[debug] [diagnose] END exit_code=0
+[signal-engine diagnose]
+
+SYSTEM
+  [OK] lane registered: product-hunt-watch
+
+CONFIG
+  [OK] lane in config: product-hunt-watch (enabled=True)
+
+SOURCE
+  [OK] api token: configured via api.token
+
+ENVIRONMENT
+  [OK] signals dir: /Users/haha/.daily-lane-data/signals
+
+OUTPUT
+  [OK] lane output dir: product-hunt-watch/ exists
+
+SUMMARY
+- overall: HEALTHY
+=== diagnose x-feed ===
+[debug] [diagnose] START lane=x-feed data_dir=/Users/haha/.daily-lane-data
+[debug] [diagnose] END exit_code=0
+[signal-engine diagnose]
+
+SYSTEM
+  [OK] lane registered: x-feed
+
+CONFIG
+  [OK] lane in config: x-feed (enabled=True)
+
+SOURCE
+  [OK] auth mode: browser-session
+  [OK] cdp url: http://127.0.0.1:9222
+  [OK] native API probe: API responded (auth valid, network OK)
+
+ENVIRONMENT
+  [OK] signals dir: /Users/haha/.daily-lane-data/signals
+
+OUTPUT
+  [OK] lane output dir: x-feed/ exists
+
+SUMMARY
+- overall: HEALTHY
