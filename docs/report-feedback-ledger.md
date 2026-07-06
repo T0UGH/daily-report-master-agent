@@ -8,6 +8,20 @@
 - 如果后续改代码、prompt、contract、validator、配置或发布链路，必须回填到对应日期或新增“改动记录”。
 - 不把“我记住了”当修复；必须能追到仓库文件、commit 或验证产物。
 
+## 2026-07-07
+
+### 运行记录
+- 06:00 master cron 走 Hermes 原生 subagent lane 架构完成日报：collect / package / delegate / validate / assemble / Feishu publish。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`；lane registry 覆盖 weather / reddit / HN / Claude / Codex / OpenClaw / Polymarket。
+- Reddit collect 首次与 retry 仍触发 RSS HTTP 429，但写出可用 raw evidence；Reddit lane subagent 基于 package raw 判断为 ok。`github-ai-projects` 作为 derived lane 已在 collect artifact 中规范化为 partial derived；OpenClaw 仍由主 agent 从 `openclaw-watch` raw evidence 补齐 package 后交给 lane subagent。
+- lane subagents 共生成 14 条 reader lanes：13 ok、1 empty（Claude Code 因近两日报告已覆盖 v2.1.199–2.1.201，今日无新增）。validation / assemble passed。
+- publish helper 首发 Feishu card header 仍缺少 `Rook｜`，同 run 已重发 corrected card、live verify，并撤回 superseded card；最终 publish-state 指向 corrected message。
+
+### 待验证 / 后续改动方向
+- 修复 runtime config / prepare package 对 `openclaw` 的正式映射，避免每次靠主 agent 从 raw evidence 兜底。
+- 持续排查 `reddit-watch` RSS 429；本轮虽有 raw evidence，但 collect 状态仍是 partial。
+- 修复 `publish_report.py` helper，使 `--title Rook｜...` 真正写入 interactive card header，避免每次发布后手动 corrected resend。
+
 ## 2026-07-06
 
 ### 运行记录
