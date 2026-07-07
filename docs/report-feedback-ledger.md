@@ -712,4 +712,8 @@
 - 降级：Reddit collect/package raw 缺失，本栏由 subagent 标记 degraded；OpenClaw package prep 遗漏已由 master 从 `openclaw-watch` raw 构造最小 package 并交给 subagent，最终 empty。
 - 发布：Docx 成功；helper 首发卡片 header 缺少 `Rook｜`，同 run 修正 payload、重发、live verify 并撤回 superseded card。
 - 归档：`artifacts/archive/2026-07-05/`。
+## 2026-07-08
+- Published: https://www.feishu.cn/docx/D7YXd0GQloWzt8xwTtDc1SL1nfb
+- Card: om_x100b6be3e1d658a0b366b75dd9f92b5 (corrected Rook header; superseded card revoked)
+- Validation: lane outputs passed; all 14 lanes ok.
 
