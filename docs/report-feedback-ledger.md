@@ -716,4 +716,9 @@
 - Published: https://www.feishu.cn/docx/D7YXd0GQloWzt8xwTtDc1SL1nfb
 - Card: om_x100b6be3e1d658a0b366b75dd9f92b5 (corrected Rook header; superseded card revoked)
 - Validation: lane outputs passed; all 14 lanes ok.
+## 2026-07-09
+
+- status: published
+- archive: `archives/2026-07-09/`
+- notes: Hermes subagent lane run; Reddit lane degraded from collect/retry anomaly and thin comments; card header corrected to self-identifying `Rook｜` title and superseded helper card revoked.
 
