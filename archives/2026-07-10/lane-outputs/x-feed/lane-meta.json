@@ -1,0 +1,97 @@
+{
+  "lane": "x-feed",
+  "status": "ok",
+  "selected_count": 10,
+  "rejected_count": 83,
+  "sources": [
+    "https://x.com/OpenAI/status/2075271421149020426",
+    "https://x.com/OpenAIDevs/status/2075273992609599834",
+    "https://x.com/OpenAIDevs/status/2075286157186003348",
+    "https://x.com/OpenAI/status/2075274271845404744",
+    "https://x.com/satyanadella/status/2075318015063925053",
+    "https://x.com/CodexReleases/status/2075265220054782386",
+    "https://x.com/Codex_Changelog/status/2075273900871889169",
+    "https://x.com/dotey/status/2075272687912448127",
+    "https://x.com/CodexReleases/status/2075261656146522158",
+    "https://x.com/cursor_ai/status/2075265504105611674",
+    "https://x.com/github/status/2075274864110293060",
+    "https://x.com/OpenRouter/status/2075271807855452196",
+    "https://x.com/ArtificialAnlys/status/2075268970492657905",
+    "https://x.com/perplexity_ai/status/2075224548476440779",
+    "https://x.com/ManusAI/status/2075236343429599432",
+    "https://x.com/dorsa_rohani/status/2074963064231952832",
+    "https://x.com/0xCheshire/status/2075105394704384479",
+    "https://x.com/geekbb/status/2075103909333651491"
+  ],
+  "selected": [
+    {
+      "title": "GPT-5.6 Sol/Terra/Luna rollout",
+      "sources": ["OpenAI__feed__2075271421149020426.md", "OpenAIDevs__feed__2075273992609599834.md", "OpenAIDevs__feed__2075286157186003348.md"],
+      "reason": "官方发布且相较昨日从预告变为实际 rollout，直接影响 ChatGPT、Codex、API 模型选择。"
+    },
+    {
+      "title": "ChatGPT Work",
+      "sources": ["OpenAI__feed__2075274271845404744.md", "satyanadella__feed__2075318015063925053.md"],
+      "reason": "OpenAI 新 agent 产品，微软生态同步承接，和 coding/office agent 工作流高度相关。"
+    },
+    {
+      "title": "Codex joins ChatGPT desktop",
+      "sources": ["CodexReleases__feed__2075265220054782386.md", "Codex_Changelog__feed__2075273900871889169.md", "dotey__feed__2075272687912448127.md"],
+      "reason": "Codex 产品形态变化，桌面端与聊天端合并影响使用入口。"
+    },
+    {
+      "title": "Codex CLI 0.144.0",
+      "sources": ["CodexReleases__feed__2075261656146522158.md"],
+      "reason": "CLI 版本更新，MCP 认证是 agent 工具调用落地痛点。"
+    },
+    {
+      "title": "GPT-5.6 distribution in Cursor/GitHub/OpenRouter",
+      "sources": ["cursor_ai__feed__2075265504105611674.md", "github__feed__2075274864110293060.md", "OpenRouter__feed__2075271807855452196.md"],
+      "reason": "同一模型迅速进入 IDE、Copilot 和路由平台，影响开发者实际可用性。"
+    },
+    {
+      "title": "Artificial Analysis GPT-5.6 Sol comparison",
+      "sources": ["ArtificialAnlys__feed__2075268970492657905.md"],
+      "reason": "第三方性能/成本信号，对模型路由和预算判断有用。"
+    },
+    {
+      "title": "Perplexity Computer orchestrator model",
+      "sources": ["perplexity_ai__feed__2075224548476440779.md"],
+      "reason": "具体 agent 编排模型预览，符合工具/流程选择主题。"
+    },
+    {
+      "title": "Manus Branch",
+      "sources": ["ManusAI__feed__2075236343429599432.md"],
+      "reason": "对话分叉和上下文继承是 agent 并行探索的具体产品能力。"
+    },
+    {
+      "title": "Claude Code multiplayer",
+      "sources": ["dorsa_rohani__feed__2074963064231952832.md", "0xCheshire__feed__2075105394704384479.md"],
+      "reason": "多人共享 terminal/context 的具体实践，和团队 agent 使用相关。"
+    },
+    {
+      "title": "BrowserSkill",
+      "sources": ["geekbb__feed__2075103909333651491.md"],
+      "reason": "为 shell 型 coding agents 提供浏览器桥接，实操价值高。"
+    }
+  ],
+  "rejected": [
+    {
+      "reason": "重复或弱化的 GPT-5.6/Codex 转述、RT、单句感叹，合并进官方发布或分发条目。",
+      "examples": ["Dimillian__feed__2075285819678392444.md", "danshipper__feed__2075263920613277809.md", "Houda_nait__feed__2075278915246113039.md", "dotey__feed__2075288698585809214.md", "turingou__feed__2075286697735225472.md", "GeekCatX__feed__2075280562554827005.md", "lxfater__feed__2075278824959541352.md"]
+    },
+    {
+      "reason": "GPT-Live、Hermes Cloud、Grok 4.5、mattpocock/skills、Claude Code 2.1.205 等已在 2026-07-09 或 2026-07-08 报告覆盖，今天没有足够新事实。",
+      "examples": ["OpenAI__feed__2074907025537224840.md", "NousResearch__feed__2074878754485043333.md", "cursor_ai__feed__2074915744999969059.md", "MaxForAI__feed__2075126554024464756.md", "mattpocockuk__feed__2075218406266036236.md", "ClaudeDevs__feed__2075279141352706215.md"]
+    },
+    {
+      "reason": "个人体验、教程、营销化 demo 或领域偏离较多，证据不足以进入 AI/coding-agent 主线。",
+      "examples": ["MatthewBerman__feed__2075267049266487689.md", "mattshumer___feed__2075268746315268138.md", "pankajkumar_dev__feed__2075292795557040391.md", "OpenAI__feed__2075310019185389913.md", "FinanceYF5__feed__2075053373490164120.md", "0xCheshire__feed__2075024999371739495.md"]
+    },
+    {
+      "reason": "skill 列表、设计/PPT/视频/公众号抓取等工具帖较零散，或与今日更强的产品发布相比信号较弱。",
+      "examples": ["the_cyw__feed__2075033876930724339.md", "zjp1997720__feed__2074721821174456531.md", "huxlab__feed__2075233046069117374.md", "laobaishare__feed__2075139080594350294.md", "gengdaJ__feed__2075149270454546523.md", "chatcutapp__feed__2075203997359898712.md"]
+    }
+  ],
+  "notes": "读取 input.md、context.json、100 个 raw 文件摘要及 2026-07-09/2026-07-08 历史报告做去重。rejected_count 按 raw 文件计：100 个 raw 中 17 个作为 10 条来源，其余 83 个拒绝或合并。"
+}

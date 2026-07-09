@@ -1,0 +1,141 @@
+{
+  "lane": "github-ai-projects",
+  "status": "ok",
+  "selected_count": 6,
+  "rejected_count": 21,
+  "sources": [
+    {
+      "repo": "openai/codex-plugin-cc",
+      "url": "https://github.com/openai/codex-plugin-cc",
+      "raw_path": "raw/github-trending-weekly/openai__codex-plugin-cc__trending-weekly.md",
+      "verified_stars": 27148,
+      "evidence": "GitHub Trending weekly raw says: Use Codex from Claude Code to review code or delegate tasks. Stars verified via GitHub repository metadata."
+    },
+    {
+      "repo": "steipete/CodexBar",
+      "url": "https://github.com/steipete/CodexBar",
+      "raw_path": "raw/github-trending-weekly/steipete__CodexBar__trending-weekly.md",
+      "verified_stars": 17349,
+      "evidence": "GitHub Trending weekly raw says: Show usage stats for OpenAI Codex and Claude Code, without having to login. Stars verified via GitHub repository metadata."
+    },
+    {
+      "repo": "browser-use/video-use",
+      "url": "https://github.com/browser-use/video-use",
+      "raw_path": "raw/github-trending-weekly/browser-use__video-use__trending-weekly.md",
+      "verified_stars": 16248,
+      "evidence": "GitHub Trending weekly raw says: Edit videos with coding agents. Stars verified via GitHub repository metadata."
+    },
+    {
+      "repo": "ogulcancelik/herdr",
+      "url": "https://github.com/ogulcancelik/herdr",
+      "raw_path": "raw/github-trending-weekly/ogulcancelik__herdr__trending-weekly.md",
+      "verified_stars": 14787,
+      "evidence": "GitHub Trending weekly raw says: agent multiplexer that lives in your terminal. Stars verified via GitHub repository metadata."
+    },
+    {
+      "repo": "bradautomates/claude-video",
+      "url": "https://github.com/bradautomates/claude-video",
+      "raw_path": "raw/github-trending-weekly/bradautomates__claude-video__trending-weekly.md",
+      "verified_stars": 6641,
+      "evidence": "GitHub Trending weekly raw says: /watch downloads, extracts frames, transcribes, hands it all to Claude. Stars verified via GitHub repository metadata."
+    },
+    {
+      "repo": "huggingface/speech-to-speech",
+      "url": "https://github.com/huggingface/speech-to-speech",
+      "raw_path": "raw/github-trending-weekly/huggingface__speech-to-speech__trending-weekly.md",
+      "verified_stars": 5830,
+      "evidence": "GitHub Trending weekly raw says: Build local voice agents with open-source models. Stars verified via GitHub repository metadata."
+    }
+  ],
+  "selected": [
+    "Selected six repos with direct AI/coding-agent workflow relevance, concrete raw evidence, source links, and verified stars >= 100.",
+    "Prior reports for 2026-07-08 and 2026-07-09 were read before selection. Repeated GitHub AI 项目 picks from those days were excluded unless substantially new; Herdr was mentioned in a prior HN discussion but not previously used as a GitHub AI 项目 pick, and today's packaged evidence is its GitHub Trending repo signal."
+  ],
+  "rejected": [
+    {
+      "repo": "MadsLorentzen/ai-job-search",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-08 GitHub AI 项目."
+    },
+    {
+      "repo": "TencentCloud/CubeSandbox",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-08 GitHub AI 项目."
+    },
+    {
+      "repo": "Zackriya-Solutions/meetily",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-09 GitHub AI 项目."
+    },
+    {
+      "repo": "alibaba/page-agent",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-09 GitHub AI 项目."
+    },
+    {
+      "repo": "asgeirtj/system_prompts_leaks",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-08 GitHub AI 项目."
+    },
+    {
+      "repo": "diegosouzapw/OmniRoute",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-08 GitHub AI 项目."
+    },
+    {
+      "repo": "dotnet/skills",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-08 GitHub AI 项目."
+    },
+    {
+      "repo": "facebook/astryx",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-09 GitHub AI 项目."
+    },
+    {
+      "repo": "stablyai/orca",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-09 GitHub AI 项目."
+    },
+    {
+      "repo": "usestrix/strix",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-08 GitHub AI 项目."
+    },
+    {
+      "repo": "xbtlin/ai-berkshire",
+      "reason": "Rejected as substantially unchanged repeat from 2026-07-09 GitHub AI 项目."
+    },
+    {
+      "repo": "harvard-edge/cs249r_book",
+      "reason": "Useful ML systems book, but not concrete enough for an AI/coding-agent project lane today."
+    },
+    {
+      "repo": "immich-app/immich",
+      "reason": "Strong repository, but generic self-hosted media management rather than AI/coding-agent workflow."
+    },
+    {
+      "repo": "ruvnet/RuView",
+      "reason": "Interesting sensing project, but too far from AI/coding-agent workflows for this lane."
+    },
+    {
+      "repo": "saadeghi/daisyui",
+      "reason": "Generic UI library; not selected for AI/coding-agent relevance."
+    },
+    {
+      "repo": "defog-ai/factiq-plugin",
+      "reason": "Relevant HN Search signal, but verified stars were below the hard floor."
+    },
+    {
+      "repo": "exmergo/dex",
+      "reason": "Relevant HN Search signal, but verified stars were below the hard floor."
+    },
+    {
+      "repo": "zqiren/Orbital",
+      "reason": "Relevant prior HN Search context, but verified stars were below the hard floor."
+    },
+    {
+      "repo": "ymichael/bb",
+      "reason": "Meets star floor but was a 2026-07-08 HN Search item and not a new packaged GitHub Trending signal today."
+    },
+    {
+      "repo": "bytechefhq/bytechef",
+      "reason": "Meets star floor, but packaged evidence was thinner and less specific for today's coding-agent reader than selected items."
+    },
+    {
+      "repo": "spiceai/spiceai",
+      "reason": "Meets star floor, but signal is broader data/analytics infrastructure rather than a concrete coding-agent project update."
+    }
+  ],
+  "notes": "Used raw corpus and history as primary inputs; selected_items-compatible JSON was read only as supporting/audit evidence. Star counts were verified from GitHub repository metadata during lane generation."
+}

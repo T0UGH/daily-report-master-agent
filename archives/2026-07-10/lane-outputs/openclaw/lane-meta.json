@@ -1,0 +1,21 @@
+{
+  "lane": "openclaw",
+  "status": "empty",
+  "selected_count": 0,
+  "rejected_count": 2,
+  "sources": [],
+  "selected": [],
+  "rejected": [
+    {
+      "title": "OpenClaw v2026.7.1-beta.2",
+      "source": "https://github.com/openclaw/openclaw/releases/tag/v2026.7.1-beta.2",
+      "reason": "与 2026-07-07、2026-07-08 OpenClaw 栏目的 release 内容高度重复；2026-07-10 采集未提供新的 release 事实。"
+    },
+    {
+      "title": "OpenClaw README updated",
+      "source": "https://github.com/openclaw/openclaw/blob/HEAD/README.md",
+      "reason": "仅 README 品牌图从 SVG 文案区改为 light/dark banner PNG，并删除单独 slogan 段落；信息过薄，对 AI/coding-agent 读者缺少可操作影响。"
+    }
+  ],
+  "notes": "指定 lane package 路径 /Users/haha/.daily-lane-data/runtime/daily-report-master/2026-07-10/lane-packages/openclaw 不存在，prepare-lane-packages.log 也未列出 openclaw。改从 /Users/haha/.daily-lane-data/signals/openclaw-watch/2026-07-10/signals 与 collect 日志读取原始证据；采集成功，2 个信号。按最近报告去重与质量规则，本日 OpenClaw 栏目为空。"
+}

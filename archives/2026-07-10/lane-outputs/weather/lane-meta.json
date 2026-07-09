@@ -1,0 +1,30 @@
+{
+  "lane": "weather",
+  "status": "ok",
+  "selected_count": 2,
+  "rejected_count": 0,
+  "sources": [
+    {
+      "title": "北京·海淀 2026-07-10 weather: Thunderstorm with slight hail, 24.9°C to 28.7°C",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=39.9593&longitude=116.2981&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-10&end_date=2026-07-10",
+      "raw_file": "raw/beijing-haidian__daily_weather__2026-07-10.md"
+    },
+    {
+      "title": "上海·杨浦 2026-07-10 weather: Overcast, 25.4°C to 32.8°C",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=31.2598&longitude=121.5257&daily=weather_code%2Ctemperature_2m_min%2Ctemperature_2m_max%2Cprecipitation_probability_max%2Cprecipitation_sum%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant&timezone=Asia%2FShanghai&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&start_date=2026-07-10&end_date=2026-07-10",
+      "raw_file": "raw/shanghai-yangpu__daily_weather__2026-07-10.md"
+    }
+  ],
+  "selected": [
+    {
+      "id": "beijing-haidian",
+      "reason": "北京默认城市；原始天气含明确温度、降水、风力和来源。与 2026-07-09 相比最高温下降但降水显著增加，适合保留为今日出行提示。"
+    },
+    {
+      "id": "shanghai-yangpu",
+      "reason": "上海默认城市；原始天气含明确温度、降水、风力和来源。与 2026-07-09 相比从雷雨转阴、降水降到 0 mm，但最高温回升，构成有用变化。"
+    }
+  ],
+  "rejected": [],
+  "notes": "已读取 input.md、context.json、两份 raw weather 文件，以及 2026-07-09/2026-07-08 历史报告作去重参考；天气为每日更新项，不因昨日已有天气栏目而去重。"
+}

@@ -1,0 +1,78 @@
+{
+  "lane": "codex",
+  "status": "ok",
+  "selected_count": 5,
+  "rejected_count": 5,
+  "sources": [
+    "https://github.com/openai/codex/pull/31363",
+    "https://github.com/openai/codex/pull/31637",
+    "https://github.com/openai/codex/pull/31431",
+    "https://github.com/openai/codex/pull/31876",
+    "https://github.com/openai/codex/pull/31899",
+    "https://github.com/openai/codex/pull/31686",
+    "https://github.com/openai/codex/pull/31842",
+    "https://github.com/openai/codex/pull/31596"
+  ],
+  "selected": [
+    {
+      "title": "HTTP client/proxy migration for uploads and login plus reqwest ratchet",
+      "sources": [
+        "https://github.com/openai/codex/pull/31363",
+        "https://github.com/openai/codex/pull/31637",
+        "https://github.com/openai/codex/pull/31431"
+      ],
+      "reason": "Concrete workflow/infrastructure change: proxy/custom-CA behavior and auth redaction boundaries affect enterprise Codex use; grouped because these PRs are one migration stack. New relative to recent reports, which covered WebSocket proxy but not uploads/login/deny ratchet."
+    },
+    {
+      "title": "Code Mode host installation on Darwin and fallback when host binary is missing",
+      "sources": [
+        "https://github.com/openai/codex/pull/31876",
+        "https://github.com/openai/codex/pull/31899"
+      ],
+      "reason": "User-visible Code Mode reliability issue for macOS installs and distributions lacking the companion binary; follows 2026-07-08 alpha asset note with concrete install/runtime fixes."
+    },
+    {
+      "title": "Codex Apps filters optional file fields by tool schema",
+      "sources": ["https://github.com/openai/codex/pull/31686"],
+      "reason": "Concrete MCP/Codex Apps interoperability fix: strict file schemas no longer reject undeclared optional fields."
+    },
+    {
+      "title": "Bundled OpenAI Docs skill updated for GPT-5.6",
+      "sources": ["https://github.com/openai/codex/pull/31842"],
+      "reason": "Directly relevant to Codex skill behavior and new model migration guidance; new source-level fact beyond prior GPT-5.6 UI/release signals."
+    },
+    {
+      "title": "Image generation defaults to extension-backed implementation",
+      "sources": ["https://github.com/openai/codex/pull/31596"],
+      "reason": "Concrete default-path change for Codex image generation/tool hosting; useful for users relying on image tools or feature flags."
+    }
+  ],
+  "rejected": [
+    {
+      "title": "tui: update safety buffering copy",
+      "source": "https://github.com/openai/codex/pull/31813",
+      "reason": "Minor copy change; relevant but lower value than product/runtime changes."
+    },
+    {
+      "title": "fix(sandboxing): initialize network proxy config inline",
+      "source": "https://github.com/openai/codex/pull/31830",
+      "reason": "Test-only Clippy unblock with no user-facing sandbox behavior change."
+    },
+    {
+      "title": "fix: forward originator to Codex Apps MCP",
+      "source": "https://github.com/openai/codex/pull/31481",
+      "reason": "Operational telemetry/classification fix; source text includes an internal-only query link and is less actionable for external readers."
+    },
+    {
+      "title": "duplicate commit entries for selected PRs",
+      "source": "raw commit files",
+      "reason": "Rejected as duplicates of merged PR records; PR URLs are clearer audit sources."
+    },
+    {
+      "title": "partial/stack footer details",
+      "source": "raw corpus footers",
+      "reason": "Sapling stack metadata was not used as a standalone report item."
+    }
+  ],
+  "notes": "Read input.md, context.json, and 2026-07-09/2026-07-08 history before selection. Did not use selected_items.json as primary input. Output is Chinese-first reader-facing markdown; recent report dedupe kept only new facts or follow-ups with changed details."
+}

@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-07-09T22:17:41.643968+00:00",
+  "payload_path": "/Users/haha/.daily-lane-data/runtime/daily-report-master/2026-07-10/artifacts/feishu-card.corrected.json",
+  "payload_bytes": 12314,
+  "issues": [],
+  "limits": {
+    "payload_bytes": 25000,
+    "lark_md_block_bytes": 6000
+  }
+}

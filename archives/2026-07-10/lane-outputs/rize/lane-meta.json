@@ -1,0 +1,142 @@
+{
+  "lane": "rize",
+  "status": "ok",
+  "selected_count": 8,
+  "rejected_count": 12,
+  "sources": [
+    "https://github.com/Hmbown/CodeWhale",
+    "https://github.com/cobusgreyling/loop-engineering",
+    "https://github.com/ConardLi/garden-skills",
+    "https://github.com/google/agents-cli",
+    "https://github.com/Graphify-Labs/graphify",
+    "https://github.com/walkinglabs/learn-harness-engineering",
+    "https://github.com/AgriciDaniel/claude-seo",
+    "https://github.com/rohitg00/agentmemory",
+    "https://rize.io/ai-tools"
+  ],
+  "selected": [
+    {
+      "rank": 1,
+      "name": "CodeWhale",
+      "url": "https://github.com/Hmbown/CodeWhale",
+      "reason": "Rize #1; has repo and concrete description as an open-source, community-driven agent harness."
+    },
+    {
+      "rank": 2,
+      "name": "loop-engineering",
+      "url": "https://github.com/cobusgreyling/loop-engineering",
+      "reason": "Rize #2; directly relevant to AI coding agents and includes named starters/CLI tools."
+    },
+    {
+      "rank": 3,
+      "name": "garden-skills",
+      "url": "https://github.com/ConardLi/garden-skills",
+      "reason": "Rize #3; skills collection with concrete capability areas."
+    },
+    {
+      "rank": 4,
+      "name": "agents-cli",
+      "url": "https://github.com/google/agents-cli",
+      "reason": "Rize #4; directly about creating, evaluating, and deploying AI agents on Google Cloud."
+    },
+    {
+      "rank": 5,
+      "name": "graphify",
+      "url": "https://github.com/Graphify-Labs/graphify",
+      "reason": "Rize #5; coding-assistant skill with concrete knowledge-graph workflow across code and documents."
+    },
+    {
+      "rank": 6,
+      "name": "learn-harness-engineering",
+      "url": "https://github.com/walkinglabs/learn-harness-engineering",
+      "reason": "Rize #6; tutorial source for harness engineering, sufficient for a short ranked note."
+    },
+    {
+      "rank": 7,
+      "name": "claude-seo",
+      "url": "https://github.com/AgriciDaniel/claude-seo",
+      "reason": "Rize #7; Claude Code skill with detailed sub-skill/sub-agent scope."
+    },
+    {
+      "rank": 8,
+      "name": "agentmemory",
+      "url": "https://github.com/rohitg00/agentmemory",
+      "reason": "Rize #8; persistent memory for AI coding agents with repo and description."
+    }
+  ],
+  "rejected": [
+    {
+      "rank": 9,
+      "name": "turbovec",
+      "url": "https://github.com/RyanCodrai/turbovec",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    },
+    {
+      "rank": 10,
+      "name": "terax-ai",
+      "url": "https://github.com/crynta/terax-ai",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    },
+    {
+      "rank": 11,
+      "name": "hermes-webui",
+      "url": "https://github.com/nesquena/hermes-webui",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    },
+    {
+      "rank": 12,
+      "name": "DeepSeek-Reasonix",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    },
+    {
+      "rank": 13,
+      "name": "awesome-gpt-image-2",
+      "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2",
+      "reason": "Lower-ranked and more image-prompt-library oriented than the selected agent/coding-tool entries."
+    },
+    {
+      "rank": 14,
+      "name": "caveman",
+      "url": "https://github.com/JuliusBrussee/caveman",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    },
+    {
+      "rank": 15,
+      "name": "OmniRoute",
+      "url": "https://github.com/diegosouzapw/OmniRoute",
+      "reason": "Lower-ranked than the selected top eight; also covered in recent report context outside this lane."
+    },
+    {
+      "rank": 16,
+      "name": "anything-analyzer",
+      "url": "https://github.com/Mouseww/anything-analyzer",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    },
+    {
+      "rank": 17,
+      "name": "herdr",
+      "url": "https://github.com/ogulcancelik/herdr",
+      "reason": "Lower-ranked than the selected top eight; description is thinner than selected entries."
+    },
+    {
+      "rank": 18,
+      "name": "clawrouter",
+      "url": "https://github.com/blockrunai/clawrouter",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    },
+    {
+      "rank": 19,
+      "name": "awesome-opensource-ai",
+      "url": "https://github.com/alvinreal/awesome-opensource-ai",
+      "reason": "Lower-ranked than the selected top eight; list-style resource rather than a specific tool workflow."
+    },
+    {
+      "rank": 20,
+      "name": "HolaOS",
+      "url": "https://github.com/HolaBoss-ai/HolaOS",
+      "reason": "Lower-ranked than the selected top eight; not needed under the lane limit."
+    }
+  ],
+  "notes": "Read input.md, context.json, raw corpus index/excerpts, and 2026-07-09/2026-07-08 history. Rize rankings are recurring current-list facts, so the lane keeps the current top eight rather than deduping the whole section against recent reports."
+}

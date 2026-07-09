@@ -1,0 +1,96 @@
+{
+  "lane": "hacker-news-search",
+  "status": "ok",
+  "selected_count": 5,
+  "rejected_count": 10,
+  "sources": [
+    {
+      "id": "48847526",
+      "title": "Show HN: Policy enforcement for Claude Code, Cursor, and Codex",
+      "hn_url": "https://news.ycombinator.com/item?id=48847526",
+      "external_url": "https://kastra.ai/",
+      "reason": "Selected: concrete runtime policy enforcement for coding-agent tool calls, with local history scan and audit trail details."
+    },
+    {
+      "id": "48832797",
+      "title": "Show HN: Abralo – Free, easy way to run several Claude Code agents in one window",
+      "hn_url": "https://news.ycombinator.com/item?id=48832797",
+      "external_url": "https://abralo.com/",
+      "reason": "Selected: concrete multi-agent UI workflow for Claude Code, plus useful HN comments about limits and refresh issues."
+    },
+    {
+      "id": "48851086",
+      "title": "Show HN: Spice 2.0 – Real-Time Analytical Query on Operational Data, Without ETL",
+      "hn_url": "https://news.ycombinator.com/item?id=48851086",
+      "external_url": "https://spice.ai/blog/spice-2-0-is-now-available",
+      "reason": "Selected: relevant data infrastructure for agents needing fresh operational data, with specific CDC and benchmark claims."
+    },
+    {
+      "id": "48842119",
+      "title": "Show HN: PandaPage – host an HTML page with one curl, no signup, auto-expires",
+      "hn_url": "https://news.ycombinator.com/item?id=48842119",
+      "external_url": "https://pandapage.clawshop.sh",
+      "reason": "Selected: concrete agent-friendly deployment API for temporary HTML demos and mockups."
+    },
+    {
+      "id": "48805309",
+      "title": "Show HN: AI harness for C/C++ with GDB, sanitizers, perf and compile tools",
+      "hn_url": "https://news.ycombinator.com/item?id=48805309",
+      "external_url": "https://byteask.ai/",
+      "reason": "Selected: specific C/C++ toolchain integrations address a clear coding-agent workflow gap."
+    }
+  ],
+  "rejected": [
+    {
+      "id": "48752835",
+      "title": "Show HN: An Open Source Codex App that works across provider",
+      "reason": "Rejected: bb was already covered in the 2026-07-08 HN 搜索 section with substantially the same facts."
+    },
+    {
+      "id": "48796330",
+      "title": "Ghostlog: Live terminal UI to monitor AI coding agent Git commits",
+      "reason": "Rejected: title-only evidence, no comments, too thin to explain beyond a one-line repo mention."
+    },
+    {
+      "id": "48816839",
+      "title": "Show HN: Open-source desktop agent that uses a local folder as its memory",
+      "reason": "Rejected: Orbital was already covered in the 2026-07-08 HN 搜索 section with the same memory/sandbox/sub-agent facts."
+    },
+    {
+      "id": "48816987",
+      "title": "Show HN: Yamanote.fun – A complete soundscape for Tokyo's Yamanote line",
+      "reason": "Rejected: not relevant to AI/coding-agent workflows despite matching the search query."
+    },
+    {
+      "id": "48826422",
+      "title": "Show HN: FactIQ – a realtime econ+finance database for AI agents",
+      "reason": "Rejected: already covered in the 2026-07-09 HN 搜索 section with the same dataset/plugin facts."
+    },
+    {
+      "id": "48832208",
+      "title": "Show HN: Dex – Cost-aware analytics engineering skills for agents",
+      "reason": "Rejected: already covered in the 2026-07-09 HN 搜索 section with the same skills/cost-control details."
+    },
+    {
+      "id": "48839395",
+      "title": "A terminal designed for ClaudeCode to replace Claude Desktop",
+      "reason": "Rejected: evidence is title-only and comments add no substantive workflow detail."
+    },
+    {
+      "id": "48847296",
+      "title": "Bytechef open source platform for AI agent orchestration and workflow automation",
+      "reason": "Rejected: title-only evidence, no comments, and no concrete agent workflow details in raw corpus."
+    },
+    {
+      "id": "48848937",
+      "title": "How I use coding agents for reproducible DS/ML workflows",
+      "reason": "Rejected: title-only evidence and no comments; cannot explain the workflow concretely from the corpus."
+    },
+    {
+      "id": "48850563",
+      "title": "Agents' Last Exam: AI Agent Benchmark for Real-World Professional Workflows",
+      "reason": "Rejected: potentially relevant but raw corpus only contains the title/link, with no benchmark details or discussion substance."
+    }
+  ],
+  "notes": "Read input.md, context.json, raw excerpts, and the 2026-07-09/2026-07-08 report history for dedupe. selected_items.json was not used as primary input. Rejected exact/substantial repeats of bb, Orbital, Dex, and FactIQ from recent reports."
+}

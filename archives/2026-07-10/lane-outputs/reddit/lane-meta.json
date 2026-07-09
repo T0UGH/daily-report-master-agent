@@ -1,0 +1,65 @@
+{
+  "lane": "reddit",
+  "status": "ok",
+  "selected_count": 4,
+  "rejected_count": 4,
+  "sources": [
+    "https://www.reddit.com/r/ClaudeAI/comments/1ua3252/is_there_actually_a_good_way_to_orchestrate/",
+    "https://www.reddit.com/r/ClaudeAI/comments/1uou7ow/friendly_reminder_what_to_fix_before_fable_5/",
+    "https://www.reddit.com/r/ClaudeAI/comments/1urzr1q/i_just_made_25k_usd_with_my_capybara_game_built/",
+    "https://www.reddit.com/r/ClaudeAI/comments/1uomrr8/retired_disabled_army_combat_vet_no_coding/"
+  ],
+  "selected": [
+    {
+      "id": "1ua3252",
+      "title": "Is there actually a good way to orchestrate multiple agents, or is everyone just running a bunch of terminals?",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1ua3252/is_there_actually_a_good_way_to_orchestrate/",
+      "reason": "Concrete practitioner pain around parallel coding agents: isolation, worktree review, and human intervention. Not present in recent report references."
+    },
+    {
+      "id": "1uou7ow",
+      "title": "Friendly reminder what to fix before Fable 5 disappears again. Use it to upgrade your Claude Code system to work like Fable 5.",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1uou7ow/friendly_reminder_what_to_fix_before_fable_5/",
+      "reason": "Actionable Claude Code workflow discussion about using stronger models to refactor harness, operators, skill routing, and agent teams."
+    },
+    {
+      "id": "1urzr1q",
+      "title": "I just made $25K USD with my capybara game built entirely with Claude Code",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1urzr1q/i_just_made_25k_usd_with_my_capybara_game_built/",
+      "reason": "Specific shipped project with budget, tools, competition result, and multi-session Claude Code workflow details."
+    },
+    {
+      "id": "1uomrr8",
+      "title": "Retired Disabled Army combat vet, no coding background. 250 iterations with Claude turned a 17KB prototype into a shipped tank game",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1uomrr8/retired_disabled_army_combat_vet_no_coding/",
+      "reason": "Concrete chat-first build workflow with QA, rollback, instrumentation, and deployment details; useful contrast to coding-terminal workflows."
+    }
+  ],
+  "rejected": [
+    {
+      "id": "1u3vyk7",
+      "title": "tested Claude Fable 5 and Opus 4.8 across 917 coding-agent scenarios. Fable won by 0.9 points.",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1u3vyk7/tested_claude_fable_5_and_opus_48_across_917/",
+      "reason": "Substantially covered in 2026-07-08 Reddit section; no new facts in raw evidence."
+    },
+    {
+      "id": "1u8pycz",
+      "title": "GLM 5.2 via Claude Code is the first non-Claude model that feels close to Opus",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1u8pycz/glm_52_via_claude_code_is_the_first_nonclaude/",
+      "reason": "Substantially covered in 2026-07-08 Reddit section; raw evidence has no meaningful follow-up."
+    },
+    {
+      "id": "1u85myc",
+      "title": "the gap between Claude Code power users and us chat-only people keeps getting wider and i don't think that's great for the community",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1u85myc/the_gap_between_claude_code_power_users_and_us/",
+      "reason": "Substantially covered in 2026-07-08 Reddit section."
+    },
+    {
+      "id": "1uqov49",
+      "title": "Anthropic silently enrolled my Claude Code install in an A/B experiment, overrode my settings, and updated the CLI even with auto-updates disabled",
+      "source": "https://www.reddit.com/r/ClaudeAI/comments/1uqov49/anthropic_silently_enrolled_my_claude_code/",
+      "reason": "Covered in 2026-07-09 Reddit section; repeating would add no new information."
+    }
+  ],
+  "notes": "Raw corpus status was ok with 8 raw files. Collect had nonzero exit/retry per task context, but raw evidence was readable and sufficient, so lane status is ok. Recent reports for 2026-07-08 and 2026-07-09 were used only for dedupe."
+}

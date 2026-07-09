@@ -1,0 +1,146 @@
+{
+  "lane": "github-trending",
+  "status": "ok",
+  "selected_count": 5,
+  "rejected_count": 16,
+  "sources": [
+    {
+      "repo": "openai/codex-plugin-cc",
+      "url": "https://github.com/openai/codex-plugin-cc",
+      "stars": 27148,
+      "raw_file": "raw/openai__codex-plugin-cc__trending-weekly.md",
+      "selected_reason": "OpenAI 官方插件，把 Codex 接进 Claude Code 做代码审查或任务委派，直接影响多模型 coding-agent workflow。"
+    },
+    {
+      "repo": "browser-use/video-use",
+      "url": "https://github.com/browser-use/video-use",
+      "stars": 16248,
+      "raw_file": "raw/browser-use__video-use__trending-weekly.md",
+      "selected_reason": "把视频编辑包装成 coding-agent 可执行工作流，和 agent 处理多媒体上下文相关。"
+    },
+    {
+      "repo": "huggingface/speech-to-speech",
+      "url": "https://github.com/huggingface/speech-to-speech",
+      "stars": 5830,
+      "raw_file": "raw/huggingface__speech-to-speech__trending-weekly.md",
+      "selected_reason": "Hugging Face 的本地 voice agent 示例，对语音 agent 的本地模型编排有参考价值。"
+    },
+    {
+      "repo": "steipete/CodexBar",
+      "url": "https://github.com/steipete/CodexBar",
+      "stars": 17349,
+      "raw_file": "raw/steipete__CodexBar__trending-weekly.md",
+      "selected_reason": "补足 Codex/Claude Code 用量可观测性，适合重度 coding-agent 用户管理额度和成本。"
+    },
+    {
+      "repo": "ogulcancelik/herdr",
+      "url": "https://github.com/ogulcancelik/herdr",
+      "stars": 14787,
+      "raw_file": "raw/ogulcancelik__herdr__trending-weekly.md",
+      "selected_reason": "终端 agent multiplexer，和多 agent pane、远程 attach、通知等工作台形态直接相关；相比 2026-07-08 HN 条目，今日新增事实是进入 GitHub Trending。"
+    }
+  ],
+  "rejected": [
+    {
+      "repo": "alibaba/page-agent",
+      "url": "https://github.com/alibaba/page-agent",
+      "stars": 25493,
+      "reason": "强相关但 2026-07-09 GitHub 趋势项目已选，今日 raw 未提供实质新事实。"
+    },
+    {
+      "repo": "bradautomates/claude-video",
+      "url": "https://github.com/bradautomates/claude-video",
+      "stars": 6641,
+      "reason": "强相关但 2026-07-09 GitHub 趋势项目已选，今日 raw 未提供实质新事实。"
+    },
+    {
+      "repo": "stablyai/orca",
+      "url": "https://github.com/stablyai/orca",
+      "stars": 15006,
+      "reason": "强相关但 2026-07-09 GitHub 趋势项目已选，今日 raw 未提供实质新事实。"
+    },
+    {
+      "repo": "MadsLorentzen/ai-job-search",
+      "url": "https://github.com/MadsLorentzen/ai-job-search",
+      "stars": 18733,
+      "reason": "垂直 agent workflow 样例，但 2026-07-08 GitHub 趋势项目已选，今日无新变化。"
+    },
+    {
+      "repo": "Zackriya-Solutions/meetily",
+      "url": "https://github.com/Zackriya-Solutions/meetily",
+      "stars": 22176,
+      "reason": "本地会议助手相关，但 2026-07-09 GitHub 趋势项目已选，今日 raw 重复。"
+    },
+    {
+      "repo": "asgeirtj/system_prompts_leaks",
+      "url": "https://github.com/asgeirtj/system_prompts_leaks",
+      "stars": 55089,
+      "reason": "与 agent harness 参考有关，但 2026-07-08 已选；今日 raw 仍是同一系统提示词汇总描述。"
+    },
+    {
+      "repo": "xbtlin/ai-berkshire",
+      "url": "https://github.com/xbtlin/ai-berkshire",
+      "stars": 12334,
+      "reason": "垂直研究型 agent workflow，但 2026-07-09 已选，今日无新事实。"
+    },
+    {
+      "repo": "TencentCloud/CubeSandbox",
+      "url": "https://github.com/TencentCloud/CubeSandbox",
+      "stars": 9316,
+      "reason": "AI agent sandbox 强相关，但 2026-07-08 已选，今日 raw 重复。"
+    },
+    {
+      "repo": "dotnet/skills",
+      "url": "https://github.com/dotnet/skills",
+      "stars": 4481,
+      "reason": ".NET coding-agent skills 强相关，但 2026-07-08 已选，今日无新变化。"
+    },
+    {
+      "repo": "diegosouzapw/OmniRoute",
+      "url": "https://github.com/diegosouzapw/OmniRoute",
+      "stars": 14260,
+      "reason": "AI gateway 相关，但 2026-07-08 已选，今日 raw 没有新增可写事实。"
+    },
+    {
+      "repo": "usestrix/strix",
+      "url": "https://github.com/usestrix/strix",
+      "stars": 39586,
+      "reason": "AI 安全测试工具相关，但 2026-07-08 已选，今日重复。"
+    },
+    {
+      "repo": "facebook/astryx",
+      "url": "https://github.com/facebook/astryx",
+      "stars": 7454,
+      "reason": "agent-ready design system 已在 2026-07-09 GitHub AI 项目出现；趋势 raw 未提供足够新增事实。"
+    },
+    {
+      "repo": "saadeghi/daisyui",
+      "url": "https://github.com/saadeghi/daisyui",
+      "stars": 41516,
+      "reason": "通用 Tailwind 组件库，raw 未显示具体 AI/coding-agent workflow 影响。"
+    },
+    {
+      "repo": "harvard-edge/cs249r_book",
+      "url": "https://github.com/harvard-edge/cs249r_book",
+      "stars": 27233,
+      "reason": "机器学习系统教材，相关性偏泛，无法具体解释对 AI/coding-agent workflow 的今日影响。"
+    },
+    {
+      "repo": "immich-app/immich",
+      "url": "https://github.com/immich-app/immich",
+      "stars": 107083,
+      "reason": "自托管照片/视频管理，raw 未显示 AI/coding-agent workflow 关联。"
+    },
+    {
+      "repo": "ruvnet/RuView",
+      "url": "https://github.com/ruvnet/RuView",
+      "stars": 79643,
+      "reason": "WiFi 空间感知/生命体征监测项目，raw 未显示 coding-agent workflow 关联。"
+    }
+  ],
+  "notes": [
+    "按要求读取 input/context/raw/history，并用 2026-07-09、2026-07-08 报告做去重参考。",
+    "所有入选 repo 均通过 GitHub API 验证 stars >= 100。",
+    "raw corpus status 为 ok；未使用 selected_items.json 作为主要判断输入。"
+  ]
+}

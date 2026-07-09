@@ -1,0 +1,114 @@
+{
+  "lane": "x-following",
+  "status": "ok",
+  "selected_count": 9,
+  "rejected_count": 14,
+  "sources": [
+    "https://x.com/OpenAIDevs/status/2075275868268789885",
+    "https://x.com/OpenAIDevs/status/2075286157186003348",
+    "https://x.com/simonw/status/2075306164993315192",
+    "https://x.com/Dimillian/status/2075302993260368279",
+    "https://x.com/steipete/status/2075293627501429067",
+    "https://x.com/OpenAIDevs/status/2075289656225374647",
+    "https://x.com/steipete/status/2075328260704288885",
+    "https://x.com/levelsio/status/2075328941317886210",
+    "https://x.com/thdxr/status/2075331244083040682"
+  ],
+  "selected": [
+    {
+      "source": "https://x.com/OpenAIDevs/status/2075275868268789885",
+      "reason": "OpenAI 官方发布 Codex 与 ChatGPT 桌面应用合并，直接影响 coding agent 入口。"
+    },
+    {
+      "source": "https://x.com/OpenAIDevs/status/2075286157186003348",
+      "reason": "官方说明 GPT-5.6 三档模型与 Sol 的长周期 coding/agentic 定位，是今日核心模型路由事实。"
+    },
+    {
+      "source": "https://x.com/simonw/status/2075306164993315192",
+      "reason": "Simon Willison 指出 GPT-5.6 API 新增 programmatic tool calling 与 multi-agent 能力，适合 agent 工程读者。"
+    },
+    {
+      "source": "https://x.com/Dimillian/status/2075302993260368279",
+      "reason": "转发 OpenAI 插件目录统一信息，关联 ChatGPT/Codex 工具生态。"
+    },
+    {
+      "source": "https://x.com/steipete/status/2075293627501429067",
+      "reason": "Codex 更新包含文件编辑和终端等开发者操作面，补足模型发布之外的产品变化。"
+    },
+    {
+      "source": "https://x.com/OpenAIDevs/status/2075289656225374647",
+      "reason": "Vercel 内部 data science agent 用例，具体说明 GPT-5.6 在企业 agent 中的使用场景。"
+    },
+    {
+      "source": "https://x.com/steipete/status/2075328260704288885",
+      "reason": "ARC-AGI-3 7.8% 是具体 benchmark 变化，可作为推理能力信号。"
+    },
+    {
+      "source": "https://x.com/levelsio/status/2075328941317886210",
+      "reason": "Claude Code 设置 iOS app Web 测试入口，是远程/移动开发 agent 工作流的具体 follow-up。"
+    },
+    {
+      "source": "https://x.com/thdxr/status/2075331244083040682",
+      "reason": "opencode 直接做 Slack 更新，体现团队通知自动化可由现有 coding agent 轻量实现。"
+    }
+  ],
+  "rejected": [
+    {
+      "source": "https://x.com/Dimillian/status/2075278891099296239",
+      "reason": "情绪表达，无具体事实。"
+    },
+    {
+      "source": "https://x.com/Dimillian/status/2075280654929957004",
+      "reason": "只提 slider，缺少上下文。"
+    },
+    {
+      "source": "https://x.com/GithubProjects/status/2075286369975632049",
+      "reason": "Goose 数据库迁移工具与 AI/coding-agent 关联不够直接。"
+    },
+    {
+      "source": "https://x.com/OpenAI/status/2075310019185389913",
+      "reason": "GPT-5.6 农场宣传案例较泛，已由更具体的 Vercel agent 用例覆盖。"
+    },
+    {
+      "source": "https://x.com/dotey/status/2075288698585809214",
+      "reason": "中文总结 OpenAI 发布，信息被官方源和更具体条目覆盖。"
+    },
+    {
+      "source": "https://x.com/Pluvio9yte/status/2075288349963862204",
+      "reason": "对 GPT-5.6/Codex UI 的二手概述，被官方源覆盖。"
+    },
+    {
+      "source": "https://x.com/alex_prompter/status/2075310283879514171",
+      "reason": "Meta Muse Spark 定价信息较偏通用模型新闻，agent 相关性弱。"
+    },
+    {
+      "source": "https://x.com/garrytan/status/2075300766269702650",
+      "reason": "Sighthound 开源安全扫描器可能相关，但证据为转发且正文截断，细节不足。"
+    },
+    {
+      "source": "https://x.com/NickADobos/status/2075312442922684836",
+      "reason": "调侃 OpenAI/AtCoder，信息密度低。"
+    },
+    {
+      "source": "https://x.com/NickADobos/status/2075327328021102611",
+      "reason": "断言 ChatGPT atlas 已死，缺少可核验事实。"
+    },
+    {
+      "source": "https://x.com/RichardMCNgo/status/2075301126921175166",
+      "reason": "AI 2040 情景批评偏政策/长期主义，不是今日 agent 工作流信号。"
+    },
+    {
+      "source": "https://x.com/NathanpmYoung/status/2075313399962194139",
+      "reason": "泛化的 AI 思考建议，不够具体。"
+    },
+    {
+      "source": "https://x.com/ios_dev_alb/status/2075323695594119183",
+      "reason": "SwiftUI one-time-code 技巧与 agent 主题无关。"
+    },
+    {
+      "source": "https://x.com/trq212/status/2075280416995705312",
+      "reason": "Fable 延期/访问提示昨日已覆盖，今日无新事实。"
+    }
+  ],
+  "notes": "Read input.md, context.json, raw corpus and 2026-07-08/2026-07-09 history for dedupe. Used raw X files as primary evidence; selected 9 concrete AI/coding-agent items and rejected generic, duplicate, off-topic or thin-evidence posts."
+}

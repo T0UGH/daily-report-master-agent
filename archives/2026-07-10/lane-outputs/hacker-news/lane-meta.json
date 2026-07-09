@@ -1,0 +1,71 @@
+{
+  "lane": "hacker-news",
+  "status": "ok",
+  "selected_count": 5,
+  "rejected_count": 5,
+  "sources": [
+    {
+      "id": "48849066",
+      "title": "GPT-5.6",
+      "hn_url": "https://news.ycombinator.com/item?id=48849066",
+      "external_url": "https://openai.com/index/gpt-5-6/",
+      "reason": "New official frontier model release with concrete developer-guide guidance, benchmark discussion, and coding-agent tool choice debate. Follow-up to prior-day pre-release signals, but materially new because the release and HN discussion are now public."
+    },
+    {
+      "id": "48842459",
+      "title": "Show HN: Getting GLM 5.2 running on my slow computer",
+      "hn_url": "https://news.ycombinator.com/item?id=48842459",
+      "external_url": "https://github.com/JustVugg/colibri",
+      "reason": "Specific local-inference implementation for a 744B MoE model with concrete memory/disk/tok/s numbers; highly relevant to local AI agent and model deployment readers."
+    },
+    {
+      "id": "48850414",
+      "title": "GLM 5.2 is nearly as accurate as a human book keeper",
+      "hn_url": "https://news.ycombinator.com/item?id=48850414",
+      "external_url": "https://toot-books.pages.dev/blog/glm-5-2-vat-benchmark",
+      "reason": "Concrete applied LLM benchmark plus substantive HN critique about task scope, retrieval, liability, and human judgment in white-collar automation."
+    },
+    {
+      "id": "48847552",
+      "title": "Hy3",
+      "hn_url": "https://news.ycombinator.com/item?id=48847552",
+      "external_url": "https://hy.tencent.com/research/hy3",
+      "reason": "Model release/distribution discussion with OpenRouter ranking, pricing, and free-tier details useful for model-routing readers."
+    },
+    {
+      "id": "48843923",
+      "title": "EU Parliament greenlights Chat Control 1.0",
+      "hn_url": "https://news.ycombinator.com/item?id=48843923",
+      "external_url": "https://www.patrick-breyer.de/en/eu-parliament-greenlights-chat-control-1-0-breyer-our-children-lose-out/",
+      "reason": "Not AI-specific, but relevant to communications, cloud data, privacy, and compliance risk for agent/tool products that handle private messages or user data."
+    }
+  ],
+  "rejected": [
+    {
+      "id": "48792383",
+      "title": "Train sim created by just one person is being called the best ever made",
+      "reason": "Interesting indie software/game story but not concretely relevant to AI or coding-agent workflows."
+    },
+    {
+      "id": "48804935",
+      "title": "I Changed My Name",
+      "reason": "Useful general software-design reminder about names, but the available evidence is mostly identity/localization discussion and too generic for this AI-agent lane."
+    },
+    {
+      "id": "48845049",
+      "title": "Show HN: 18 Words",
+      "reason": "Popular web puzzle with product feedback, but no AI/coding-agent-specific substance."
+    },
+    {
+      "id": "48845209",
+      "title": "A road to Lisp: Why Lisp",
+      "reason": "Programming-language essay with broad discussion, but no concrete current release, tool, agent workflow, or practitioner update for this lane."
+    },
+    {
+      "id": "48846281",
+      "title": "No leap second will be introduced at the end of December 2026",
+      "reason": "Systems/timekeeping relevance is real, but this item is generic infrastructure news and not specific enough to AI/coding-agent readers compared with stronger model/tool discussions."
+    }
+  ],
+  "notes": "Read input.md, context.json, all 10 raw HN story files, and the 2026-07-09/2026-07-08 report history for dedupe. Did not use selected_items.json as primary input. GPT-5.6 was retained as a meaningful follow-up because previous reports only had pre-release/X signals, while this corpus has the official HN discussion and developer-guide details."
+}

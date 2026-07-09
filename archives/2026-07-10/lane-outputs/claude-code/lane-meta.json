@@ -1,0 +1,26 @@
+{
+  "lane": "claude-code",
+  "status": "empty",
+  "selected_count": 0,
+  "rejected_count": 3,
+  "sources": [],
+  "selected": [],
+  "rejected": [
+    {
+      "title": "Claude Code v2.1.203",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.203",
+      "reason": "已在 2026-07-08 日报 Claude Code 栏完整覆盖后台 agent、worktree、PATH、ANTHROPIC_BASE_URL、UI/性能等主要变化；今日无新增事实。"
+    },
+    {
+      "title": "Claude Code v2.1.204",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.204",
+      "reason": "已在 2026-07-09 日报 Claude Code 栏覆盖 headless SessionStart hook 事件流修复；今日原始语料未提供新增信息。"
+    },
+    {
+      "title": "Claude Code v2.1.205",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.205",
+      "reason": "已在 2026-07-09 日报 Claude Code 栏覆盖 auto mode、--json-schema、后台 agent、PR 关联、Windows worktree、插件 LSP 等主要变化；今日无新增事实。"
+    }
+  ],
+  "notes": "按 skill 要求以 raw corpus 为主、以 2026-07-09 和 2026-07-08 历史日报做去重参考。三个 raw release 均为最近两日报已刊登或已充分覆盖的重复素材，因此本 lane 标记为 empty。"
+}

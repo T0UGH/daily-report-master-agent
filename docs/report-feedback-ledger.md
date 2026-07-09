@@ -722,3 +722,8 @@
 - archive: `archives/2026-07-09/`
 - notes: Hermes subagent lane run; Reddit lane degraded from collect/retry anomaly and thin comments; card header corrected to self-identifying `Rook｜` title and superseded helper card revoked.
 
+## 2026-07-10
+
+- Delivery: succeeded. Feishu Docx published and corrected Rook self-identifying card verified live.
+- Runtime archive: `archives/2026-07-10/`.
+- Notes: Reddit collect exited non-zero after retry but raw package had 8 files and lane subagent produced `ok`; Claude Code and OpenClaw were `empty` after dedupe/quality judgment. Initial helper card header lacked `Rook｜`; corrected card resent and superseded helper card revoked.

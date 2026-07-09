@@ -1,0 +1,63 @@
+{
+  "lane": "polymarket",
+  "status": "ok",
+  "selected_count": 6,
+  "rejected_count": 5,
+  "sources": [
+    "https://polymarket.com/event/which-company-has-best-ai-model-end-of-july-299",
+    "https://polymarket.com/event/which-company-has-the-best-coding-ai-model-end-of-july",
+    "https://polymarket.com/event/which-company-has-the-best-math-ai-model-end-of-july",
+    "https://polymarket.com/event/ai-model-scores-90-on-frontiermath-benchmark-before-2027",
+    "https://polymarket.com/event/will-any-ai-model-reach-overall-arena-score-by-september-30",
+    "https://polymarket.com/event/which-company-has-best-ai-model-end-of-2026"
+  ],
+  "selected": [
+    {
+      "raw_file": "raw/pm__model-race__556131__prediction_market__2026-07-10.md",
+      "reason": "7月底总模型竞赛市场，成交和流动性最高；相较昨日 Anthropic 概率继续上行，有可写的新变化。"
+    },
+    {
+      "raw_file": "raw/pm__coding-ai__556287__prediction_market__2026-07-10.md",
+      "reason": "直接对应 coding AI，读者相关性强；概率较昨日小幅回落但仍高度集中。"
+    },
+    {
+      "raw_file": "raw/pm__company-expectation__556271__prediction_market__2026-07-10.md",
+      "reason": "数学模型榜与模型能力判断相关；相比昨日大幅回升，形成有意义 follow-up。"
+    },
+    {
+      "raw_file": "raw/pm__benchmark__79080__prediction_market__2026-07-10.md",
+      "reason": "FrontierMath 90% 是具体能力基准市场；Yes 概率较昨日继续上升。"
+    },
+    {
+      "raw_file": "raw/pm__benchmark__336406__prediction_market__2026-07-10.md",
+      "reason": "Arena 1510 的9月底短期基准市场，有较高24h成交和本月明显下跌，可补充短期 benchmark 预期。"
+    },
+    {
+      "raw_file": "raw/pm__model-race__556382__prediction_market__2026-07-10.md",
+      "reason": "年底模型公司市场提供更长期对照，OpenAI 概率较昨日上行至接近 Google。"
+    }
+  ],
+  "rejected": [
+    {
+      "raw_file": "raw/pm__benchmark__138745__prediction_market__2026-07-10.md",
+      "reason": "1550 Overall Arena Score 市场概率较低、24h成交较小；与已选1510市场重复，信息增量弱。"
+    },
+    {
+      "raw_file": "raw/pm__coding-ai__336534__prediction_market__2026-07-10.md",
+      "reason": "1560 Coding Arena Score 分档标签仍不清，昨日已提示需先看规则；本次不重复写。"
+    },
+    {
+      "raw_file": "raw/pm__company-expectation__502834__prediction_market__2026-07-10.md",
+      "reason": "OpenAI+Anthropic vs Google 估值市场与AI/coding-agent工作流相关性较弱，且30d成交偏低。"
+    },
+    {
+      "raw_file": "raw/pm__company-expectation__556162__prediction_market__2026-07-10.md",
+      "reason": "第三名模型公司市场可解释性不如最佳模型/数学/编码市场，容易增加噪声。"
+    },
+    {
+      "raw_file": "raw/pm__model-race__556312__prediction_market__2026-07-10.md",
+      "reason": "中国模型公司市场与昨日基本持平，信息增量有限；为避免重复未选。"
+    }
+  ],
+  "notes": "Read input.md, context.json, and 2026-07-09/2026-07-08 history reports. Used raw corpus as primary evidence and history only for dedupe/follow-up comparison; selected markets with concrete AI/coding-agent relevance and non-trivial movement or high market strength."
+}

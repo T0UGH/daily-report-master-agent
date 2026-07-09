@@ -1,0 +1,77 @@
+{
+  "lane": "product-hunt",
+  "status": "ok",
+  "selected_count": 3,
+  "rejected_count": 8,
+  "sources": [
+    {
+      "title": "Aura: Agents + Git + Intent Open Source",
+      "url": "https://www.producthunt.com/products/aura-28?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/aura-agents-git-intent-open-source__developer-tools__producthunt_topic_hit__2026-07-10.md",
+      "reason": "开源 IDE、AI coding agents、Git 与 intent 控制这些要素直接相关，信息可具体解释给 coding-agent 读者。"
+    },
+    {
+      "title": "Coasty",
+      "url": "https://www.producthunt.com/products/coasty?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/coasty-3__developer-tools__producthunt_topic_hit__2026-07-10.md",
+      "reason": "Computer-use agent 运行 legacy software，和 GUI/桌面自动化 agent 工作流高度相关。"
+    },
+    {
+      "title": "Perfai Security",
+      "url": "https://www.producthunt.com/products/perfai-security-for-vibe-coded-apps?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/perfai-security__developer-tools__producthunt_topic_hit__2026-07-10.md",
+      "reason": "面向 vibe-coded apps 的漏洞查找与修复，契合 agent 生成应用后的安全验收需求。"
+    }
+  ],
+  "rejected": [
+    {
+      "title": "Constellation Gate AI",
+      "url": "https://www.producthunt.com/products/gate-ai-2?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/constellation-gate-ai__developer-tools__producthunt_topic_hit__2026-07-10.md",
+      "reason": "与 prompt injection/token savings 相关，但原始证据只有一句 benchmark 宣称，缺少足够具体事实支撑。"
+    },
+    {
+      "title": "GPT-Live",
+      "url": "https://www.producthunt.com/products/openai?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/gpt-live-2__artificial-intelligence__producthunt_topic_hit__2026-07-10.md",
+      "reason": "昨日主报告多个栏目已覆盖 GPT-Live，PH 条目只提供 full-duplex voice 一句，重复且新增信息不足。"
+    },
+    {
+      "title": "Just Ask by SEORCE",
+      "url": "https://www.producthunt.com/products/seorce?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/just-ask-by-seorce__artificial-intelligence__producthunt_topic_hit__2026-07-10.md",
+      "reason": "SEO/AI visibility 的 WhatsApp 问答工具，更偏营销数据查询，和 coding-agent 读者关联较弱。"
+    },
+    {
+      "title": "Lispr",
+      "url": "https://www.producthunt.com/products/lispr?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/lispr__artificial-intelligence__producthunt_topic_hit__2026-07-10.md",
+      "reason": "语音输入/听写工具，证据只说明按键说话并写入任意位置，AI/coding-agent 相关性不如入选项。"
+    },
+    {
+      "title": "Opper AI",
+      "url": "https://www.producthunt.com/products/opper-ai?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/opper-ai__developer-tools__producthunt_topic_hit__2026-07-10.md",
+      "reason": "AI gateway for agents 方向相关，但原始材料只有地域与网关定位，缺少功能、接口或差异化细节。"
+    },
+    {
+      "title": "Auriko",
+      "url": "https://www.producthunt.com/products/auriko?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/auriko-2__developer-tools__producthunt_topic_hit__2026-07-10.md",
+      "reason": "LLM calls trading desk 可能涉及成本/路由，但材料过短，无法具体说明对 agent 工程的实际用法。"
+    },
+    {
+      "title": "Timbal AI",
+      "url": "https://www.producthunt.com/products/timbal-ai?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/timbal-ai__artificial-intelligence__producthunt_topic_hit__2026-07-10.md",
+      "reason": "build AI agents/workflows/apps 的平台描述过泛，缺少具体发布事实或开发者可操作信息。"
+    },
+    {
+      "title": "Toyo",
+      "url": "https://www.producthunt.com/products/toyo?utm_campaign=producthunt-api&utm_medium=api-v2&utm_source=Application%3A+gui-ai-daily+%28ID%3A+279028%29",
+      "raw_file": "raw/toyo__artificial-intelligence__producthunt_topic_hit__2026-07-10.md",
+      "reason": "iMessage/电话里的高管助手更偏个人生产力和助理产品，不是 coding-agent 相关新品。"
+    }
+  ],
+  "notes": "已读取 input.md、context.json、raw 摘要及 2026-07-09/2026-07-08 历史报告；未使用 selected_items.json 作为判断依据。昨日 Product Hunt 栏目为 agents-cli/Compendium/Knowledge Atlas，前日为 Ogment/LongCat/Badge，本次入选项无直接重复。"
+}
