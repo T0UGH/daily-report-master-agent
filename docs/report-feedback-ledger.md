@@ -727,3 +727,15 @@
 - Delivery: succeeded. Feishu Docx published and corrected Rook self-identifying card verified live.
 - Runtime archive: `archives/2026-07-10/`.
 - Notes: Reddit collect exited non-zero after retry but raw package had 8 files and lane subagent produced `ok`; Claude Code and OpenClaw were `empty` after dedupe/quality judgment. Initial helper card header lacked `Rook｜`; corrected card resent and superseded helper card revoked.
+
+## 2026-07-22
+
+### 运行记录
+- Hermes 原生 lane subagent 链路完成 collect / package / 14 lanes / validate / assemble；14 个 lane 输出均存在，13 ok、1 degraded（Reddit）。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产 config `~/.signal-engine/config/lanes.yaml`、data root `~/.daily-lane-data`；registry 覆盖所有生产 reader signal lanes。
+- Reddit collect 首次与 retry 均失败，但残留 raw corpus 可读；lane subagent 明示证据完整性受 HTTP 429 限制并标记 degraded。
+- Feishu Docx 已发布；精选卡片 preflight 通过且已修正为 `Rook｜` header，但 lark-cli user token 过期（`need_user_authorization`），无法发送。
+- 最终 report 已归档到 knowledge-wiki 并推送。
+
+### 待处理
+- 重新授权 lark-cli user token 后，发送 runtime 中已预检的 curated card，并更新 publish-state / card message_id。
