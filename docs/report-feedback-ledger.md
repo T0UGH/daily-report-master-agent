@@ -8,6 +8,20 @@
 - 如果后续改代码、prompt、contract、validator、配置或发布链路，必须回填到对应日期或新增“改动记录”。
 - 不把“我记住了”当修复；必须能追到仓库文件、commit 或验证产物。
 
+## 2026-07-23
+
+### 运行记录
+- 06:00 master cron 完成同日 deterministic collect、package、14 个 Hermes lane subagent、validation、assemble、Feishu 文档与精选卡片发布，以及 knowledge-wiki 归档。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml` 与 data-dir `/Users/haha/.daily-lane-data`；registry 覆盖 weather / Reddit / HN / Claude / Codex / OpenClaw / Polymarket。
+- `reddit-watch` 初次 collect 与同 run diagnose/retry 均非零，但仍有 8 个 raw 文件；lane subagent 基于可用原始证据完成 3 条 reader-facing 选项。`github-ai-projects` 保持 derived lane 并使用上游 evidence。
+- 14 条 reader lanes：13 ok、1 empty（OpenClaw；3 条 raw 均不够具体），无 degraded / blocked；validation 与 report heading cross-check 通过，合计 57 条被 lane subagents 选中。
+- publish helper 成功创建 Feishu Docx，但因未设置 `FEISHU_HOME_CHANNEL` 未发送卡片；主 agent 用已生成、preflight 通过的原文精选 card payload 发送到 Rook DM，live verification 确认 header 为 `Rook｜AI Agent 日报精选（2026-07-23）`。
+- 最终文档已归档并推送至 knowledge-wiki commit `8260edb`。
+
+### 待验证 / 后续改动方向
+- 修复 publish helper 对明确 chat_id 的支持，避免 `FEISHU_HOME_CHANNEL` 缺失时需要主 agent 补发卡片。
+- 持续排查 `reddit-watch` 的非零退出；保留“有 raw evidence 时由 lane agent 判断”的降级路径。
+
 ## 2026-07-07
 
 ### 运行记录
