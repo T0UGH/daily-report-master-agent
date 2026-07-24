@@ -767,3 +767,11 @@
 
 ### 待处理
 - 重新授权 lark-cli user token 后，发送 runtime 中已预检的 curated card，并更新 publish-state / card message_id。
+
+## 2026-07-25 cron run
+
+- Hermes 原生 lane subagent 链路完成 collect / package / 14 lanes / validate / assemble；14 个 lane 输出均存在。
+- Collect preflight：repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`，生产 config `~/.signal-engine/config/lanes.yaml`，data root `~/.daily-lane-data`；registry 完整。
+- 降级：Reddit 首次 collect 与 retry 均受 RSS HTTP 429 影响，但保留 8 条 raw evidence，lane subagent 标记 degraded。`github-ai-projects` 作为 derived lane 规范化为 partial；OpenClaw package prep 遗漏已从 `openclaw-watch` raw 修复 package，lane 结果 empty。
+- 发布：Feishu Docx `https://www.feishu.cn/docx/IPE2d4xidoXfEYxpMBVcmQrSnbN`；card preflight 通过，使用 bot identity 发送并 live-verified `Rook｜AI Agent 日报精选（2026-07-25）`，message `om_x100b690a2861eca0b3b115a59f8e1f1`。
+- 归档：knowledge-wiki `raw/inbound/ai-daily-report/2026/2026-07-25.md`。
