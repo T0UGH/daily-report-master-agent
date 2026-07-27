@@ -1,5 +1,20 @@
 # Report Feedback Ledger
 
+## 2026-07-28
+
+### 运行记录
+- 完成同日 deterministic collect、13 个 Hermes lane subagent、validation、assemble、Feishu Docx/精选卡片发布与 knowledge-wiki 归档。
+- collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`；registry 覆盖 weather / Reddit / HN / Claude / Codex / OpenClaw / Polymarket。
+- `reddit-watch` 首次与 retry 均非零，但保留 8 个 raw 文件；lane subagent 基于原始证据选出 2 条并标为 degraded。`github-ai-projects` 保持 derived collect artifact；本日 runtime 配置未纳入 OpenClaw reader lane。
+- 13 条 reader lanes：12 ok、1 degraded（Reddit）、0 blocked/empty；全部 `lane.md` + `lane-meta.json` 已生成，validation 与 section-heading cross-check 通过，lane subagents 共选中 53 条。
+- publish helper 成功创建 Feishu Docx，但因缺 `FEISHU_HOME_CHANNEL` 未能自动发卡；主 agent 对从最终 `report.md` 抽取的 card payload 做 preflight 后以 bot 身份补发到 Rook DM，并 live verify 标题为 `Rook｜AI Agent 日报精选（2026-07-28）`。
+- 最终文档归档并推送至 knowledge-wiki commit `f155a64`。
+
+### 待验证 / 后续改动方向
+- 为 publish helper 提供明确 chat_id，避免 `FEISHU_HOME_CHANNEL` 缺失时需要主 agent 补发卡片。
+- 明确 runtime config 是否恢复 `openclaw` reader lane；当前 collector 虽在 registry 中，但不在本日 package/order。
+- 继续缓解 Reddit RSS 非零退出；有 raw evidence 时保持由 lane agent 判断 degraded/empty/ok。
+
 ## 2026-07-27
 
 ### 运行记录
