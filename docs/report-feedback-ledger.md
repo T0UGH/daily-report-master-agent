@@ -1,5 +1,18 @@
 # Report Feedback Ledger
 
+## 2026-08-08
+
+### 运行记录
+- 完成同日 deterministic collect、13 个 Hermes lane subagent、validation、assemble 与 Feishu 发布。collect preflight 使用 repo-local `uvx --from /Users/haha/workspace/signals-engine signals-engine`、生产配置 `/Users/haha/.signal-engine/config/lanes.yaml`、data-dir `/Users/haha/.daily-lane-data`；registry 覆盖 weather / Reddit / HN / Claude / Codex / OpenClaw / Polymarket。
+- `reddit-watch` 首次 collect 与 diagnose 后 retry 均非零；lane package 虽有 16 条 raw 文件，但均缺可核验的当日讨论实质，lane subagent 标为 degraded 且不更新正文。`github-ai-projects` 作为 derived lane 从上游 evidence 生成 package。
+- 13 条 reader lanes：12 ok、1 degraded（Reddit）、0 blocked/empty；每条均重新生成 `lane.md` 和 `lane-meta.json`，validation 通过，lane agents 共选中 50 条。
+- Feishu Docx 已发布；publish helper 因缺少 `FEISHU_HOME_CHANNEL` 未自动发送卡片，且 user OAuth `im:message.send_as_user` token/scope 不可用。对最终 `report.md` 的原文精选卡 preflight 通过后，已以 bot identity 发送到 Rook DM；live verification 确认标题为 `Rook｜AI Agent 日报精选（2026-08-08）`。
+- 最终文档归档至 knowledge-wiki，提交见本次归档 commit。
+
+### 待验证 / 后续改动方向
+- 为 publish helper 配置稳定 chat_id，并恢复 `lark-cli` user OAuth `im:message.send_as_user` scope，避免卡片需以 bot identity 补发。
+- 持续修复 Reddit RSS 采集非零；没有可核验当日讨论时保持 lane subagent 的降级不更新判断。
+
 ## 2026-08-07
 
 ### 运行记录
